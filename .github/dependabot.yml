@@ -1,0 +1,11 @@
+version: 2
+enable-beta-ecosystems: true
+updates:
+  - package-ecosystem: pub
+    directory: "/app"
+    schedule:
+      interval: daily
+  - package-ecosystem: cargo
+    directory: "/app/native"
+    schedule:
+      interval: daily

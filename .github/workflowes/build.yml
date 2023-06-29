@@ -1,0 +1,78 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.10.5"
+          channel: "stable"
+          cache: true
+      - name: Install Rust Language
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            override: true
+            components: rustfmt, clippy
+      - name: Build Windows
+        run: |
+          cd app
+          flutter pub get
+          flutter build windows --release
+      - name: Upload Windows
+        uses: actions/upload-artifact@v3
+        with:
+          name: Era Connect Windows
+          path: app/build/windows/runner/Release
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.10.5"
+          channel: "stable"
+          cache: true
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - name: Build Linux
+        run: |
+          cd app
+          flutter pub get
+          flutter build linux --release
+      - name: Upload Linux
+        uses: actions/upload-artifact@v3
+        with:
+          name: Era Connect Linux (AMD64)
+          path: app/build/linux/x64/release/bundle
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.10.5"
+          channel: "stable"
+          cache: true
+      - name: Build macOS
+        run: |
+          cd app
+          flutter pub get
+          flutter build macos --release
+      - name: Upload macOS
+        uses: actions/upload-artifact@v3
+        with:
+          name: Era Connect macOS
+          path: app/build/macos/Build/Products/Release
