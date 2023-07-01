@@ -31,7 +31,7 @@ class EraThemeData {
     return EraThemeData(
       primaryColor: Colors.black,
       textColor: Colors.white,
-      secondaryTextColor: const Color(0xFF4f4f4f),
+      secondaryTextColor: const Color(0xFF7D7D7D),
       tertiaryTextColor: const Color(0xFF3d3d3d),
       accentColor: EraAccentColor.green.color,
       surfaceColor: const Color(0xFF1e1e1e),

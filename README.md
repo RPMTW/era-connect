@@ -16,3 +16,6 @@ To begin, ensure that you have a working installation of the following items:
 
 ## 🎓 LICENSE
 The source code of this application is released under the [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html). For more details, please refer to the [LICENSE](LICENSE) file.
+
+---
+NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG.

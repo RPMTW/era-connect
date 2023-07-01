@@ -5,6 +5,6 @@ class EraMenuAccount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder(fallbackHeight: 100, fallbackWidth: 200);
+    return const Placeholder(fallbackHeight: 50, fallbackWidth: 265);
   }
 }
