@@ -14,6 +14,7 @@ class EraThemeData {
   final Color deepBackgroundColor;
   final Color surfaceColor;
   final Color secondarySurfaceColor;
+  final String? fontFamily;
 
   const EraThemeData({
     required this.primaryColor,
@@ -25,9 +26,10 @@ class EraThemeData {
     required this.deepBackgroundColor,
     required this.surfaceColor,
     required this.secondarySurfaceColor,
+    this.fontFamily,
   });
 
-  factory EraThemeData.dark() {
+  factory EraThemeData.dark({String? fontFamily}) {
     return EraThemeData(
       primaryColor: Colors.black,
       textColor: Colors.white,
@@ -38,6 +40,7 @@ class EraThemeData {
       backgroundColor: const Color(0xFF0d0d0d),
       deepBackgroundColor: const Color(0xFF0e0e0e),
       secondarySurfaceColor: const Color(0xFF2f2f2f),
+      fontFamily: fontFamily,
     );
   }
 }

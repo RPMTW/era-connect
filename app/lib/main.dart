@@ -31,6 +31,7 @@ class EraConnectApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
           fontFamily: 'GenSenRounded',
+          fontFamilyFallback: const ['GenSenRounded'],
           brightness: Brightness.dark,
           useMaterial3: true),
       builder: (context, child) {
@@ -43,7 +44,7 @@ class EraConnectApp extends StatelessWidget {
         return child!;
       },
       home: ThemeProvider(
-          getDefaultTheme: () => EraThemeData.dark(),
+          getDefaultTheme: () => EraThemeData.dark(fontFamily: 'GenSenRounded'),
           builder: (context, theme) {
             return const Material(
               child: MainPage(),

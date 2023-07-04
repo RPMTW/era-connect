@@ -50,7 +50,7 @@ class _EraMenuItemState extends State<EraMenuItem> {
             duration: const Duration(milliseconds: 200),
             height: 75,
             color: getColor(),
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
                 SizedBox(
@@ -59,48 +59,42 @@ class _EraMenuItemState extends State<EraMenuItem> {
                     child: widget.selected
                         ? widget.data.selectedIcon
                         : widget.data.icon),
-                const SizedBox(width: 12),
+                const SizedBox(width: 15),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: const Cubic(0.0, 0.4, 0.4, 1.0),
+                      height: _isHovering ? 0 : 15,
+                    ),
                     AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 200),
+                      curve: const Cubic(0.0, 0.4, 0.4, 1.0),
                       style: TextStyle(
                           fontSize: _isHovering ? 17 : 19,
-                          fontWeight: FontWeight.w700),
+                          fontFamily: context.theme.fontFamily,
+                          fontWeight: widget.selected
+                              ? FontWeight.w700
+                              : FontWeight.w500),
                       child: Text(
                         widget.data.title,
                       ),
                     ),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      switchInCurve: Curves.easeInOut,
-                      transitionBuilder: (child, animation) {
-                        return SlideTransition(
-                          position: Tween<Offset>(
-                                  begin: const Offset(0, 0.5),
-                                  end: const Offset(0, 0))
-                              .animate(animation),
-                          child: child,
-                        );
-                      },
-                      child: Builder(
-                          key: ValueKey(_isHovering),
-                          builder: (context) {
-                            if (_isHovering) {
-                              return Text(
-                                widget.data.subtitle,
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: context.theme.secondaryTextColor,
-                                    fontWeight: FontWeight.w500),
-                              );
-                            } else {
-                              return const SizedBox.shrink();
-                            }
-                          }),
-                    )
+                    _isHovering ? const SizedBox(height: 3) : const SizedBox(),
+                    AnimatedOpacity(
+                        opacity: _isHovering ? 1 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        curve: const Cubic(0.0, 0.4, 0.4, 1.0),
+                        child: Text(
+                          widget.data.subtitle,
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontFamily: context.theme.fontFamily,
+                              color: context.theme.secondaryTextColor,
+                              fontWeight: FontWeight.w500),
+                        ))
                   ],
                 )
               ],

@@ -58,7 +58,8 @@ flutter:
   fonts:
     - family: GenSenRounded
       fonts:
-        - asset: assets/fonts/GenSenRounded-R.ttc
+        - asset: assets/fonts/GenSenRounded-H.ttc
+          weight: 900
         - asset: assets/fonts/GenSenRounded-B.ttc
           weight: 700
         - asset: assets/fonts/GenSenRounded-M.ttc

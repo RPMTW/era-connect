@@ -15,7 +15,9 @@ To begin, ensure that you have a working installation of the following items:
 - Appropriate [Rust targets](https://rust-lang.github.io/rustup/cross-compilation.html) for cross-compiling to your device
 
 ## 🎓 LICENSE
-The source code of this application is released under the [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html). For more details, please refer to the [LICENSE](LICENSE) file.
+The source code of this application is released under the [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html). For more details, please refer to the [LICENSE](LICENSE) file.  
+
+The fonts used in this project are licensed under the [SIL Open Font License (version 1.1)](https://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL). Please refer to the [license file](app/assets/fonts/SIL_Open_Font_License_1.1.txt) for the complete terms and conditions.
 
 ---
 NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG.
