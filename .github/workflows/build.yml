@@ -85,8 +85,8 @@ jobs:
           --volicon "era_connect_app_icon.icns" \
           --window-pos 200 120 \
           --window-size 800 529 \
-          --icon "era_connect.app" 260 250 \
-          --hide-extension "era_connect.app" \
+          --icon "Era Connect.app" 260 250 \
+          --hide-extension "Era Connect.app" \
           --app-drop-link 540 250 \
           --hdiutil-quiet \
           "Era-Connect-macOS-Installer.dmg" \
