@@ -21,9 +21,9 @@ jobs:
       - name: Install Rust Language
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
-            override: true
-            components: rustfmt, clippy
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
       - name: Build Windows
         run: |
           cd app
@@ -71,8 +71,24 @@ jobs:
           cd app
           flutter pub get
           flutter build macos --release
+
+          # Create a DMG installer.
+          cp assets/images/era_connect_app_icon.icns build/macos/Build/Products
+          cd build/macos/Build/Products
+          brew install create-dmg
+          create-dmg \
+          --volname "Era Connect Installer" \
+          --volicon "era_connect_app_icon.icns" \
+          --window-pos 200 120 \
+          --window-size 800 529 \
+          --icon "era_connect.app" 260 250 \
+          --hide-extension "era_connect.app" \
+          --app-drop-link 540 250 \
+          --hdiutil-quiet \
+          "Era-Connect-macOS-Installer.dmg" \
+          "Release/"
       - name: Upload macOS
         uses: actions/upload-artifact@v3
         with:
           name: Era Connect macOS
-          path: app/build/macos/Build/Products/Release
+          path: app/build/macos/Build/Products/Era-Connect-macOS-Installer.dmg
