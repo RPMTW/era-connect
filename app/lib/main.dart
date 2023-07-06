@@ -1,6 +1,7 @@
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 // import 'ffi.dart' if (dart.library.html) 'ffi_web.dart' show api;
 import 'pages/main_page.dart';
 import 'package:window_manager/window_manager.dart';
@@ -45,9 +46,15 @@ class EraConnectApp extends StatelessWidget {
 
         return child!;
       },
-      home: ThemeProvider(
-          getDefaultTheme: () => EraThemeData.dark(fontFamily: 'GenSenRounded'),
-          builder: (context) {
+      home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider(
+              create: (_) => ThemeChangeNotifier(
+                () => EraThemeData.dark(fontFamily: 'GenSenRounded'),
+              ),
+            )
+          ],
+          builder: (context, _) {
             return Material(
               child: Column(
                 children: [

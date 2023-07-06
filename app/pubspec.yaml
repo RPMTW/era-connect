@@ -38,6 +38,7 @@ dependencies:
     path: ../packages/era_connect_ui
   flutter_svg: ^2.0.7
   window_manager: ^0.3.4
+  provider: ^6.0.5
 
 dev_dependencies:
   flutter_test:
