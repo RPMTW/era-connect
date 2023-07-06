@@ -4,14 +4,15 @@ version: 0.0.1
 homepage: https://rpmtw.com
 
 environment:
-  sdk: '>=3.0.5 <4.0.0'
+  sdk: ">=3.0.5 <4.0.0"
   flutter: ">=3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   provider: ^6.0.5
-  auto_size_text: ^3.0.0
+  flutter_svg: ^2.0.7
+  window_manager: ^0.3.4
 
 dev_dependencies:
   flutter_test:
@@ -23,7 +24,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
+  assets:
+    - icons/
 # To add assets to your package, add an assets section, like this:
 # assets:
 #   - images/a_dot_burr.jpeg

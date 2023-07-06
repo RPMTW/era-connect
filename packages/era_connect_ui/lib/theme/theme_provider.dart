@@ -6,7 +6,7 @@ import 'era_theme_data.dart';
 /// Provides the Era Connect theme to the widget tree.
 class ThemeProvider extends StatelessWidget {
   final EraThemeData Function() getDefaultTheme;
-  final Widget Function(BuildContext context, EraThemeData theme) builder;
+  final Widget Function(BuildContext context) builder;
 
   const ThemeProvider(
       {Key? key, required this.getDefaultTheme, required this.builder})
@@ -22,7 +22,7 @@ class ThemeProvider extends StatelessWidget {
         create: (_) => ThemeChangeNotifier(getDefaultTheme),
         child:
             Consumer<ThemeChangeNotifier>(builder: (context, notifier, child) {
-          return builder(context, notifier.themeData);
+          return builder(context);
         }));
   }
 }
