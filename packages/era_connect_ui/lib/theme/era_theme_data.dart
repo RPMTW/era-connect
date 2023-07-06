@@ -1,10 +1,11 @@
 import 'dart:ui' show Color;
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart' show Colors;
 
 import 'era_accent_color.dart';
 
-class EraThemeData {
+class EraThemeData extends Equatable {
   final Color primaryColor;
   final Color textColor;
   final Color secondaryTextColor;
@@ -43,4 +44,45 @@ class EraThemeData {
       fontFamily: fontFamily,
     );
   }
+
+  EraThemeData copyWith({
+    Color? primaryColor,
+    Color? textColor,
+    Color? secondaryTextColor,
+    Color? tertiaryTextColor,
+    Color? accentColor,
+    Color? backgroundColor,
+    Color? deepBackgroundColor,
+    Color? surfaceColor,
+    Color? secondarySurfaceColor,
+    String? fontFamily,
+  }) {
+    return EraThemeData(
+      primaryColor: primaryColor ?? this.primaryColor,
+      textColor: textColor ?? this.textColor,
+      secondaryTextColor: secondaryTextColor ?? this.secondaryTextColor,
+      tertiaryTextColor: tertiaryTextColor ?? this.tertiaryTextColor,
+      accentColor: accentColor ?? this.accentColor,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      deepBackgroundColor: deepBackgroundColor ?? this.deepBackgroundColor,
+      surfaceColor: surfaceColor ?? this.surfaceColor,
+      secondarySurfaceColor:
+          secondarySurfaceColor ?? this.secondarySurfaceColor,
+      fontFamily: fontFamily ?? this.fontFamily,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        primaryColor,
+        textColor,
+        secondaryTextColor,
+        tertiaryTextColor,
+        accentColor,
+        backgroundColor,
+        deepBackgroundColor,
+        surfaceColor,
+        secondarySurfaceColor,
+        fontFamily,
+      ];
 }

@@ -49,3 +49,5 @@ jniLibs
 
 Cargo.lock
 pubspec.lock
+
+coverage/
