@@ -14,7 +14,7 @@ class EraTitleBar extends StatelessWidget {
     return DragToMoveArea(
       child: Container(
         color: context.theme.primaryColor,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+        padding: const EdgeInsets.only(left: 20, right: 8, top: 7, bottom: 7),
         child: Container(
           color: context.theme.primaryColor,
           child: Container(
@@ -28,12 +28,13 @@ class EraTitleBar extends StatelessWidget {
                     const SizedBox(width: 10),
                     const Text('Era Connect',
                         style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w500,
-                        ))
+                            fontSize: 29,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Geo',
+                            letterSpacing: -1))
                   ],
                 ),
-                Wrap(spacing: 8, children: [
+                Wrap(spacing: 5, children: [
                   EraTitleBarAction.minimize(),
                   EraTitleBarAction.maximize(),
                   EraTitleBarAction.close()
