@@ -3,7 +3,7 @@ description: A Minecraft launcher.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -30,12 +30,13 @@ dependencies:
   flutter:
     sdk: flutter
 
-
   ffi: ^2.0.2
   flutter_rust_bridge: ^1.78.0
   meta: ^1.8.0
   era_connect_ui:
     path: ../packages/era_connect_ui
+  era_connect_i18n:
+    path: ../packages/era_connect_i18n
   flutter_svg: ^2.0.7
   window_manager: ^0.3.4
   provider: ^6.0.5
@@ -52,6 +53,7 @@ flutter:
 
   assets:
     - assets/icons/
+    - assets/i18n/
     - assets/era_connect_logo.svg
 
   fonts:
@@ -65,4 +67,4 @@ flutter:
           weight: 500
     - family: Geo
       fonts:
-       - asset: assets/fonts/Geo-Regular.ttf
+        - asset: assets/fonts/Geo-Regular.ttf
