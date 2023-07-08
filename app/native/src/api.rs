@@ -268,10 +268,10 @@ pub async fn process_download() -> Result<(
     let native_library_path = Arc::new(PathBuf::from(jvm_options.native_directory));
     let (handles, total_size) = parallel_library(
         library_list,
-        library_path,
-        native_library_path,
+        RustOpaque::new(library_path),
+        RustOpaque::new(native_library_path),
         RustOpaque::new(Arc::clone(&current_size)),
-        semaphore.clone(),
+        RustOpaque::new(semaphore.clone()),
     )
     .await?;
 
@@ -307,7 +307,7 @@ pub async fn process_download() -> Result<(
         asset_download_hash,
         asset_download_path,
         asset_download_size,
-        semaphore.clone(),
+        RustOpaque::new(semaphore.clone()),
         RustOpaque::new(current_size.clone()),
         total_size.clone(),
         handles.clone(),
@@ -371,7 +371,7 @@ async fn parallel_assets(
     asset_download_hash: Vec<String>,
     asset_download_path: Vec<PathBuf>,
     asset_download_size: Vec<usize>,
-    semaphore: Arc<Semaphore>,
+    semaphore: RustOpaque<Arc<Semaphore>>,
     current_size: RustOpaque<Arc<AtomicUsize>>,
     total_size: RustOpaque<Arc<AtomicUsize>>,
     handles: RustOpaque<
@@ -504,10 +504,10 @@ async fn extract_assets(
 
 pub async fn parallel_library(
     library_list: Vec<Library>,
-    folder: Arc<PathBuf>,
-    native_folder: Arc<PathBuf>,
+    folder: RustOpaque<Arc<PathBuf>>,
+    native_folder: RustOpaque<Arc<PathBuf>>,
     current: RustOpaque<Arc<AtomicUsize>>,
-    semaphore: Arc<Semaphore>,
+    semaphore: RustOpaque<Arc<Semaphore>>,
 ) -> Result<(
     RustOpaque<
         Mutex<FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>>,
