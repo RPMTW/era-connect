@@ -1,6 +1,6 @@
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
-// import 'ffi.dart' if (dart.library.html) 'ffi_web.dart' show api;
+import 'ffi.dart' if (dart.library.html) 'ffi_web.dart' show api;
 import 'pages/main_page.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -19,6 +19,16 @@ void main() async {
   });
 
   runApp(const EraConnectApp());
+
+  testRust();
+}
+
+void testRust() async {
+  final stream = api.test();
+
+  stream.listen((event) {
+    print(event);
+  });
 }
 
 class EraConnectApp extends StatelessWidget {

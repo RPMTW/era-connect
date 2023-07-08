@@ -20,19 +20,19 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  String helloWorld({dynamic hint}) {
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_hello_world(),
-      parseSuccessData: _wire2api_String,
-      constMeta: kHelloWorldConstMeta,
+  Stream<int> test({dynamic hint}) {
+    return _platform.executeStream(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_test(port_),
+      parseSuccessData: _wire2api_usize,
+      constMeta: kTestConstMeta,
       argValues: [],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kHelloWorldConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kTestConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "hello_world",
+        debugName: "test",
         argNames: [],
       );
 
@@ -41,16 +41,8 @@ class NativeImpl implements Native {
   }
 // Section: wire2api
 
-  String _wire2api_String(dynamic raw) {
-    return raw as String;
-  }
-
-  int _wire2api_u8(dynamic raw) {
-    return raw as int;
-  }
-
-  Uint8List _wire2api_uint_8_list(dynamic raw) {
-    return raw as Uint8List;
+  int _wire2api_usize(dynamic raw) {
+    return castInt(raw);
   }
 }
 

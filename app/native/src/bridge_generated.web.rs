@@ -2,8 +2,8 @@ use super::*;
 // Section: wire functions
 
 #[wasm_bindgen]
-pub fn wire_hello_world() -> support::WireSyncReturn {
-    wire_hello_world_impl()
+pub fn wire_test(port_: MessagePort) {
+    wire_test_impl(port_)
 }
 
 // Section: allocate functions

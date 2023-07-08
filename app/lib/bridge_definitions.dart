@@ -11,7 +11,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
-  String helloWorld({dynamic hint});
+  Stream<int> test({dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kHelloWorldConstMeta;
+  FlutterRustBridgeTaskConstMeta get kTestConstMeta;
 }
