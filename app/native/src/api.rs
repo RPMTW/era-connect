@@ -1,7 +1,7 @@
 pub mod minecraft;
 
 use flutter_rust_bridge::StreamSink;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 pub use crate::api::minecraft::get_progress;
 
@@ -13,6 +13,7 @@ pub struct Progress {
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn test(stream: StreamSink<Progress>) {
-    get_progress(stream).await
+pub async fn test(stream: StreamSink<Progress>) -> anyhow::Result<()> {
+    get_progress(stream).await;
+    Ok(())
 }

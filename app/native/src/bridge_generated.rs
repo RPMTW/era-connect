@@ -28,7 +28,7 @@ fn wire_test_impl(port_: MessagePort) {
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
-        move || move |task_callback| Ok(test(task_callback.stream_sink())),
+        move || move |task_callback| test(task_callback.stream_sink()),
     )
 }
 // Section: wrapper structs
@@ -54,6 +54,19 @@ where
     }
 }
 // Section: impl IntoDart
+
+impl support::IntoDart for Progress {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.speed.into_dart(),
+            self.percentages.into_dart(),
+            self.current_size.into_dart(),
+            self.total_size.into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for Progress {}
 
 // Section: executor
 
