@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use async_semaphore::Semaphore;
 use core::fmt;
-use futures::{stream::FuturesUnordered, StreamExt};
+use futures::{select, stream::FuturesUnordered, StreamExt};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -18,6 +18,8 @@ use std::{
 use tokio::{
     fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt, BufReader},
+    join,
+    sync::Mutex,
     time::{self, Instant},
 };
 
@@ -320,12 +322,14 @@ pub async fn get_progress(sink: StreamSink<Progress>) -> Result<()> {
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&current_size);
     let total_size_clone = Arc::clone(&total_size);
-    let instant = Instant::now();
+
     let task = tokio::spawn(async move {
+        let mut instant = Instant::now();
+        let mut prev_bytes = 0.0;
         while !download_complete_clone.load(Ordering::Acquire) {
-            time::sleep(Duration::from_millis(10)).await;
+            time::sleep(Duration::from_millis(1000)).await;
             let progress = Progress {
-                speed: current_size_clone.load(Ordering::Relaxed) as f64
+                speed: (current_size_clone.load(Ordering::Relaxed) as f64 - prev_bytes)
                     / instant.elapsed().as_secs_f64()
                     / 1_000_000.0,
                 percentages: current_size_clone.load(Ordering::Relaxed) as f64
@@ -334,31 +338,32 @@ pub async fn get_progress(sink: StreamSink<Progress>) -> Result<()> {
                 current_size: current_size_clone.load(Ordering::Relaxed) as f64,
                 total_size: total_size_clone.load(Ordering::Relaxed) as f64,
             };
+            prev_bytes = current_size_clone.load(Ordering::Relaxed) as f64;
+            instant = Instant::now();
             sink.add(progress);
-            // if total_size_clone.load(Ordering::Relaxed) == 0 {
-            //     println!("everything has been downloaded!");
-            // } else {
-            //     println!(
-            //         "{:.2}%, {:.2} MiBs, {}/{}",
-            // current_size_clone.load(Ordering::Relaxed) as f64
-            //     / total_size_clone.load(Ordering::Relaxed) as f64
-            //     * 100.0,
-            //         current_size_clone.load(Ordering::Relaxed) as f64
-            //             / instant.elapsed().as_secs_f64()
-            //             / 1_000_000.0,
-            //         current_size_clone.load(Ordering::Relaxed),
-            //         total_size_clone.load(Ordering::Relaxed)
-            //     );
-            // }
         }
     });
+
+    // let elapsed_time_clone = elapsed_time.clone();
+
+    // let task2 = tokio::spawn(async move {
+    //     loop {
+    //         elapsed_time_clone.store(0_usize, Ordering::SeqCst);
+    //         for _x in 0..1000 {
+    //             elapsed_time_clone.fetch_add(1, Ordering::SeqCst);
+    //             time::sleep(Duration::from_millis(1)).await;
+    //         }
+    //     }
+    // });
 
     while let Some(handle) = handles.next().await {
         handle??;
     }
 
     download_complete.store(true, Ordering::Release);
-    task.await?;
+
+    join!(task);
+
     Ok(())
 }
 
