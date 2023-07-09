@@ -32,3 +32,4 @@ build/
 android/local.properties
 ios/Flutter/flutter_export_environment.sh
 macos/Flutter/ephemeral
+coverage/

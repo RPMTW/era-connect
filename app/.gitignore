@@ -47,5 +47,4 @@ native/target
 xcuserdata
 jniLibs
 
-Cargo.lock
-pubspec.lock
+coverage/

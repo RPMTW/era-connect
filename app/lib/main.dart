@@ -1,6 +1,9 @@
+import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
-import 'ffi.dart' if (dart.library.html) 'ffi_web.dart' show api;
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'ffi.dart' show api;
 import 'pages/main_page.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -10,12 +13,13 @@ void main() async {
 
   const windowOptions = WindowOptions(
     size: Size(1600, 900),
-    minimumSize: Size(1280, 720),
-    // titleBarStyle: TitleBarStyle.hidden,
+    minimumSize: Size(1280, 820),
+    titleBarStyle: TitleBarStyle.hidden,
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
+    await windowManager.setMinimumSize(const Size(1280, 820));
   });
 
   runApp(const EraConnectApp());
@@ -53,11 +57,43 @@ class EraConnectApp extends StatelessWidget {
 
         return child!;
       },
-      home: ThemeProvider(
-          getDefaultTheme: () => EraThemeData.dark(fontFamily: 'GenSenRounded'),
-          builder: (context, theme) {
-            return const Material(
-              child: MainPage(),
+      home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider(
+              create: (_) => ThemeChangeNotifier(
+                () => EraThemeData.dark(fontFamily: 'GenSenRounded'),
+              ),
+            ),
+            ChangeNotifierProvider(
+              create: (_) => I18nManager(
+                  path: 'assets/i18n',
+                  defaultLocale: I18nLocale.traditionalChineseTW),
+            )
+          ],
+          builder: (context, _) {
+            return Material(
+              child: FutureBuilder(
+                  future: context.i18n.load(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+
+                    return Column(
+                      children: [
+                        EraTitleBar(
+                          logo: SvgPicture.asset(
+                            'assets/era_connect_logo.svg',
+                            height: 17,
+                            width: 16,
+                          ),
+                        ),
+                        const Expanded(child: MainPage()),
+                      ],
+                    );
+                  }),
             );
           }),
     );

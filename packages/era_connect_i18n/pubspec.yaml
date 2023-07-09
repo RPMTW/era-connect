@@ -1,5 +1,5 @@
-name: era_connect_ui
-description: Era Connect user interface design library.
+name: era_connect_i18n
+description: Era Connect internationalization library.
 version: 0.0.1
 homepage: https://rpmtw.com
 
@@ -11,9 +11,6 @@ dependencies:
   flutter:
     sdk: flutter
   provider: ^6.0.5
-  flutter_svg: ^2.0.7
-  window_manager: ^0.3.4
-  equatable: ^2.0.5
 
 dev_dependencies:
   flutter_test:
@@ -25,8 +22,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-  assets:
-    - icons/
 # To add assets to your package, add an assets section, like this:
 # assets:
 #   - images/a_dot_burr.jpeg
