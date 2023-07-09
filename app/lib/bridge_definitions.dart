@@ -11,7 +11,21 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
-  Stream<int> test({dynamic hint});
+  Stream<Progress> test({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kTestConstMeta;
+}
+
+class Progress {
+  final double speed;
+  final double percentages;
+  final double currentSize;
+  final double totalSize;
+
+  const Progress({
+    required this.speed,
+    required this.percentages,
+    required this.currentSize,
+    required this.totalSize,
+  });
 }

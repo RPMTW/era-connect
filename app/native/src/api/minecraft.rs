@@ -1,7 +1,6 @@
 use anyhow::{Context, Result};
 use async_semaphore::Semaphore;
 use core::fmt;
-use flutter_rust_bridge::IntoDart;
 use futures::{stream::FuturesUnordered, StreamExt};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
@@ -19,7 +18,6 @@ use std::{
 use tokio::{
     fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt, BufReader},
-    sync::{Mutex, OnceCell},
     time::{self, Instant},
 };
 

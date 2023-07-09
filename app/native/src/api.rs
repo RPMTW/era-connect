@@ -1,7 +1,6 @@
 pub mod minecraft;
 
 use flutter_rust_bridge::StreamSink;
-use tokio::sync::{Mutex, RwLock};
 
 pub use crate::api::minecraft::get_progress;
 

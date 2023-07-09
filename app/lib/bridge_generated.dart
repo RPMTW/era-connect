@@ -20,10 +20,10 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  Stream<int> test({dynamic hint}) {
+  Stream<Progress> test({dynamic hint}) {
     return _platform.executeStream(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_test(port_),
-      parseSuccessData: _wire2api_usize,
+      parseSuccessData: _wire2api_progress,
       constMeta: kTestConstMeta,
       argValues: [],
       hint: hint,
@@ -41,8 +41,20 @@ class NativeImpl implements Native {
   }
 // Section: wire2api
 
-  int _wire2api_usize(dynamic raw) {
-    return castInt(raw);
+  double _wire2api_f64(dynamic raw) {
+    return raw as double;
+  }
+
+  Progress _wire2api_progress(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return Progress(
+      speed: _wire2api_f64(arr[0]),
+      percentages: _wire2api_f64(arr[1]),
+      currentSize: _wire2api_f64(arr[2]),
+      totalSize: _wire2api_f64(arr[3]),
+    );
   }
 }
 

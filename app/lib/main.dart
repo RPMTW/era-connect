@@ -27,7 +27,7 @@ void testRust() async {
   final stream = api.test();
 
   stream.listen((event) {
-    print(event);
+    print(event.speed);
   });
 }
 
