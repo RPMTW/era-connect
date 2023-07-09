@@ -528,6 +528,7 @@ pub async fn parallel_library(
                 let mut os_okto_download = false;
                 let path = library.downloads.artifact.path.to_string();
                 let mut download_path = PathBuf::new();
+                let mut process_native = false;
                 match &library.rules {
                     Some(rule) => {
                         for x in rule {
@@ -536,7 +537,8 @@ pub async fn parallel_library(
                                     if &current_os_type == name {
                                         match x.action {
                                             ActionType::Allow => {
-                                                download_path = native_folder_clone.join(&path);
+                                                // download_path = native_folder_clone.join(&path);
+                                                process_native = true;
                                                 os_okto_download = true;
                                             }
                                             ActionType::Disallow => os_okto_download = false,
@@ -544,19 +546,26 @@ pub async fn parallel_library(
                                     }
                                 }
                             } else {
-                                download_path = folder.join(&path);
+                                // download_path = folder.join(&path);
                             }
                         }
                     }
                     None => {
-                        download_path = folder.join(&path);
+                        // download_path = folder.join(&path);
                         os_okto_download = true;
                     }
                 }
+                download_path = folder.join(&path);
                 let okto_download = if download_path.exists() {
-                    if let Err(x) =
+                    if let Err(x) = if !process_native {
                         validate_sha1(&download_path, &library.downloads.artifact.sha1).await
-                    {
+                    } else {
+                        validate_sha1(
+                            &native_folder_clone.join(&path),
+                            &library.downloads.artifact.sha1,
+                        )
+                        .await
+                    } {
                         eprintln!("{x}, \nredownloading.");
                         true
                     } else {
@@ -571,12 +580,23 @@ pub async fn parallel_library(
                 } else if !okto_download {
                     Ok(())
                 } else {
-                    download_total_size_clone
-                        .fetch_add(library.downloads.artifact.size, Ordering::Relaxed);
-                    let parent_dir = download_path.parent().unwrap();
-                    fs::create_dir_all(parent_dir).await?;
-                    let url = library.downloads.artifact.url.to_string();
-                    download_file(url, Some(&download_path), size_clone).await
+                    if !process_native {
+                        download_total_size_clone
+                            .fetch_add(library.downloads.artifact.size, Ordering::Relaxed);
+                        let parent_dir = download_path.parent().unwrap();
+                        fs::create_dir_all(parent_dir).await?;
+                        let url = library.downloads.artifact.url.to_string();
+                        download_file(url, Some(&download_path), size_clone).await
+                    } else {
+                        let url = library.downloads.artifact.url.to_string();
+                        let response = reqwest::get(&url).await?;
+                        let data = response.bytes().await?;
+                        let reader = std::io::Cursor::new(&data);
+                        if let Ok(mut archive) = zip::ZipArchive::new(reader) {
+                            archive.extract(native_folder_clone.as_path()).unwrap()
+                        }
+                        Ok(())
+                    }
                 }
             } else {
                 Ok(())
