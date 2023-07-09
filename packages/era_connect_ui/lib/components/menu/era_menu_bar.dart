@@ -32,7 +32,7 @@ class _EraMenuBarState extends State<EraMenuBar> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const EraMenuAccount(),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
                 ...widget.items.map((data) {
                   final index = widget.items.indexOf(data);
 

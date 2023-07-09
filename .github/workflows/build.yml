@@ -47,6 +47,12 @@ jobs:
           flutter-version: "3.10.5"
           channel: "stable"
           cache: true
+      - name: Install Rust Language
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
       - name: Install Dependencies
         run: |
           sudo apt-get update
@@ -70,6 +76,13 @@ jobs:
           flutter-version: "3.10.5"
           channel: "stable"
           cache: true
+      - name: Install Rust Language
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+          target: aarch64-apple-darwin
       - name: Build macOS
         run: |
           cd app

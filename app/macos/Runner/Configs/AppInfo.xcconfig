@@ -8,7 +8,7 @@
 PRODUCT_NAME = Era Connect
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.rpmtw.era_connect
+PRODUCT_BUNDLE_IDENTIFIER = com.rpmtw.era-connect
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2023 com.rpmtw.era_connect All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2023 com.rpmtw.era-connect All rights reserved.
