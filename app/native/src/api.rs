@@ -1,13 +1,18 @@
 pub mod minecraft;
 
 use flutter_rust_bridge::StreamSink;
+use tokio::sync::RwLock;
 
-pub use crate::api::minecraft::process_download;
-pub use crate::api::minecraft::progress;
+pub use crate::api::minecraft::get_progress;
+
+pub struct Progress {
+    speed: f64,
+    percentages: f64,
+    current_size: f64,
+    total_size: f64,
+}
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn test(a: StreamSink<usize>) {
-    let data = process_download().await.unwrap();
-
-    progress(data.0, data.1, data.2, a).await.unwrap();
+pub async fn test(stream: StreamSink<Progress>) {
+    get_progress(stream).await
 }

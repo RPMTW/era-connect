@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use async_semaphore::Semaphore;
+use flutter_rust_bridge::IntoDart;
 use core::fmt;
 use futures::{stream::FuturesUnordered, StreamExt};
 use reqwest::Url;
@@ -18,7 +19,7 @@ use std::{
 use tokio::{
     fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt, BufReader},
-    time::{self, Instant},
+    time::{self, Instant}, sync::{Mutex, OnceCell},
 };
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -135,7 +136,7 @@ pub struct Library {
     name: String,
     rules: Option<Vec<Rule>>,
 }
-fn get_rules(argument: RustOpaque<&[Value]>) -> Result<Vec<Rule>> {
+fn get_rules(argument: &[Value]) -> Result<Vec<Rule>> {
     let rules: Result<Vec<Rule>, _> = argument
         .iter()
         .filter(|x| x["rules"][0].is_object())
@@ -185,14 +186,137 @@ pub async fn get_game_manifest(
     Ok((RustOpaque::new(contents), version.unwrap().to_string()))
 }
 
-pub async fn progress(
-    current_size: Arc<AtomicUsize>,
-    total_size: RustOpaque<Arc<AtomicUsize>>,
-    handles: RustOpaque<
-        Mutex<FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>>,
-    >,
-    sink: StreamSink<usize>,
-) -> Result<()> {
+pub async fn prepare_download() -> Result<(
+    Arc<AtomicUsize>,
+    Arc<AtomicUsize>,
+    FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
+)> {
+    let (game_manifest, current_version) = get_game_manifest(
+        "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_string(),
+        None,
+    )
+    .await?;
+
+    let game_argument = game_manifest["arguments"]["game"]
+        .as_array()
+        .ok_or_else(|| anyhow!("Failure to parse contents[\"arguments\"][\"game\"]"))?;
+
+    let game_flags = GameFlags {
+        rules: get_rules(&game_argument)?,
+        arguments: game_argument
+            .iter()
+            .filter_map(Value::as_str)
+            .map(std::string::ToString::to_string)
+            .collect::<Vec<_>>(),
+        additional_arguments: None,
+    };
+
+    let asset_index = AssetIndex::deserialize(&game_manifest["assetIndex"])
+        .context("Failed to Serialize assetIndex")?;
+
+    let downloads_list: Downloads = Downloads::deserialize(&game_manifest["downloads"])
+        .context("Failed to Serialize Downloads")?;
+
+    let library_list: Vec<Library> = Vec::<Library>::deserialize(&game_manifest["libraries"])
+        .context("Failed to Serialize contents[\"libraries\"]")?;
+
+    let logging: LoggingConfig = LoggingConfig::deserialize(&game_manifest["logging"])
+        .context("Failed to Serialize logging")?;
+
+    let main_class: String =
+        String::deserialize(&game_manifest["mainClass"]).context("Failed to get MainClass")?;
+
+    let client_jar = extract_filename(&downloads_list.client.url)?;
+
+    let mut classpath_list = library_list
+        .iter()
+        .map(|x| format!("library/{}", x.downloads.artifact.path))
+        .collect::<Vec<String>>();
+
+    classpath_list.push(client_jar.to_string());
+    let classpath = classpath_list.join(":");
+
+    let jvm_argument = game_manifest["arguments"]["jvm"]
+        .as_array()
+        .ok_or_else(|| anyhow!("Failure to parse contents[\"arguments\"][\"jvm\"]"))?;
+    let jvm_flags = JvmFlags {
+        rules: get_rules(jvm_argument)?,
+        arguments: jvm_argument
+            .iter()
+            .filter_map(Value::as_str)
+            .map(std::string::ToString::to_string)
+            .collect::<Vec<_>>(),
+        additional_arguments: None,
+    };
+    let jvm_options = JvmArgs {
+        launcher_name: "era-connect".to_string(),
+        launcher_version: "0.0.1".to_string(),
+        classpath,
+        classpath_separator: ":".to_string(),
+        primary_jar: client_jar.to_string(),
+        library_directory: "library".to_string(),
+        game_directory: ".minecraft".to_string(),
+        native_directory: format!(".minecraft/versions/{}/natives", current_version),
+    };
+
+    let max_concurrent_tasks = 64;
+    let semaphore = Arc::new(Semaphore::new(max_concurrent_tasks));
+
+    let current_size = Arc::new(AtomicUsize::new(0));
+    let library_path = Arc::new(PathBuf::from(jvm_options.library_directory));
+    let native_library_path = Arc::new(PathBuf::from(jvm_options.native_directory));
+    let (mut handles, total_size) = parallel_library(
+        library_list,
+        library_path,
+        native_library_path,
+        Arc::clone(&current_size),
+        &semaphore,
+    )
+    .await?;
+
+    let client_download = || {
+        let client_jar_future = download_file(
+            downloads_list.client.url.to_string(),
+            None,
+            Arc::clone(&current_size),
+        );
+        total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
+        handles.push(tokio::spawn(async move { client_jar_future.await }));
+    };
+
+    if !PathBuf::from(extract_filename(&downloads_list.client.url)?).exists() {
+        client_download();
+    } else if let Err(x) = validate_sha1(
+        &PathBuf::from(&extract_filename(&downloads_list.client.url)?),
+        &downloads_list.client.sha1,
+    )
+    .await
+    {
+        eprintln!("{x}");
+        client_download();
+    }
+    let (asset_download_list, asset_download_hash, asset_download_path, asset_download_size) =
+        extract_assets(asset_index).await?;
+
+    parallel_assets(
+        asset_download_list,
+        asset_download_hash,
+        asset_download_path,
+        asset_download_size,
+        &semaphore,
+        &current_size,
+        &total_size,
+        &mut handles,
+    )
+    .await?;
+    Ok((current_size.clone(), total_size.clone(), handles))
+}
+
+use flutter_rust_bridge::StreamSink;
+use crate::api::Progress;
+
+pub async fn get_progress(sink: StreamSink<Progress>) -> Result<()> {
+    let (current_size, total_size, mut handles) = prepare_download().await?;
     let download_complete = Arc::new(AtomicBool::new(false));
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&current_size);
@@ -201,15 +325,25 @@ pub async fn progress(
     let task = tokio::spawn(async move {
         while !download_complete_clone.load(Ordering::Acquire) {
             time::sleep(Duration::from_millis(10)).await;
-            sink.add(current_size_clone.load(Ordering::Relaxed));
+            let progress = Progress {
+                speed: current_size_clone.load(Ordering::Relaxed) as f64
+                    / instant.elapsed().as_secs_f64()
+                    / 1_000_000.0,
+                percentages: current_size_clone.load(Ordering::Relaxed) as f64
+                        / total_size_clone.load(Ordering::Relaxed) as f64
+                        * 100.0,            
+                current_size: current_size_clone.load(Ordering::Relaxed) as f64,
+                total_size: total_size_clone.load(Ordering::Relaxed) as f64,
+                };
+            sink.add(progress);
             // if total_size_clone.load(Ordering::Relaxed) == 0 {
             //     println!("everything has been downloaded!");
             // } else {
             //     println!(
             //         "{:.2}%, {:.2} MiBs, {}/{}",
-            //         current_size_clone.load(Ordering::Relaxed) as f64
-            //             / total_size_clone.load(Ordering::Relaxed) as f64
-            //             * 100.0,
+                    current_size_clone.load(Ordering::Relaxed) as f64
+                        / total_size_clone.load(Ordering::Relaxed) as f64
+                        * 100.0,
             //         current_size_clone.load(Ordering::Relaxed) as f64
             //             / instant.elapsed().as_secs_f64()
             //             / 1_000_000.0,
