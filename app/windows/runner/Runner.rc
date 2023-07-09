@@ -93,7 +93,7 @@ BEGIN
             VALUE "FileDescription", "era_connect" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "era_connect" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2023 com.rpmtw.era_connect All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2023 com.rpmtw.era-connect All rights reserved." "\0"
             VALUE "OriginalFilename", "Era Connect.exe" "\0"
             VALUE "ProductName", "Era Connect" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
