@@ -1,8 +1,9 @@
 use anyhow::{Context, Result};
 use async_semaphore::Semaphore;
+use bytes::Bytes;
 use core::fmt;
-use futures::stream::FuturesUnordered;
-use reqwest::Url;
+use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
+use reqwest::{Response, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
@@ -185,10 +186,14 @@ pub async fn get_game_manifest(
     Ok((contents, version.unwrap().to_string()))
 }
 
+struct Future {
+    filename: String,
+    size: u64,
+}
 pub async fn prepare_download() -> Result<(
     Arc<AtomicUsize>,
     Arc<AtomicUsize>,
-    FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
+    FuturesOrdered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
 )> {
     let (game_manifest, current_version) = get_game_manifest(
         "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_string(),
@@ -264,23 +269,25 @@ pub async fn prepare_download() -> Result<(
     let current_size = Arc::new(AtomicUsize::new(0));
     let library_path = Arc::new(PathBuf::from(jvm_options.library_directory));
     let native_library_path = Arc::new(PathBuf::from(jvm_options.native_directory));
-    let (mut handles, total_size) = parallel_library(
+    let mut handles = FuturesOrdered::new();
+    let total_size = parallel_library(
         library_list,
         library_path,
         native_library_path,
         Arc::clone(&current_size),
         &semaphore,
+        &mut handles,
     )
     .await?;
 
-    let client_download = || {
+    let mut client_download = || {
         let client_jar_future = download_file(
             downloads_list.client.url.to_string(),
             None,
             Arc::clone(&current_size),
         );
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
-        handles.push(tokio::spawn(async move { client_jar_future.await }));
+        handles.push_back(tokio::spawn(async move { client_jar_future.await }));
     };
 
     if !PathBuf::from(extract_filename(&downloads_list.client.url)?).exists() {
@@ -308,6 +315,7 @@ pub async fn prepare_download() -> Result<(
         &mut handles,
     )
     .await?;
+
     Ok((current_size.clone(), total_size.clone(), handles))
 }
 
@@ -315,7 +323,7 @@ use crate::api::Progress;
 use flutter_rust_bridge::StreamSink;
 
 pub async fn get_progress(sink: StreamSink<Progress>) -> Result<()> {
-    let (current_size, total_size, handles) = prepare_download().await?;
+    let (current_size, total_size, mut handles) = prepare_download().await?;
     let download_complete = Arc::new(AtomicBool::new(false));
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&current_size);
@@ -342,8 +350,8 @@ pub async fn get_progress(sink: StreamSink<Progress>) -> Result<()> {
         }
     });
 
-    for x in handles {
-        x.await??;
+    while let Some(future) = handles.next().await {
+        future??
     }
 
     println!("Complete!");
@@ -360,7 +368,7 @@ async fn parallel_assets(
     semaphore: &Arc<Semaphore>,
     current_size: &Arc<AtomicUsize>,
     total_size: &Arc<AtomicUsize>,
-    handles: &mut FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
+    handles: &mut FuturesOrdered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
 ) -> Result<()> {
     let asset_download_list_arc = Arc::new(asset_download_list);
     let asset_download_hash_arc = Arc::new(asset_download_hash);
@@ -394,7 +402,7 @@ async fn parallel_assets(
         let semaphore_clone = semaphore.clone();
         if okto_download {
             total_size.fetch_add(asset_download_size_arc[index], Ordering::Relaxed);
-            handles.push(tokio::spawn(async move {
+            handles.push_front(tokio::spawn(async move {
                 let _permit = semaphore_clone.acquire_arc().await;
                 download_file(
                     asset_download_list_clone[index].to_string(),
@@ -446,45 +454,60 @@ async fn extract_assets(
     let mut asset_download_list = Vec::new();
     let mut asset_download_hash = Vec::new();
     let mut asset_download_path = Vec::new();
-    let mut asset_download_size: Vec<usize> = Vec::new();
     for (_, val) in asset_objects.iter() {
-        asset_download_list.push(format!(
-            "https://resources.download.minecraft.net/{:.2}/{}",
-            val["hash"]
-                .as_str()
-                .ok_or_else(|| anyhow!("asset hash is not a string"))?,
-            val["hash"]
-                .as_str()
-                .ok_or_else(|| anyhow!("asset hash is not a string"))?,
+        let size = val["size"].as_u64().unwrap();
+        asset_download_list.push((
+            format!(
+                "https://resources.download.minecraft.net/{:.2}/{}",
+                val["hash"]
+                    .as_str()
+                    .ok_or_else(|| anyhow!("asset hash is not a string"))?,
+                val["hash"]
+                    .as_str()
+                    .ok_or_else(|| anyhow!("asset hash is not a string"))?,
+            ),
+            size,
         ));
-        asset_download_hash.push(
+        asset_download_hash.push((
             val["hash"]
                 .as_str()
                 .ok_or_else(|| anyhow!("asset hash is not a string"))?
                 .to_string(),
-        );
-        asset_download_path.push(folder.join(PathBuf::from(format!(
-            ".minecraft/assets/objects/{:.2}/{}",
-            val["hash"]
-                .as_str()
-                .ok_or_else(|| anyhow!("asset hash is not a string"))?,
-            val["hash"]
-                .as_str()
-                .ok_or_else(|| anyhow!("asset hash is not a string"))?,
-        ))));
-        asset_download_size.push(
-            val["size"]
-                .as_u64()
-                .ok_or_else(|| anyhow!("asset size is not u64"))?
-                .try_into()?,
-        );
+            size,
+        ));
+        asset_download_path.push((
+            folder.join(PathBuf::from(format!(
+                ".minecraft/assets/objects/{:.2}/{}",
+                val["hash"]
+                    .as_str()
+                    .ok_or_else(|| anyhow!("asset hash is not a string"))?,
+                val["hash"]
+                    .as_str()
+                    .ok_or_else(|| anyhow!("asset hash is not a string"))?,
+            ))),
+            size,
+        ));
     }
-    Ok((
-        asset_download_list,
-        asset_download_hash,
-        asset_download_path,
-        asset_download_size,
-    ))
+    asset_download_list.sort_unstable_by_key(|x| x.1);
+    asset_download_hash.sort_unstable_by_key(|x| x.1);
+    asset_download_path.sort_unstable_by_key(|x| x.1);
+    let list = asset_download_list
+        .iter()
+        .map(|x| x.0.to_string())
+        .collect();
+    let size = asset_download_list
+        .iter()
+        .map(|x| x.1.try_into().unwrap())
+        .collect();
+    let hash = asset_download_hash
+        .iter()
+        .map(|x| x.0.to_string())
+        .collect();
+    let path = asset_download_path
+        .iter()
+        .map(|x| x.0.to_path_buf())
+        .collect();
+    Ok((list, hash, path, size))
 }
 
 pub async fn parallel_library(
@@ -493,17 +516,18 @@ pub async fn parallel_library(
     native_folder: Arc<PathBuf>,
     current: Arc<AtomicUsize>,
     semaphore: &Arc<Semaphore>,
-) -> Result<(
-    FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
-    Arc<AtomicUsize>,
-)> {
-    let library_list_arc: Arc<Vec<Library>> = Arc::new(library_list);
+    library_download_handles: &mut FuturesOrdered<
+        tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>,
+    >,
+) -> Result<Arc<AtomicUsize>> {
+    let mut sort_library = Vec::from_iter(library_list.into_iter());
+    sort_library.sort_unstable_by_key(|x| x.downloads.artifact.size);
+    let library_list_arc: Arc<Vec<Library>> = Arc::new(sort_library);
     let index_counter = Arc::new(AtomicUsize::new(0));
     let size_counter = current;
     let download_total_size = Arc::new(AtomicUsize::new(0));
     let num_libraries = library_list_arc.len();
 
-    let library_download_handles = FuturesUnordered::new();
     let current_os = os_version::detect()?;
     let current_os_type = match current_os {
         os_version::OsVersion::Linux(_) => OsName::Linux,
@@ -602,10 +626,10 @@ pub async fn parallel_library(
                 Ok(())
             }
         });
-        library_download_handles.push(handle);
+        library_download_handles.push_front(handle);
     }
 
-    Ok((library_download_handles, download_total_size))
+    Ok(download_total_size)
 }
 async fn download_file(
     url: String,
