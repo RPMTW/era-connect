@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use async_semaphore::Semaphore;
 use core::fmt;
-use futures::{select, stream::FuturesUnordered, StreamExt};
+use futures::stream::FuturesUnordered;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -18,8 +18,6 @@ use std::{
 use tokio::{
     fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt, BufReader},
-    join,
-    sync::Mutex,
     time::{self, Instant},
 };
 
@@ -255,12 +253,12 @@ pub async fn prepare_download() -> Result<(
         classpath,
         classpath_separator: ":".to_string(),
         primary_jar: client_jar.to_string(),
-        library_directory: "library".to_string(),
-        game_directory: ".minecraft".to_string(),
-        native_directory: format!(".minecraft/versions/{}/natives", current_version),
+        library_directory: "downloads/library".to_string(),
+        game_directory: "downloads/.minecraft".to_string(),
+        native_directory: format!("downloads/.minecraft/versions/{}/natives", current_version),
     };
 
-    let max_concurrent_tasks = 64;
+    let max_concurrent_tasks = 128;
     let semaphore = Arc::new(Semaphore::new(max_concurrent_tasks));
 
     let current_size = Arc::new(AtomicUsize::new(0));
@@ -297,7 +295,7 @@ pub async fn prepare_download() -> Result<(
         client_download();
     }
     let (asset_download_list, asset_download_hash, asset_download_path, asset_download_size) =
-        extract_assets(asset_index).await?;
+        extract_assets(asset_index, PathBuf::from(jvm_options.game_directory)).await?;
 
     parallel_assets(
         asset_download_list,
@@ -317,7 +315,7 @@ use crate::api::Progress;
 use flutter_rust_bridge::StreamSink;
 
 pub async fn get_progress(sink: StreamSink<Progress>) -> Result<()> {
-    let (current_size, total_size, mut handles) = prepare_download().await?;
+    let (current_size, total_size, handles) = prepare_download().await?;
     let download_complete = Arc::new(AtomicBool::new(false));
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&current_size);
@@ -327,7 +325,7 @@ pub async fn get_progress(sink: StreamSink<Progress>) -> Result<()> {
         let mut instant = Instant::now();
         let mut prev_bytes = 0.0;
         while !download_complete_clone.load(Ordering::Acquire) {
-            time::sleep(Duration::from_millis(1000)).await;
+            time::sleep(Duration::from_millis(500)).await;
             let progress = Progress {
                 speed: (current_size_clone.load(Ordering::Relaxed) as f64 - prev_bytes)
                     / instant.elapsed().as_secs_f64()
@@ -344,26 +342,13 @@ pub async fn get_progress(sink: StreamSink<Progress>) -> Result<()> {
         }
     });
 
-    // let elapsed_time_clone = elapsed_time.clone();
-
-    // let task2 = tokio::spawn(async move {
-    //     loop {
-    //         elapsed_time_clone.store(0_usize, Ordering::SeqCst);
-    //         for _x in 0..1000 {
-    //             elapsed_time_clone.fetch_add(1, Ordering::SeqCst);
-    //             time::sleep(Duration::from_millis(1)).await;
-    //         }
-    //     }
-    // });
-
-    while let Some(handle) = handles.next().await {
-        handle??;
+    for x in handles {
+        x.await??;
     }
 
+    println!("Complete!");
     download_complete.store(true, Ordering::Release);
-
-    join!(task);
-
+    task.await?;
     Ok(())
 }
 
@@ -384,7 +369,6 @@ async fn parallel_assets(
     for index in 0..asset_download_list_arc.len() {
         let asset_download_list_clone = Arc::clone(&asset_download_list_arc);
         let asset_download_path_clone = Arc::clone(&asset_download_path_arc);
-        let semaphore_clone = Arc::clone(semaphore);
         let current_size_clone = Arc::clone(current_size);
         fs::create_dir_all(
             asset_download_path_clone[index]
@@ -407,10 +391,11 @@ async fn parallel_assets(
         } else {
             true
         };
+        let semaphore_clone = semaphore.clone();
         if okto_download {
             total_size.fetch_add(asset_download_size_arc[index], Ordering::Relaxed);
             handles.push(tokio::spawn(async move {
-                let _permit = semaphore_clone.acquire().await;
+                let _permit = semaphore_clone.acquire_arc().await;
                 download_file(
                     asset_download_list_clone[index].to_string(),
                     Some(&asset_download_path_clone[index]),
@@ -451,6 +436,7 @@ expected: {}
 
 async fn extract_assets(
     asset_index: AssetIndex,
+    folder: PathBuf,
 ) -> Result<(Vec<String>, Vec<String>, Vec<PathBuf>, Vec<usize>)> {
     let asset_response = reqwest::get(asset_index.url).await?;
     let asset_index_content: Value = asset_response.json().await?;
@@ -461,7 +447,7 @@ async fn extract_assets(
     let mut asset_download_hash = Vec::new();
     let mut asset_download_path = Vec::new();
     let mut asset_download_size: Vec<usize> = Vec::new();
-    for (_, val) in asset_objects {
+    for (_, val) in asset_objects.iter() {
         asset_download_list.push(format!(
             "https://resources.download.minecraft.net/{:.2}/{}",
             val["hash"]
@@ -477,7 +463,7 @@ async fn extract_assets(
                 .ok_or_else(|| anyhow!("asset hash is not a string"))?
                 .to_string(),
         );
-        asset_download_path.push(PathBuf::from(format!(
+        asset_download_path.push(folder.join(PathBuf::from(format!(
             ".minecraft/assets/objects/{:.2}/{}",
             val["hash"]
                 .as_str()
@@ -485,7 +471,7 @@ async fn extract_assets(
             val["hash"]
                 .as_str()
                 .ok_or_else(|| anyhow!("asset hash is not a string"))?,
-        )));
+        ))));
         asset_download_size.push(
             val["size"]
                 .as_u64()
@@ -535,7 +521,7 @@ pub async fn parallel_library(
         let download_total_size_clone = Arc::clone(&download_total_size);
         let native_folder_clone = Arc::clone(&native_folder);
         let handle = tokio::spawn(async move {
-            let _permit = semaphore_clone.acquire().await;
+            let _permit = semaphore_clone.acquire_arc().await;
             let index = counter_clone.fetch_add(1, Ordering::SeqCst);
             if index < num_libraries {
                 let library = &library_list_clone[index];
@@ -580,7 +566,7 @@ pub async fn parallel_library(
                     true
                 };
                 if !os_okto_download {
-                    println!("{} is not required on {}", library.name, current_os_type);
+                    // println!("{} is not required on {}", library.name, current_os_type);
                     Ok(())
                 } else if !okto_download {
                     Ok(())
