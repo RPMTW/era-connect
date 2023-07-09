@@ -5,6 +5,12 @@ class EraMenuAccount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder(fallbackHeight: 50, fallbackWidth: 265);
+    return Padding(
+      padding: const EdgeInsets.all(5),
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 50),
+        child: const Text('某帳號'),
+      ),
+    );
   }
 }
