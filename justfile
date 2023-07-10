@@ -5,7 +5,7 @@ gen:
     cd app && flutter_rust_bridge_codegen \
         --rust-input native/src/api.rs \
         --dart-output lib/bridge_generated.dart \
-        --extra-c-output-path macos/Runner/ \
+        --c-output macos/Runner/bridge_generated.h \
         --dart-decl-output lib/bridge_definitions.dart \
 
 lint:
