@@ -1,4 +1,3 @@
-#![warn(clippy::pedantic, clippy::nursery, clippy::perf)]
 use anyhow::{bail, Context, Result};
 use async_semaphore::Semaphore;
 use core::fmt;
@@ -425,7 +424,7 @@ async fn validate_sha1(file_path: &PathBuf, sha1: &str) -> Result<()> {
 
     let mut hasher = Sha1::new();
     hasher.update(&buffer);
-    let result = &*hasher.finalize();
+    let result = &hasher.finalize()[..];
 
     if result != hex::decode(sha1)? {
         bail!(
@@ -632,28 +631,11 @@ async fn download_file(
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
         .build()
         .map_err(|err| anyhow!("{err:?}\n{}", filename.to_string()))?;
-    for attempt in 1..=4 {
-        let response = client.get(&url).send().await;
-        match response {
-            Ok(mut response) => {
-                let mut file = File::create(&filename).await?;
-                let chunked = response.chunk().await;
-                if let Err(error) = chunked {
-                    if attempt <= 3 {
-                        continue;
-                    }
-                    bail!(error);
-                }
-                while let Some(chunk) = response.chunk().await? {
-                    file.write_all(&chunk).await?;
-                    current_bytes.fetch_add(chunk.len(), Ordering::Relaxed);
-                }
-            }
-            Err(_) if attempt <= 3 => continue,
-            Err(err) => {
-                bail!("Fetch Error, {}", err);
-            }
-        }
+    let mut response = client.get(&url).send().await?;
+    let mut file = File::create(&filename).await?;
+    while let Some(chunk) = response.chunk().await? {
+        file.write_all(&chunk).await?;
+        current_bytes.fetch_add(chunk.len(), Ordering::Relaxed);
     }
     Ok(())
 }
