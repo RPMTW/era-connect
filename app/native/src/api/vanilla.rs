@@ -257,7 +257,7 @@ pub async fn prepare_download() -> Result<(
     let main_class: String =
         String::deserialize(&game_manifest["mainClass"]).context("Failed to get MainClass")?;
 
-    let client_jar = PathBuf::from(extract_filename(&downloads_list.client.url)?).canonicalize()?;
+    let client_jar = std::env::current_dir()?.join(extract_filename(&downloads_list.client.url)?);
 
     let jvm_argument = game_manifest["arguments"]["jvm"]
         .as_array()
@@ -325,8 +325,6 @@ pub async fn prepare_download() -> Result<(
         .map(|x| {
             Arc::clone(&library_path)
                 .join(&x.downloads.artifact.path)
-                .canonicalize()
-                .unwrap()
                 .to_string_lossy()
                 .to_string()
         })
