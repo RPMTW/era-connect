@@ -112,7 +112,6 @@ pub struct LaunchArgs {
 
 pub fn launch_game(launch_args: LaunchArgs) -> Result<()> {
     let mut launch_vec = Vec::new();
-    launch_vec.push("-jar".to_string());
     launch_vec.extend(launch_args.jvm_args);
     launch_vec.push(launch_args.main_class);
     launch_vec.extend(launch_args.game_args);
