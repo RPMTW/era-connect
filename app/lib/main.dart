@@ -12,10 +12,10 @@ void main() async {
   await windowManager.ensureInitialized();
 
   const windowOptions = WindowOptions(
-    size: Size(1600, 900),
-    minimumSize: Size(1280, 820),
-    titleBarStyle: TitleBarStyle.hidden,
-  );
+      size: Size(1600, 900),
+      minimumSize: Size(1280, 820),
+      titleBarStyle: TitleBarStyle.hidden,
+      windowButtonVisibility: false);
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
