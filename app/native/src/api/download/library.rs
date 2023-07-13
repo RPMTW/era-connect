@@ -35,8 +35,42 @@ pub struct Library {
     pub name: String,
     pub rules: Option<Vec<Rule>>,
 }
+
+pub async fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bool, &'a str) {
+    let mut process_native = false;
+    let mut os_okto_download = false;
+    let mut library_extension_type = "";
+    match &library.rules {
+        Some(rule) => {
+            for x in rule {
+                if let Some(os) = &x.os {
+                    if let Some(name) = os.name {
+                        if current_os_type == &name {
+                            match x.action {
+                                ActionType::Allow => {
+                                    process_native = true;
+                                    os_okto_download = true;
+                                }
+                                ActionType::Disallow => os_okto_download = false,
+                            }
+                        }
+                        library_extension_type = match current_os_type {
+                            OsName::Osx => ".dylib",
+                            OsName::Linux => ".so",
+                            OsName::Windows => ".dll",
+                        }
+                    }
+                }
+            }
+        }
+        None => {
+            os_okto_download = true;
+        }
+    }
+    (process_native, os_okto_download, library_extension_type)
+}
 pub async fn parallel_library(
-    library_list: Vec<Library>,
+    library_list_arc: Arc<Vec<Library>>,
     folder: Arc<PathBuf>,
     native_folder: Arc<PathBuf>,
     current: Arc<AtomicUsize>,
@@ -45,9 +79,6 @@ pub async fn parallel_library(
         tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>,
     >,
 ) -> Result<Arc<AtomicUsize>> {
-    let mut sort_library = library_list.into_iter().collect::<Vec<_>>();
-    sort_library.sort_unstable_by_key(|x| x.downloads.artifact.size);
-    let library_list_arc: Arc<Vec<Library>> = Arc::new(sort_library);
     let index_counter = Arc::new(AtomicUsize::new(0));
     let size_counter = current;
     let download_total_size = Arc::new(AtomicUsize::new(0));
@@ -74,34 +105,10 @@ pub async fn parallel_library(
             let index = counter_clone.fetch_add(1, Ordering::SeqCst);
             if index < num_libraries {
                 let library = &library_list_clone[index];
-                let mut os_okto_download = false;
                 let path = library.downloads.artifact.path.clone();
-                let download_path;
-                let mut process_native = false;
-                match &library.rules {
-                    Some(rule) => {
-                        for x in rule {
-                            if let Some(os) = &x.os {
-                                if let Some(name) = &os.name {
-                                    if &current_os_type == name {
-                                        match x.action {
-                                            ActionType::Allow => {
-                                                process_native = true;
-                                                os_okto_download = true;
-                                            }
-                                            ActionType::Disallow => os_okto_download = false,
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    None => {
-                        // download_path = folder.join(&path);
-                        os_okto_download = true;
-                    }
-                }
-                download_path = folder_clone.join(&path);
+                let (process_native, os_okto_download, library_extension) =
+                    os_match(&library, &current_os_type).await;
+                let download_path = folder_clone.join(&path);
                 let okto_download = if download_path.exists() {
                     if let Err(x) = if process_native {
                         Ok(())
@@ -132,7 +139,8 @@ pub async fn parallel_library(
                         if let Ok(mut archive) = zip::ZipArchive::new(reader) {
                             archive.extract(native_folder_clone.join("temp").as_path())?;
                             for x in archive.file_names() {
-                                if (x.contains(".so") || x.contains(".sha1")) && !x.contains(".git")
+                                if (x.contains(library_extension) || x.contains(".sha1"))
+                                    && !x.contains(".git")
                                 {
                                     std::fs::rename(
                                         native_folder_clone.join("temp").join(x),
