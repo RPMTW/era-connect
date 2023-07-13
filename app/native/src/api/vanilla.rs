@@ -6,7 +6,7 @@ use futures::{stream::FuturesUnordered, StreamExt};
 use glob::Pattern;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::fs::create_dir_all;
+use std::fs::{create_dir_all, File};
 use std::process::Command;
 use std::{
     path::PathBuf,
@@ -171,7 +171,7 @@ pub async fn prepare_download() -> Result<(
             .filter_map(Value::as_str)
             .map(std::string::ToString::to_string)
             .collect::<Vec<_>>(),
-        additional_arguments: Some(vec!["--demo".to_string()]),
+        additional_arguments: None,
     };
 
     let game_directory = PathBuf::from("downloads/.minecraft");
@@ -191,7 +191,10 @@ pub async fn prepare_download() -> Result<(
         game_version_name: current_version,
         game_directory: &game_directory.canonicalize()?,
         assets_root: &asset_directory.canonicalize()?,
-        assets_index_name: "1.20".to_string(),
+        assets_index_name: game_manifest["assetIndex"]["id"]
+            .as_str()
+            .unwrap()
+            .to_string(),
         auth_uuid: "".to_string(),
         user_type: "mojang".to_string(),
         version_type: "release".to_string(),

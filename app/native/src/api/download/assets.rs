@@ -5,6 +5,7 @@ use futures::stream::FuturesUnordered;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
+    fs::File,
     path::PathBuf,
     sync::{atomic::AtomicUsize, atomic::Ordering, Arc},
 };
@@ -28,8 +29,21 @@ pub struct AssetSettings {
 }
 
 pub async fn extract_assets(asset_index: AssetIndex, folder: PathBuf) -> Result<AssetSettings> {
-    let asset_response = reqwest::get(asset_index.url).await?;
-    let asset_index_content: Value = asset_response.json().await?;
+    let asset_index_path = folder.join(PathBuf::from(format!("indexes/{}.json", asset_index.id)));
+    let asset_index_content: Value = if asset_index_path.exists()
+        && validate_sha1(&asset_index_path, asset_index.sha1.as_str())
+            .await
+            .is_ok()
+    {
+        let b: &[u8] = &fs::read(asset_index_path).await?;
+        serde_json::from_slice(b)?
+    } else {
+        let asset_response = reqwest::get(asset_index.url).await?;
+        let asset_response_bytes = asset_response.bytes().await?;
+        fs::create_dir_all(asset_index_path.parent().unwrap()).await?;
+        fs::write(&asset_index_path, &asset_response_bytes).await?;
+        serde_json::from_slice(&asset_response_bytes)?
+    };
     let asset_objects = asset_index_content
         .get("objects")
         .ok_or_else(|| anyhow!("fail to get content[objects]"))?
@@ -54,8 +68,7 @@ pub async fn extract_assets(asset_index: AssetIndex, folder: PathBuf) -> Result<
             "https://resources.download.minecraft.net/{hash:.2}/{hash}",
         ));
         asset_download_hash.push(hash.to_string());
-        asset_download_path
-            .push(folder.join(PathBuf::from(format!("assets/objects/{hash:.2}/{hash}"))));
+        asset_download_path.push(folder.join(PathBuf::from(format!("objects/{hash:.2}/{hash}"))));
         asset_download_size.push(size);
     }
     Ok(AssetSettings {
