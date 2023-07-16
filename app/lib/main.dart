@@ -32,11 +32,12 @@ void testRust() async {
 
   stream.listen((event) {
     print(event.progress?.speed);
-    if (event.prepareNameArgs != null) {
-      var launchArgs = event.prepareNameArgs!.launchArgs;
-      var jvmArgs = event.prepareNameArgs!.jvmArgs;
-      var gameArgs = event.prepareNameArgs!.gameArgs;
-      var c = PrepareGameArgs(
+    final prepareNameArgs = event.prepareNameArgs;
+    if (prepareNameArgs != null) {
+      final launchArgs = prepareNameArgs.launchArgs;
+      final jvmArgs = prepareNameArgs.jvmArgs;
+      final gameArgs = prepareNameArgs.gameArgs;
+      final c = PrepareGameArgs(
           launchArgs: launchArgs, jvmArgs: jvmArgs, gameArgs: gameArgs);
       final t = api.launchQuilt(quiltPrepare: c);
       t.listen((ttt) {
