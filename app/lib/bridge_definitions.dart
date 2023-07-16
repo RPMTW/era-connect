@@ -9,9 +9,100 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
-  Stream<Progress> test({dynamic hint});
+  Stream<ReturnType> test({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kTestConstMeta;
+
+  Stream<ReturnType> launchQuilt(
+      {required PrepareGameArgs quiltPrepare, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kLaunchQuiltConstMeta;
+
+  DropFnType get dropOpaquePathBuf;
+  ShareFnType get shareOpaquePathBuf;
+  OpaqueTypeFinalizer get PathBufFinalizer;
+}
+
+@sealed
+class PathBuf extends FrbOpaque {
+  final Native bridge;
+  PathBuf.fromRaw(int ptr, int size, this.bridge) : super.unsafe(ptr, size);
+  @override
+  DropFnType get dropFn => bridge.dropOpaquePathBuf;
+
+  @override
+  ShareFnType get shareFn => bridge.shareOpaquePathBuf;
+
+  @override
+  OpaqueTypeFinalizer get staticFinalizer => bridge.PathBufFinalizer;
+}
+
+class GameArgs {
+  final String authPlayerName;
+  final String gameVersionName;
+  final PathBuf gameDirectory;
+  final PathBuf assetsRoot;
+  final String assetsIndexName;
+  final String authUuid;
+  final String userType;
+  final String versionType;
+
+  const GameArgs({
+    required this.authPlayerName,
+    required this.gameVersionName,
+    required this.gameDirectory,
+    required this.assetsRoot,
+    required this.assetsIndexName,
+    required this.authUuid,
+    required this.userType,
+    required this.versionType,
+  });
+}
+
+class JvmArgs {
+  final String launcherName;
+  final String launcherVersion;
+  final String classpath;
+  final String classpathSeparator;
+  final String primaryJar;
+  final PathBuf libraryDirectory;
+  final PathBuf gameDirectory;
+  final PathBuf nativeDirectory;
+
+  const JvmArgs({
+    required this.launcherName,
+    required this.launcherVersion,
+    required this.classpath,
+    required this.classpathSeparator,
+    required this.primaryJar,
+    required this.libraryDirectory,
+    required this.gameDirectory,
+    required this.nativeDirectory,
+  });
+}
+
+class LaunchArgs {
+  final List<String> jvmArgs;
+  final String mainClass;
+  final List<String> gameArgs;
+
+  const LaunchArgs({
+    required this.jvmArgs,
+    required this.mainClass,
+    required this.gameArgs,
+  });
+}
+
+class PrepareGameArgs {
+  final LaunchArgs launchArgs;
+  final JvmArgs jvmArgs;
+  final GameArgs gameArgs;
+
+  const PrepareGameArgs({
+    required this.launchArgs,
+    required this.jvmArgs,
+    required this.gameArgs,
+  });
 }
 
 class Progress {
@@ -25,5 +116,15 @@ class Progress {
     required this.percentages,
     required this.currentSize,
     required this.totalSize,
+  });
+}
+
+class ReturnType {
+  final Progress? progress;
+  final PrepareGameArgs? prepareNameArgs;
+
+  const ReturnType({
+    this.progress,
+    this.prepareNameArgs,
   });
 }

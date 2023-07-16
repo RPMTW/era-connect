@@ -1,5 +1,5 @@
 use std::{
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -8,6 +8,7 @@ use std::{
 
 use anyhow::{bail, Result};
 use async_semaphore::Semaphore;
+use flutter_rust_bridge::RustOpaque;
 use futures::stream::FuturesUnordered;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
@@ -71,8 +72,8 @@ pub async fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bo
 }
 pub async fn parallel_library(
     library_list_arc: Arc<Vec<Library>>,
-    folder: Arc<PathBuf>,
-    native_folder: Arc<PathBuf>,
+    folder: Arc<RustOpaque<PathBuf>>,
+    native_folder: Arc<RustOpaque<PathBuf>>,
     current: Arc<AtomicUsize>,
     semaphore: &Arc<Semaphore>,
     library_download_handles: &mut FuturesUnordered<

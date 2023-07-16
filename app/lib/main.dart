@@ -3,7 +3,7 @@ import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import 'ffi.dart' show api;
+import 'ffi.dart' show PrepareGameArgs, api;
 import 'pages/main_page.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -31,7 +31,18 @@ void testRust() async {
   final stream = api.test();
 
   stream.listen((event) {
-    print(event.speed);
+    print(event.progress?.speed);
+    if (event.prepareNameArgs != null) {
+      var launchArgs = event.prepareNameArgs!.launchArgs;
+      var jvmArgs = event.prepareNameArgs!.jvmArgs;
+      var gameArgs = event.prepareNameArgs!.gameArgs;
+      var c = PrepareGameArgs(
+          launchArgs: launchArgs, jvmArgs: jvmArgs, gameArgs: gameArgs);
+      final t = api.launchQuilt(quiltPrepare: c);
+      t.listen((ttt) {
+        print(ttt.progress?.speed);
+      });
+    }
   });
 }
 

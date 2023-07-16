@@ -1,15 +1,17 @@
 use anyhow::{anyhow, bail};
 use anyhow::{Context, Result};
 use async_semaphore::Semaphore;
-use flutter_rust_bridge::StreamSink;
+use flutter_rust_bridge::{RustOpaque, StreamSink};
 use futures::{stream::FuturesUnordered, StreamExt};
 use glob::Pattern;
+use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs::{create_dir_all, File};
+pub use std::path::PathBuf;
 use std::process::Command;
+use std::rc::Rc;
 use std::{
-    path::PathBuf,
     sync::{
         atomic::Ordering,
         atomic::{AtomicBool, AtomicUsize},
@@ -26,6 +28,7 @@ use super::download::assets::{extract_assets, parallel_assets, AssetIndex};
 use super::download::library::{parallel_library, Library};
 use super::download::rules::{get_rules, ActionType, Rule};
 use super::download::util::{download_file, extract_filename, validate_sha1};
+use super::ReturnType;
 
 pub struct Progress {
     pub speed: f64,
@@ -82,32 +85,35 @@ struct LogFile {
     url: String,
 }
 
-struct JvmArgs<'a> {
-    launcher_name: String,
-    launcher_version: String,
-    classpath: String,
-    classpath_separator: String,
-    primary_jar: String,
-    library_directory: &'a PathBuf,
-    game_directory: &'a PathBuf,
-    native_directory: &'a PathBuf,
+#[derive(Clone)]
+pub struct JvmArgs {
+    pub launcher_name: String,
+    pub launcher_version: String,
+    pub classpath: String,
+    pub classpath_separator: String,
+    pub primary_jar: String,
+    pub library_directory: RustOpaque<PathBuf>,
+    pub game_directory: RustOpaque<PathBuf>,
+    pub native_directory: RustOpaque<PathBuf>,
 }
 
-struct GameArgs<'a> {
-    auth_player_name: String,
-    game_version_name: String,
-    game_directory: &'a PathBuf,
-    assets_root: &'a PathBuf,
-    assets_index_name: String,
-    auth_uuid: String,
-    user_type: String,
-    version_type: String,
+#[derive(Clone)]
+pub struct GameArgs {
+    pub auth_player_name: String,
+    pub game_version_name: String,
+    pub game_directory: RustOpaque<PathBuf>,
+    pub assets_root: RustOpaque<PathBuf>,
+    pub assets_index_name: String,
+    pub auth_uuid: String,
+    pub user_type: String,
+    pub version_type: String,
 }
 
+#[derive(Clone)]
 pub struct LaunchArgs {
-    jvm_args: Vec<String>,
-    main_class: String,
-    game_args: Vec<String>,
+    pub jvm_args: Vec<String>,
+    pub main_class: String,
+    pub game_args: Vec<String>,
 }
 
 pub fn launch_game(launch_args: LaunchArgs) -> Result<()> {
@@ -119,6 +125,73 @@ pub fn launch_game(launch_args: LaunchArgs) -> Result<()> {
     let b = Command::new("java").args(launch_vec).spawn();
     b?.wait()?;
     Ok(())
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Default, Clone)]
+pub struct FabricLibrary {
+    name: String,
+    url: String,
+}
+
+pub async fn prepare_quilt_download(
+    game_version: String,
+    launch_args: LaunchArgs,
+    jvm_options: JvmArgs,
+    game_options: GameArgs,
+) -> Result<DownloadArgs> {
+    let meta_url = format!(
+        "https://meta.quiltmc.org/v3/versions/loader/{}",
+        game_version
+    );
+    let response = reqwest::get(meta_url).await?;
+    let version_manifest: Value = response.json().await?;
+    let current_size = Arc::new(AtomicUsize::new(0));
+    let total_size = Arc::new(AtomicUsize::new(0));
+    let download_list = Vec::<FabricLibrary>::deserialize(
+        &version_manifest[0]["launcherMeta"]["libraries"]["common"],
+    )?;
+    let handles = FuturesUnordered::new();
+    let index_counter = Arc::new(AtomicUsize::new(0));
+    let library_directory = jvm_options.library_directory.clone();
+    let num_libraries = download_list.len();
+    let download_list_arc = Arc::new(download_list);
+    let path_vec = download_list_arc
+        .iter()
+        .map(|x| library_directory.join(x.name.replace(':', "/").replace('.', "/")))
+        .collect::<Vec<_>>();
+    let mut jvm_options = jvm_options;
+    let mut launch_args = launch_args;
+    jvm_options.classpath = path_vec
+        .iter()
+        .map(|x| x.to_string_lossy().to_string())
+        .collect::<Vec<_>>()
+        .join(":");
+    launch_args.jvm_args = jvm_args_parse(&launch_args.jvm_args, &jvm_options);
+    let path_vec_arc = Arc::new(path_vec);
+    for _ in 0..num_libraries {
+        let index_counter_clone = Arc::clone(&index_counter);
+        let current_size_clone = Arc::clone(&current_size);
+        let path_vec_clone = Arc::clone(&path_vec_arc);
+        let download_list_clone = Arc::clone(&download_list_arc);
+        handles.push(tokio::spawn(async move {
+            let index = index_counter_clone.fetch_add(1, Ordering::SeqCst);
+            if index < num_libraries {
+                let library = &download_list_clone[index];
+                let path = &path_vec_clone[index];
+                download_file(library.url.clone(), Some(&path), current_size_clone).await
+            } else {
+                Ok(())
+            }
+        }));
+    }
+    Ok(DownloadArgs {
+        current_size: Arc::clone(&current_size),
+        total_size: Arc::clone(&total_size),
+        handles,
+        launch_args,
+        jvm_args: jvm_options,
+        game_args: game_options,
+    })
 }
 
 pub async fn get_game_manifest(
@@ -148,12 +221,7 @@ pub async fn get_game_manifest(
     Ok((contents, version.unwrap()))
 }
 
-pub async fn prepare_download() -> Result<(
-    Arc<AtomicUsize>,
-    Arc<AtomicUsize>,
-    FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
-    LaunchArgs,
-)> {
+pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     let (game_manifest, current_version) = get_game_manifest(
         "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_string(),
         None,
@@ -186,11 +254,11 @@ pub async fn prepare_download() -> Result<(
     create_dir_all(&game_directory)?;
     create_dir_all(&native_directory)?;
 
-    let game_arguments = GameArgs {
+    let game_options = GameArgs {
         auth_player_name: "Kyle".to_string(),
         game_version_name: current_version,
-        game_directory: &game_directory.canonicalize()?,
-        assets_root: &asset_directory.canonicalize()?,
+        game_directory: RustOpaque::new(game_directory.canonicalize()?),
+        assets_root: RustOpaque::new(asset_directory.canonicalize()?),
         assets_index_name: game_manifest["assetIndex"]["id"]
             .as_str()
             .unwrap()
@@ -200,43 +268,7 @@ pub async fn prepare_download() -> Result<(
         version_type: "release".to_string(),
     };
 
-    let pattern = Pattern::new("*${*}")?;
-    let mut modified_arguments = Vec::new();
-
-    for argument in &game_flags.arguments {
-        if pattern.matches(argument) {
-            modified_arguments.push(
-                argument
-                    .replace("${", "")
-                    .replace("}", "")
-                    .replace("auth_player_name", &game_arguments.auth_player_name)
-                    .replace("version_name", &game_arguments.game_version_name)
-                    .replace(
-                        "game_directory",
-                        game_arguments
-                            .game_directory
-                            .to_string_lossy()
-                            .to_string()
-                            .as_str(),
-                    )
-                    .replace(
-                        "assets_root",
-                        game_arguments
-                            .assets_root
-                            .to_string_lossy()
-                            .to_string()
-                            .as_str(),
-                    )
-                    .replace("assets_index_name", &game_arguments.assets_index_name)
-                    .replace("auth_uuid", &game_arguments.auth_uuid)
-                    .replace("version_type", &game_arguments.version_type),
-            );
-        } else {
-            modified_arguments.push(argument.clone());
-        }
-    }
-
-    game_flags.arguments = modified_arguments;
+    game_flags.arguments = game_args_parse(&game_flags, &game_options);
 
     if game_flags.additional_arguments.is_some() {
         game_flags
@@ -280,9 +312,9 @@ pub async fn prepare_download() -> Result<(
         classpath: "".to_string(),
         classpath_separator: ":".to_string(),
         primary_jar: client_jar.to_string_lossy().to_string(),
-        library_directory: &library_directory.canonicalize()?,
-        game_directory: &game_directory.canonicalize()?,
-        native_directory: &native_directory.canonicalize()?,
+        library_directory: RustOpaque::new(library_directory.canonicalize()?),
+        game_directory: RustOpaque::new(game_directory.canonicalize()?),
+        native_directory: RustOpaque::new(native_directory.canonicalize()?),
     };
 
     let max_concurrent_tasks = 256;
@@ -346,28 +378,7 @@ pub async fn prepare_download() -> Result<(
         }
     }
 
-    let mut parsed_argument = Vec::new();
-
-    let pattern = Pattern::new("*${*}").unwrap();
-    for argument in jvm_flags.arguments.iter() {
-        if pattern.matches(&argument) {
-            let parsed = argument
-                .replace("${", "")
-                .replace("}", "")
-                .replace(
-                    "natives_directory",
-                    &jvm_options.native_directory.to_string_lossy(),
-                )
-                .replace("launcher_name", &jvm_options.launcher_name)
-                .replace("launcher_version", &jvm_options.launcher_version)
-                .replace("classpath", &jvm_options.classpath);
-            parsed_argument.push(parsed);
-        } else {
-            parsed_argument.push(argument.clone());
-        }
-    }
-
-    jvm_flags.arguments = parsed_argument;
+    jvm_flags.arguments = jvm_args_parse(&jvm_flags.arguments, &jvm_options);
 
     let client_download = || {
         let client_jar_future = download_file(
@@ -407,21 +418,86 @@ pub async fn prepare_download() -> Result<(
         game_args: game_flags.arguments,
     };
 
-    Ok((
-        Arc::clone(&current_size),
-        Arc::clone(&total_size),
+    Ok(DownloadArgs {
+        current_size: Arc::clone(&current_size),
+        total_size: Arc::clone(&total_size),
         handles,
         launch_args,
-    ))
+        jvm_args: jvm_options,
+        game_args: game_options,
+    })
+}
+
+fn jvm_args_parse(jvm_flags: &Vec<String>, jvm_options: &JvmArgs) -> Vec<String> {
+    let mut parsed_argument = Vec::new();
+
+    for argument in jvm_flags.iter() {
+        parsed_argument.push(
+            argument
+                .replace("${", "")
+                .replace("}", "")
+                .replace(
+                    "natives_directory",
+                    &jvm_options.native_directory.to_string_lossy(),
+                )
+                .replace("launcher_name", &jvm_options.launcher_name)
+                .replace("launcher_version", &jvm_options.launcher_version)
+                .replace("classpath", &jvm_options.classpath),
+        );
+    }
+    parsed_argument
+}
+
+fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameArgs) -> Vec<String> {
+    let mut modified_arguments = Vec::new();
+
+    for argument in &game_flags.arguments {
+        modified_arguments.push(
+            argument
+                .replace("${", "")
+                .replace("}", "")
+                .replace("auth_player_name", &game_arguments.auth_player_name)
+                .replace("version_name", &game_arguments.game_version_name)
+                .replace(
+                    "game_directory",
+                    game_arguments
+                        .game_directory
+                        .to_string_lossy()
+                        .to_string()
+                        .as_str(),
+                )
+                .replace(
+                    "assets_root",
+                    game_arguments
+                        .assets_root
+                        .to_string_lossy()
+                        .to_string()
+                        .as_str(),
+                )
+                .replace("assets_index_name", &game_arguments.assets_index_name)
+                .replace("auth_uuid", &game_arguments.auth_uuid)
+                .replace("version_type", &game_arguments.version_type),
+        );
+    }
+    modified_arguments
+}
+
+pub struct DownloadArgs {
+    current_size: Arc<AtomicUsize>,
+    total_size: Arc<AtomicUsize>,
+    handles: FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
+    launch_args: LaunchArgs,
+    jvm_args: JvmArgs,
+    game_args: GameArgs,
 }
 
 // get progress and and launch download
-pub async fn get_download_progress(sink: StreamSink<Progress>) -> Result<LaunchArgs> {
-    let (current_size, total_size, mut handles, launch_args) = prepare_download().await?;
+pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadArgs) -> Result<()> {
+    let mut handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
     let download_complete_clone = Arc::clone(&download_complete);
-    let current_size_clone = Arc::clone(&current_size);
-    let total_size_clone = Arc::clone(&total_size);
+    let current_size_clone = Arc::clone(&download_args.current_size);
+    let total_size_clone = Arc::clone(&download_args.total_size);
 
     let task = tokio::spawn(async move {
         let mut instant = Instant::now();
@@ -440,8 +516,20 @@ pub async fn get_download_progress(sink: StreamSink<Progress>) -> Result<LaunchA
             };
             prev_bytes = current_size_clone.load(Ordering::Relaxed) as f64;
             instant = Instant::now();
-            sink.add(progress);
+            sink.add(ReturnType {
+                progress: Some(progress),
+                prepare_name_args: None,
+            });
         }
+        sink.add(ReturnType {
+            progress: None,
+            prepare_name_args: Some(crate::api::PrepareGameArgs {
+                launch_args: download_args.launch_args,
+                jvm_args: download_args.jvm_args,
+                game_args: download_args.game_args,
+            }),
+        });
+        sink.close();
     });
 
     while let Some(future) = handles.next().await {
@@ -451,5 +539,5 @@ pub async fn get_download_progress(sink: StreamSink<Progress>) -> Result<LaunchA
     download_complete.store(true, Ordering::Release);
     task.await?;
     println!("Complete!");
-    Ok(launch_args)
+    Ok(())
 }
