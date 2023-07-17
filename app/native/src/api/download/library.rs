@@ -7,7 +7,6 @@ use std::{
 };
 
 use anyhow::{bail, Result};
-use async_semaphore::Semaphore;
 use flutter_rust_bridge::RustOpaque;
 use futures::stream::FuturesUnordered;
 use serde::{Deserialize, Serialize};
@@ -75,7 +74,6 @@ pub async fn parallel_library(
     folder: Arc<RustOpaque<PathBuf>>,
     native_folder: Arc<RustOpaque<PathBuf>>,
     current: Arc<AtomicUsize>,
-    semaphore: &Arc<Semaphore>,
     library_download_handles: &mut FuturesUnordered<
         tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>,
     >,
@@ -98,11 +96,9 @@ pub async fn parallel_library(
         let counter_clone = Arc::clone(&index_counter);
         let size_clone = Arc::clone(&size_counter);
         let folder_clone = folder.clone();
-        let semaphore_clone = Arc::clone(semaphore);
         let download_total_size_clone = Arc::clone(&download_total_size);
         let native_folder_clone = Arc::clone(&native_folder);
         let handle = tokio::spawn(async move {
-            let _permit = semaphore_clone.acquire_arc().await;
             let index = counter_clone.fetch_add(1, Ordering::SeqCst);
             if index < num_libraries {
                 let library = &library_list_clone[index];

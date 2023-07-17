@@ -343,8 +343,6 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
         native_directory: RustOpaque::new(native_directory.canonicalize()?),
     };
 
-    let max_concurrent_tasks = 256;
-    let semaphore = Arc::new(Semaphore::new(max_concurrent_tasks));
     let mut handles = FuturesUnordered::new();
 
     let current_size = Arc::new(AtomicUsize::new(0));
@@ -359,7 +357,6 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
         Arc::clone(&library_path),
         Arc::clone(&native_library_path),
         Arc::clone(&current_size),
-        &semaphore,
         &mut handles,
     )
     .await?;
@@ -429,14 +426,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     }
     let asset_settings = extract_assets(asset_index, asset_directory).await?;
 
-    parallel_assets(
-        asset_settings,
-        &semaphore,
-        &current_size,
-        &total_size,
-        &mut handles,
-    )
-    .await?;
+    parallel_assets(asset_settings, &current_size, &total_size, &mut handles).await?;
 
     let launch_args = LaunchArgs {
         jvm_args: jvm_flags.arguments,
@@ -557,11 +547,25 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
         });
         sink.close();
     });
+    // Create a semaphore with a limit on the number of concurrent downloads
+    let concurrency_limit = 3;
+    let semaphore = Arc::new(Semaphore::new(concurrency_limit));
 
-    while let Some(future) = handles.next().await {
-        future??;
+    // Create a stream of download tasks using futures_ordered
+    let download_stream = stream::iter(handles)
+        .map(|t| {
+            let semaphore = Arc::clone(&semaphore);
+            async move {
+                let _permit = semaphore.acquire_arc().await;
+                t.await
+            }
+        })
+        .buffer_unordered(concurrency_limit);
+    let results: Vec<_> = download_stream.collect().await;
+    // Check if any downloads failed
+    for result in results {
+        result??
     }
-
     download_complete.store(true, Ordering::Release);
     task.await?;
     println!("Complete!");

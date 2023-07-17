@@ -81,7 +81,6 @@ pub async fn extract_assets(asset_index: AssetIndex, folder: PathBuf) -> Result<
 
 pub async fn parallel_assets(
     assets: AssetSettings,
-    semaphore: &Arc<Semaphore>,
     current_size: &Arc<AtomicUsize>,
     total_size: &Arc<AtomicUsize>,
     handles: &mut FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
@@ -115,11 +114,9 @@ pub async fn parallel_assets(
         } else {
             true
         };
-        let semaphore_clone = Arc::clone(semaphore);
         if okto_download {
             total_size.fetch_add(asset_download_size_arc[index], Ordering::Relaxed);
             handles.push(tokio::spawn(async move {
-                let _permit = semaphore_clone.acquire_arc().await;
                 download_file(
                     asset_download_list_clone[index].clone(),
                     Some(&asset_download_path_clone[index]),
