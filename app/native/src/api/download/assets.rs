@@ -5,13 +5,12 @@ use futures::stream::FuturesUnordered;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
-    fs::File,
     path::PathBuf,
     sync::{atomic::AtomicUsize, atomic::Ordering, Arc},
 };
 use tokio::fs;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct AssetIndex {
     pub url: String,
     id: String,

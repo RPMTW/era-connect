@@ -26,37 +26,56 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  Stream<ReturnType> test({dynamic hint}) {
+  Stream<ReturnType> downloadVanilla({dynamic hint}) {
     return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_test(port_),
+      callFfi: (port_) => _platform.inner.wire_download_vanilla(port_),
       parseSuccessData: _wire2api_return_type,
-      constMeta: kTestConstMeta,
+      constMeta: kDownloadVanillaConstMeta,
       argValues: [],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kTestConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kDownloadVanillaConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "test",
+        debugName: "download_vanilla",
         argNames: [],
       );
 
-  Stream<ReturnType> launchQuilt(
+  Future<void> launchGame(
+      {required PrepareGameArgs preLaunchArguments, dynamic hint}) {
+    var arg0 =
+        _platform.api2wire_box_autoadd_prepare_game_args(preLaunchArguments);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_launch_game(port_, arg0),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kLaunchGameConstMeta,
+      argValues: [preLaunchArguments],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kLaunchGameConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "launch_game",
+        argNames: ["preLaunchArguments"],
+      );
+
+  Stream<ReturnType> downloadQuilt(
       {required PrepareGameArgs quiltPrepare, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_prepare_game_args(quiltPrepare);
     return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_launch_quilt(port_, arg0),
+      callFfi: (port_) => _platform.inner.wire_download_quilt(port_, arg0),
       parseSuccessData: _wire2api_return_type,
-      constMeta: kLaunchQuiltConstMeta,
+      constMeta: kDownloadQuiltConstMeta,
       argValues: [quiltPrepare],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kLaunchQuiltConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kDownloadQuiltConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "launch_quilt",
+        debugName: "download_quilt",
         argNames: ["quiltPrepare"],
       );
 
@@ -183,6 +202,10 @@ class NativeImpl implements Native {
 
   Uint8List _wire2api_uint_8_list(dynamic raw) {
     return raw as Uint8List;
+  }
+
+  void _wire2api_unit(dynamic raw) {
+    return;
   }
 }
 
@@ -384,33 +407,52 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _init_frb_dart_api_dl = _init_frb_dart_api_dlPtr
       .asFunction<int Function(ffi.Pointer<ffi.Void>)>();
 
-  void wire_test(
+  void wire_download_vanilla(
     int port_,
   ) {
-    return _wire_test(
+    return _wire_download_vanilla(
       port_,
     );
   }
 
-  late final _wire_testPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('wire_test');
-  late final _wire_test = _wire_testPtr.asFunction<void Function(int)>();
+  late final _wire_download_vanillaPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_download_vanilla');
+  late final _wire_download_vanilla =
+      _wire_download_vanillaPtr.asFunction<void Function(int)>();
 
-  void wire_launch_quilt(
+  void wire_launch_game(
+    int port_,
+    ffi.Pointer<wire_PrepareGameArgs> pre_launch_arguments,
+  ) {
+    return _wire_launch_game(
+      port_,
+      pre_launch_arguments,
+    );
+  }
+
+  late final _wire_launch_gamePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_PrepareGameArgs>)>>('wire_launch_game');
+  late final _wire_launch_game = _wire_launch_gamePtr
+      .asFunction<void Function(int, ffi.Pointer<wire_PrepareGameArgs>)>();
+
+  void wire_download_quilt(
     int port_,
     ffi.Pointer<wire_PrepareGameArgs> quilt_prepare,
   ) {
-    return _wire_launch_quilt(
+    return _wire_download_quilt(
       port_,
       quilt_prepare,
     );
   }
 
-  late final _wire_launch_quiltPtr = _lookup<
+  late final _wire_download_quiltPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_PrepareGameArgs>)>>('wire_launch_quilt');
-  late final _wire_launch_quilt = _wire_launch_quiltPtr
+              ffi.Pointer<wire_PrepareGameArgs>)>>('wire_download_quilt');
+  late final _wire_download_quilt = _wire_download_quiltPtr
       .asFunction<void Function(int, ffi.Pointer<wire_PrepareGameArgs>)>();
 
   wire_PathBuf new_PathBuf() {

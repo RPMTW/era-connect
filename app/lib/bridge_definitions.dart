@@ -9,14 +9,19 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
-  Stream<ReturnType> test({dynamic hint});
+  Stream<ReturnType> downloadVanilla({dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kTestConstMeta;
+  FlutterRustBridgeTaskConstMeta get kDownloadVanillaConstMeta;
 
-  Stream<ReturnType> launchQuilt(
+  Future<void> launchGame(
+      {required PrepareGameArgs preLaunchArguments, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kLaunchGameConstMeta;
+
+  Stream<ReturnType> downloadQuilt(
       {required PrepareGameArgs quiltPrepare, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kLaunchQuiltConstMeta;
+  FlutterRustBridgeTaskConstMeta get kDownloadQuiltConstMeta;
 
   DropFnType get dropOpaquePathBuf;
   ShareFnType get shareOpaquePathBuf;

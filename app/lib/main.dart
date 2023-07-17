@@ -28,20 +28,17 @@ void main() async {
 }
 
 void testRust() async {
-  final stream = api.test();
+  final vanilla = api.downloadVanilla();
 
-  stream.listen((event) {
+  vanilla.listen((event) {
     print(event.progress?.speed);
-    final prepareNameArgs = event.prepareNameArgs;
-    if (prepareNameArgs != null) {
-      final launchArgs = prepareNameArgs.launchArgs;
-      final jvmArgs = prepareNameArgs.jvmArgs;
-      final gameArgs = prepareNameArgs.gameArgs;
-      final c = PrepareGameArgs(
-          launchArgs: launchArgs, jvmArgs: jvmArgs, gameArgs: gameArgs);
-      final t = api.launchQuilt(quiltPrepare: c);
-      t.listen((ttt) {
-        print(ttt.progress?.speed);
+    if (event.prepareNameArgs != null) {
+      final quilt = api.downloadQuilt(quiltPrepare: event.prepareNameArgs!);
+      quilt.listen((event) {
+        print(event.progress?.speed);
+        if (event.prepareNameArgs != null) {
+          api.launchGame(preLaunchArguments: event.prepareNameArgs!);
+        }
       });
     }
   });

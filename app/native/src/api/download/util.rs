@@ -28,9 +28,10 @@ pub async fn download_file(
     );
     let client = reqwest::Client::builder()
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
+        .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
         .build()
         .map_err(|err| anyhow!("{err:?}\n{}", filename.to_string()))?;
-    let mut response = client.get(&url).send().await?;
+    let mut response = client.get(&url).send().await.unwrap();
     let mut file = File::create(&filename).await?;
     while let Some(chunk) = response.chunk().await? {
         file.write_all(&chunk).await?;

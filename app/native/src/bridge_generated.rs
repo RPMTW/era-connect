@@ -21,29 +21,45 @@ use std::sync::Arc;
 
 // Section: wire functions
 
-fn wire_test_impl(port_: MessagePort) {
+fn wire_download_vanilla_impl(port_: MessagePort) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "test",
+            debug_name: "download_vanilla",
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
-        move || move |task_callback| test(task_callback.stream_sink()),
+        move || move |task_callback| download_vanilla(task_callback.stream_sink()),
     )
 }
-fn wire_launch_quilt_impl(
+fn wire_launch_game_impl(
+    port_: MessagePort,
+    pre_launch_arguments: impl Wire2Api<PrepareGameArgs> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "launch_game",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_pre_launch_arguments = pre_launch_arguments.wire2api();
+            move |task_callback| launch_game(api_pre_launch_arguments)
+        },
+    )
+}
+fn wire_download_quilt_impl(
     port_: MessagePort,
     quilt_prepare: impl Wire2Api<PrepareGameArgs> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "launch_quilt",
+            debug_name: "download_quilt",
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
         move || {
             let api_quilt_prepare = quilt_prepare.wire2api();
-            move |task_callback| launch_quilt(task_callback.stream_sink(), api_quilt_prepare)
+            move |task_callback| download_quilt(task_callback.stream_sink(), api_quilt_prepare)
         },
     )
 }

@@ -3,14 +3,11 @@ use anyhow::{Context, Result};
 use async_semaphore::Semaphore;
 use flutter_rust_bridge::{RustOpaque, StreamSink};
 use futures::{stream::FuturesUnordered, StreamExt};
-use glob::Pattern;
-use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::fs::{self, create_dir_all, File};
+use std::fs::create_dir_all;
 pub use std::path::PathBuf;
 use std::process::Command;
-use std::rc::Rc;
 use std::{
     sync::{
         atomic::Ordering,
@@ -49,14 +46,14 @@ struct JvmFlags {
     arguments: Vec<String>,
     additional_arguments: Option<Vec<String>>,
 }
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct DownloadMetadata {
     sha1: String,
     size: usize,
     url: String,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct Downloads {
     client: DownloadMetadata,
     client_mappings: DownloadMetadata,
@@ -64,12 +61,12 @@ struct Downloads {
     server_mappings: DownloadMetadata,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct LoggingConfig {
     client: ClientConfig,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct ClientConfig {
     argument: String,
     file: LogFile,
@@ -77,7 +74,7 @@ struct ClientConfig {
     log_type: String,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct LogFile {
     id: String,
     sha1: String,
@@ -121,103 +118,15 @@ pub fn launch_game(launch_args: LaunchArgs) -> Result<()> {
     launch_vec.extend(launch_args.jvm_args);
     launch_vec.push(launch_args.main_class);
     launch_vec.extend(launch_args.game_args);
-    dbg!(&launch_vec);
     let b = Command::new("java").args(launch_vec).spawn();
     b?.wait()?;
     Ok(())
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default, Clone)]
-pub struct FabricLibrary {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct QuiltLibrary {
     name: String,
     url: String,
-}
-
-pub async fn prepare_quilt_download(
-    game_version: String,
-    launch_args: LaunchArgs,
-    jvm_options: JvmArgs,
-    game_options: GameArgs,
-) -> Result<DownloadArgs> {
-    let meta_url = format!(
-        "https://meta.quiltmc.org/v3/versions/loader/{}",
-        game_version
-    );
-    let response = reqwest::get(meta_url).await?;
-    let version_manifest: Value = response.json().await?;
-    let current_size = Arc::new(AtomicUsize::new(0));
-    let total_size = Arc::new(AtomicUsize::new(0));
-    let download_list = Vec::<FabricLibrary>::deserialize(
-        &version_manifest[0]["launcherMeta"]["libraries"]["common"],
-    )?;
-    let handles = FuturesUnordered::new();
-    let index_counter = Arc::new(AtomicUsize::new(0));
-    let library_directory = jvm_options.library_directory.clone();
-    let num_libraries = download_list.len();
-    let download_list_arc = Arc::new(download_list);
-    let path_vec = download_list_arc
-        .iter()
-        .map(|x| library_directory.join(convert_maven_to_path(&x.name)))
-        .collect::<Vec<_>>();
-    let url_vec = download_list_arc
-        .iter()
-        .map(|x| convert_maven_to_path(&x.name))
-        .collect::<Vec<_>>();
-    for x in path_vec.iter() {
-        fs::create_dir_all(x.parent().unwrap())?;
-    }
-    let mut jvm_options = jvm_options;
-    let mut launch_args = launch_args;
-    jvm_options.classpath.push_str(
-        &path_vec
-            .iter()
-            .map(|x| x.to_string_lossy().to_string())
-            .collect::<Vec<_>>()
-            .join(":"),
-    );
-    launch_args.jvm_args = jvm_args_parse(&launch_args.jvm_args, &jvm_options);
-    launch_args.main_class = version_manifest[0]["launcherMeta"]["mainClass"]["client"]
-        .as_str()
-        .unwrap()
-        .to_string();
-    let path_vec_arc = Arc::new(path_vec);
-    let url_vec_arc = Arc::new(url_vec);
-    for _ in 0..num_libraries {
-        let index_counter_clone = Arc::clone(&index_counter);
-        let current_size_clone = Arc::clone(&current_size);
-        let path_vec_clone = Arc::clone(&path_vec_arc);
-        let url_vec_clone = Arc::clone(&url_vec_arc);
-        let download_list_clone = Arc::clone(&download_list_arc);
-        handles.push(tokio::spawn(async move {
-            let index = index_counter_clone.fetch_add(1, Ordering::SeqCst);
-            if index < num_libraries {
-                let library = &download_list_clone[index];
-                let url = format!("{}{}", library.url, url_vec_clone[index]);
-                let path = &path_vec_clone[index];
-                download_file(url, Some(&path), current_size_clone).await
-            } else {
-                Ok(())
-            }
-        }));
-    }
-    Ok(DownloadArgs {
-        current_size: Arc::clone(&current_size),
-        total_size: Arc::clone(&total_size),
-        handles,
-        launch_args,
-        jvm_args: jvm_options,
-        game_args: game_options,
-    })
-}
-fn convert_maven_to_path(input: &str) -> String {
-    let parts: Vec<&str> = input.split(':').collect();
-    let org = parts[0].replace(".", "/");
-    let package = parts[1];
-    let version = parts[2];
-    let file_name = format!("{}-{}.jar", package, version);
-    let path = format!("{}/{}/{}/", org, package, version);
-
-    format!("{}/{}", path, file_name)
 }
 
 pub async fn get_game_manifest(
@@ -289,7 +198,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
             .as_str()
             .unwrap()
             .to_string(),
-        auth_uuid: "".to_string(),
+        auth_uuid: String::new(),
         user_type: "mojang".to_string(),
         version_type: "release".to_string(),
     };
@@ -311,7 +220,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     let library_list: Vec<Library> = Vec::<Library>::deserialize(&game_manifest["libraries"])
         .context("Failed to Serialize contents[\"libraries\"]")?;
 
-    let logging: LoggingConfig = LoggingConfig::deserialize(&game_manifest["logging"])
+    let _logging: LoggingConfig = LoggingConfig::deserialize(&game_manifest["logging"])
         .context("Failed to Serialize logging")?;
 
     let main_class: String =
@@ -335,7 +244,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     let mut jvm_options = JvmArgs {
         launcher_name: "era-connect".to_string(),
         launcher_version: "0.0.1".to_string(),
-        classpath: "".to_string(),
+        classpath: String::new(),
         classpath_separator: ":".to_string(),
         primary_jar: client_jar.to_string_lossy().to_string(),
         library_directory: RustOpaque::new(library_directory.canonicalize()?),
@@ -371,7 +280,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
 
     let mut parsed_library_list = Vec::new();
     for library in library_list_arc.iter() {
-        let (process_native, os_okto_download, _) = os_match(&library, &current_os_type).await;
+        let (process_native, os_okto_download, _) = os_match(library, &current_os_type);
         if os_okto_download && !process_native {
             parsed_library_list.push(library);
         }
@@ -444,22 +353,33 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     })
 }
 
-fn jvm_args_parse(jvm_flags: &Vec<String>, jvm_options: &JvmArgs) -> Vec<String> {
+fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmArgs) -> Vec<String> {
     let mut parsed_argument = Vec::new();
 
     for argument in jvm_flags.iter() {
-        parsed_argument.push(
-            argument
-                .replace("${", "")
-                .replace("}", "")
-                .replace(
-                    "natives_directory",
-                    &jvm_options.native_directory.to_string_lossy(),
-                )
-                .replace("launcher_name", &jvm_options.launcher_name)
-                .replace("launcher_version", &jvm_options.launcher_version)
-                .replace("classpath", &jvm_options.classpath),
-        );
+        let mut s = argument.as_str();
+        let mut buf = String::with_capacity(s.len());
+
+        while let Some(pos) = s.find("${") {
+            buf.push_str(&s[..pos]);
+            let start = &s[pos + 2..];
+
+            let Some(closing) = start.find('}') else { panic!("missing closing brace"); };
+            let var = &start[..closing];
+            // make processing string to next part
+            s = &start[closing + 1..];
+
+            let natives_directory = jvm_options.native_directory.to_string_lossy().to_string();
+            buf.push_str(match var {
+                "natives_directory" => &natives_directory,
+                "launcher_name" => &jvm_options.launcher_name,
+                "launcher_version" => &jvm_options.launcher_version,
+                "classpath" => &jvm_options.classpath,
+                _ => "",
+            });
+        }
+        buf.push_str(s);
+        parsed_argument.push(buf);
     }
     parsed_argument
 }
@@ -468,40 +388,42 @@ fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameArgs) -> Vec<Str
     let mut modified_arguments = Vec::new();
 
     for argument in &game_flags.arguments {
-        modified_arguments.push(
-            argument
-                .replace("${", "")
-                .replace("}", "")
-                .replace("auth_player_name", &game_arguments.auth_player_name)
-                .replace("version_name", &game_arguments.game_version_name)
-                .replace(
-                    "game_directory",
-                    game_arguments
-                        .game_directory
-                        .to_string_lossy()
-                        .to_string()
-                        .as_str(),
-                )
-                .replace(
-                    "assets_root",
-                    game_arguments
-                        .assets_root
-                        .to_string_lossy()
-                        .to_string()
-                        .as_str(),
-                )
-                .replace("assets_index_name", &game_arguments.assets_index_name)
-                .replace("auth_uuid", &game_arguments.auth_uuid)
-                .replace("version_type", &game_arguments.version_type),
-        );
+        let mut s = argument.as_str();
+        let mut buf = String::with_capacity(s.len());
+
+        while let Some(pos) = s.find("${") {
+            buf.push_str(&s[..pos]);
+            let start = &s[pos + 2..];
+
+            let Some(closing) = start.find('}') else { panic!("missing closing brace"); };
+            let var = &start[..closing];
+            // make processing string to next part
+            s = &start[closing + 1..];
+
+            let game_directory = game_arguments.game_directory.to_string_lossy().to_string();
+            let assets_root = game_arguments.assets_root.to_string_lossy().to_string();
+
+            buf.push_str(match var {
+                "auth_player_name" => &game_arguments.auth_player_name,
+                "version_name" => &game_arguments.game_version_name,
+                "game_directory" => &game_directory,
+                "assets_root" => &assets_root,
+                "assets_index_name" => &game_arguments.assets_index_name,
+                "auth_uuid" => &game_arguments.auth_uuid,
+                "version_type" => &game_arguments.version_type,
+                _ => "",
+            });
+        }
+        buf.push_str(s);
+        modified_arguments.push(buf);
     }
     modified_arguments
 }
 
 pub struct DownloadArgs {
-    current_size: Arc<AtomicUsize>,
-    total_size: Arc<AtomicUsize>,
-    handles: FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
+    pub current_size: Arc<AtomicUsize>,
+    pub total_size: Arc<AtomicUsize>,
+    pub handles: FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
     pub launch_args: LaunchArgs,
     pub jvm_args: JvmArgs,
     pub game_args: GameArgs,

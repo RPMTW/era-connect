@@ -17,14 +17,14 @@ use super::{
     util::{download_file, validate_sha1},
 };
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LibraryMetadata {
     pub path: String,
     pub sha1: String,
     pub size: usize,
     pub url: String,
 }
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LibraryArtifact {
     pub artifact: LibraryMetadata,
 }
@@ -36,7 +36,7 @@ pub struct Library {
     pub rules: Option<Vec<Rule>>,
 }
 
-pub async fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bool, &'a str) {
+pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bool, &'a str) {
     let mut process_native = false;
     let mut os_okto_download = false;
     let mut library_extension_type = "";
@@ -104,7 +104,7 @@ pub async fn parallel_library(
                 let library = &library_list_clone[index];
                 let path = library.downloads.artifact.path.clone();
                 let (process_native, os_okto_download, library_extension) =
-                    os_match(&library, &current_os_type).await;
+                    os_match(library, &current_os_type);
                 let download_path = folder_clone.join(&path);
                 let okto_download = if download_path.exists() {
                     if let Err(x) = if process_native {

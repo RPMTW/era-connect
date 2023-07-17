@@ -2,13 +2,18 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
-pub extern "C" fn wire_test(port_: i64) {
-    wire_test_impl(port_)
+pub extern "C" fn wire_download_vanilla(port_: i64) {
+    wire_download_vanilla_impl(port_)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_launch_quilt(port_: i64, quilt_prepare: *mut wire_PrepareGameArgs) {
-    wire_launch_quilt_impl(port_, quilt_prepare)
+pub extern "C" fn wire_launch_game(port_: i64, pre_launch_arguments: *mut wire_PrepareGameArgs) {
+    wire_launch_game_impl(port_, pre_launch_arguments)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_download_quilt(port_: i64, quilt_prepare: *mut wire_PrepareGameArgs) {
+    wire_download_quilt_impl(port_, quilt_prepare)
 }
 
 // Section: allocate functions
