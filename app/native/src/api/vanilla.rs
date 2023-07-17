@@ -7,7 +7,7 @@ use glob::Pattern;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::fs::{create_dir_all, File};
+use std::fs::{self, create_dir_all, File};
 pub use std::path::PathBuf;
 use std::process::Command;
 use std::rc::Rc;
@@ -85,7 +85,7 @@ struct LogFile {
     url: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct JvmArgs {
     pub launcher_name: String,
     pub launcher_version: String,
@@ -97,7 +97,7 @@ pub struct JvmArgs {
     pub native_directory: RustOpaque<PathBuf>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GameArgs {
     pub auth_player_name: String,
     pub game_version_name: String,
@@ -109,7 +109,7 @@ pub struct GameArgs {
     pub version_type: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LaunchArgs {
     pub jvm_args: Vec<String>,
     pub main_class: String,
@@ -157,28 +157,44 @@ pub async fn prepare_quilt_download(
     let download_list_arc = Arc::new(download_list);
     let path_vec = download_list_arc
         .iter()
-        .map(|x| library_directory.join(x.name.replace(':', "/").replace('.', "/")))
+        .map(|x| library_directory.join(convert_maven_to_path(&x.name)))
         .collect::<Vec<_>>();
+    let url_vec = download_list_arc
+        .iter()
+        .map(|x| convert_maven_to_path(&x.name))
+        .collect::<Vec<_>>();
+    for x in path_vec.iter() {
+        fs::create_dir_all(x.parent().unwrap())?;
+    }
     let mut jvm_options = jvm_options;
     let mut launch_args = launch_args;
-    jvm_options.classpath = path_vec
-        .iter()
-        .map(|x| x.to_string_lossy().to_string())
-        .collect::<Vec<_>>()
-        .join(":");
+    jvm_options.classpath.push_str(
+        &path_vec
+            .iter()
+            .map(|x| x.to_string_lossy().to_string())
+            .collect::<Vec<_>>()
+            .join(":"),
+    );
     launch_args.jvm_args = jvm_args_parse(&launch_args.jvm_args, &jvm_options);
+    launch_args.main_class = version_manifest[0]["launcherMeta"]["mainClass"]["client"]
+        .as_str()
+        .unwrap()
+        .to_string();
     let path_vec_arc = Arc::new(path_vec);
+    let url_vec_arc = Arc::new(url_vec);
     for _ in 0..num_libraries {
         let index_counter_clone = Arc::clone(&index_counter);
         let current_size_clone = Arc::clone(&current_size);
         let path_vec_clone = Arc::clone(&path_vec_arc);
+        let url_vec_clone = Arc::clone(&url_vec_arc);
         let download_list_clone = Arc::clone(&download_list_arc);
         handles.push(tokio::spawn(async move {
             let index = index_counter_clone.fetch_add(1, Ordering::SeqCst);
             if index < num_libraries {
                 let library = &download_list_clone[index];
+                let url = format!("{}{}", library.url, url_vec_clone[index]);
                 let path = &path_vec_clone[index];
-                download_file(library.url.clone(), Some(&path), current_size_clone).await
+                download_file(url, Some(&path), current_size_clone).await
             } else {
                 Ok(())
             }
@@ -192,6 +208,16 @@ pub async fn prepare_quilt_download(
         jvm_args: jvm_options,
         game_args: game_options,
     })
+}
+fn convert_maven_to_path(input: &str) -> String {
+    let parts: Vec<&str> = input.split(':').collect();
+    let org = parts[0].replace(".", "/");
+    let package = parts[1];
+    let version = parts[2];
+    let file_name = format!("{}-{}.jar", package, version);
+    let path = format!("{}/{}/{}/", org, package, version);
+
+    format!("{}/{}", path, file_name)
 }
 
 pub async fn get_game_manifest(
@@ -486,9 +512,9 @@ pub struct DownloadArgs {
     current_size: Arc<AtomicUsize>,
     total_size: Arc<AtomicUsize>,
     handles: FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
-    launch_args: LaunchArgs,
-    jvm_args: JvmArgs,
-    game_args: GameArgs,
+    pub launch_args: LaunchArgs,
+    pub jvm_args: JvmArgs,
+    pub game_args: GameArgs,
 }
 
 // get progress and and launch download
