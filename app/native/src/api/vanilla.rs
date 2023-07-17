@@ -2,6 +2,7 @@ use anyhow::{anyhow, bail};
 use anyhow::{Context, Result};
 use async_semaphore::Semaphore;
 use flutter_rust_bridge::{RustOpaque, StreamSink};
+use futures::stream;
 use futures::{stream::FuturesUnordered, StreamExt};
 use glob::Pattern;
 use reqwest::Response;
@@ -121,7 +122,6 @@ pub fn launch_game(launch_args: LaunchArgs) -> Result<()> {
     launch_vec.extend(launch_args.jvm_args);
     launch_vec.push(launch_args.main_class);
     launch_vec.extend(launch_args.game_args);
-    dbg!(&launch_vec);
     let b = Command::new("java").args(launch_vec).spawn();
     b?.wait()?;
     Ok(())
@@ -147,9 +147,23 @@ pub async fn prepare_quilt_download(
     let version_manifest: Value = response.json().await?;
     let current_size = Arc::new(AtomicUsize::new(0));
     let total_size = Arc::new(AtomicUsize::new(0));
-    let download_list = Vec::<FabricLibrary>::deserialize(
+    let mut download_list = Vec::<FabricLibrary>::deserialize(
         &version_manifest[0]["launcherMeta"]["libraries"]["common"],
     )?;
+    let special_library_list = version_manifest[0].as_object().unwrap();
+    let special = vec!["loader", "hashed", "intermediary"];
+    for x in special {
+        let b = special_library_list.get(x).unwrap();
+        let maven = b["maven"].as_str().unwrap();
+        download_list.push(FabricLibrary {
+            name: maven.to_string(),
+            url: if maven.contains("quiltmc") {
+                "https://maven.quiltmc.org/repository/release/".to_string()
+            } else {
+                "https://maven.fabricmc.net/".to_string()
+            },
+        });
+    }
     let handles = FuturesUnordered::new();
     let index_counter = Arc::new(AtomicUsize::new(0));
     let library_directory = jvm_options.library_directory.clone();
@@ -168,6 +182,8 @@ pub async fn prepare_quilt_download(
     }
     let mut jvm_options = jvm_options;
     let mut launch_args = launch_args;
+    // HACK
+    jvm_options.classpath.push(':');
     jvm_options.classpath.push_str(
         &path_vec
             .iter()
@@ -175,7 +191,13 @@ pub async fn prepare_quilt_download(
             .collect::<Vec<_>>()
             .join(":"),
     );
-    launch_args.jvm_args = jvm_args_parse(&launch_args.jvm_args, &jvm_options);
+    for x in 0..launch_args.jvm_args.len() {
+        if launch_args.jvm_args[x] == "-cp".to_string() {
+            launch_args.jvm_args[x + 1] = jvm_options.classpath.clone();
+            break;
+        }
+    }
+    dbg!(&launch_args.jvm_args);
     launch_args.main_class = version_manifest[0]["launcherMeta"]["mainClass"]["client"]
         .as_str()
         .unwrap()
@@ -215,7 +237,7 @@ fn convert_maven_to_path(input: &str) -> String {
     let package = parts[1];
     let version = parts[2];
     let file_name = format!("{}-{}.jar", package, version);
-    let path = format!("{}/{}/{}/", org, package, version);
+    let path = format!("{}/{}/{}", org, package, version);
 
     format!("{}/{}", path, file_name)
 }
