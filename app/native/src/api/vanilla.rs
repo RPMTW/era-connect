@@ -9,6 +9,7 @@ use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs::{self, create_dir_all, File};
+use std::io::Read;
 pub use std::path::PathBuf;
 use std::process::Command;
 use std::rc::Rc;
@@ -175,9 +176,17 @@ pub async fn prepare_quilt_download(
         .iter()
         .map(|x| library_directory.join(convert_maven_to_path(&x.name)))
         .collect::<Vec<_>>();
+    let sha1_path_vec = download_list_arc
+        .iter()
+        .map(|x| library_directory.join(format!("{}.sha1", convert_maven_to_path(&x.name))))
+        .collect::<Vec<_>>();
     let url_vec = download_list_arc
         .iter()
         .map(|x| convert_maven_to_path(&x.name))
+        .collect::<Vec<_>>();
+    let sha1_url_vec = download_list_arc
+        .iter()
+        .map(|x| format!("{}.sha1", convert_maven_to_path(&x.name)))
         .collect::<Vec<_>>();
     for x in &path_vec {
         fs::create_dir_all(x.parent().unwrap())?;
@@ -202,9 +211,39 @@ pub async fn prepare_quilt_download(
         .to_string();
     let path_vec_arc = Arc::new(path_vec);
     let url_vec_arc = Arc::new(url_vec);
+    let sha1_path_vec_arc = Arc::new(sha1_path_vec);
+    let sha1_url_vec_arc = Arc::new(sha1_url_vec);
+    let mut sha1_vec = FuturesUnordered::new();
     for _ in 0..num_libraries {
         let index_counter_clone = Arc::clone(&index_counter);
         let current_size_clone = Arc::clone(&current_size);
+        let sha1_path_vec_clone = Arc::clone(&sha1_path_vec_arc);
+        let sha1_url_vec_clone = Arc::clone(&sha1_url_vec_arc);
+        let download_list_clone = Arc::clone(&download_list_arc);
+        sha1_vec.push(tokio::spawn(async move {
+            let index = index_counter_clone.fetch_add(1, Ordering::SeqCst);
+            if index < num_libraries {
+                let library = &download_list_clone[index];
+                let url = format!("{}{}", library.url, sha1_url_vec_clone[index]);
+                let path = &sha1_path_vec_clone[index];
+                if !path.exists() {
+                    dbg!(&url, path);
+                    download_file(url, Some(path), current_size_clone).await
+                } else {
+                    Ok(())
+                }
+            } else {
+                Ok(())
+            }
+        }));
+    }
+    while let Some(future) = sha1_vec.next().await {
+        future??
+    }
+    for _ in 0..num_libraries {
+        let index_counter_clone = Arc::clone(&index_counter);
+        let current_size_clone = Arc::clone(&current_size);
+        let sha1_path_vec_clone = Arc::clone(&sha1_path_vec_arc);
         let path_vec_clone = Arc::clone(&path_vec_arc);
         let url_vec_clone = Arc::clone(&url_vec_arc);
         let download_list_clone = Arc::clone(&download_list_arc);
@@ -212,9 +251,18 @@ pub async fn prepare_quilt_download(
             let index = index_counter_clone.fetch_add(1, Ordering::SeqCst);
             if index < num_libraries {
                 let library = &download_list_clone[index];
+                let sha1_path = &sha1_path_vec_clone[index];
+                let mut sha1 = String::new();
+                File::open(sha1_path)?.read_to_string(&mut sha1)?;
                 let url = format!("{}{}", library.url, url_vec_clone[index]);
                 let path = &path_vec_clone[index];
-                download_file(url, Some(path), current_size_clone).await
+                if !path.exists() {
+                    download_file(url, Some(path), current_size_clone).await
+                } else if !validate_sha1(path, sha1.as_str()).await.is_ok() {
+                    download_file(url, Some(path), current_size_clone).await
+                } else {
+                    Ok(())
+                }
             } else {
                 Ok(())
             }
