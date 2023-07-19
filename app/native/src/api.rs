@@ -36,16 +36,15 @@ pub async fn launch_quilt(
     stream: StreamSink<ReturnType>,
     quilt_prepare: PrepareGameArgs,
 ) -> anyhow::Result<()> {
-    let d = prepare_quilt_download(
+    let quilt_download_args = prepare_quilt_download(
         "1.20.1".to_string(),
-        quilt_prepare.launch_args.clone(),
+        quilt_prepare.launch_args,
         quilt_prepare.jvm_args,
         quilt_prepare.game_args,
     )
     .await?;
-    let launch_args = d.launch_args.clone();
-    dbg!(&launch_args);
-    run_download(stream, d).await.unwrap();
-    vanilla::launch_game(launch_args).unwrap();
+    let launch_args = quilt_download_args.launch_args.clone();
+    run_download(stream, quilt_download_args).await?;
+    vanilla::launch_game(launch_args)?;
     Ok(())
 }

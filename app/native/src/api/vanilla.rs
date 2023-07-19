@@ -50,14 +50,14 @@ struct JvmFlags {
     arguments: Vec<String>,
     additional_arguments: Option<Vec<String>>,
 }
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct DownloadMetadata {
     sha1: String,
     size: usize,
     url: String,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct Downloads {
     client: DownloadMetadata,
     client_mappings: DownloadMetadata,
@@ -65,12 +65,12 @@ struct Downloads {
     server_mappings: DownloadMetadata,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct LoggingConfig {
     client: ClientConfig,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct ClientConfig {
     argument: String,
     file: LogFile,
@@ -78,7 +78,7 @@ struct ClientConfig {
     log_type: String,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct LogFile {
     id: String,
     sha1: String,
@@ -127,7 +127,7 @@ pub fn launch_game(launch_args: LaunchArgs) -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Default, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FabricLibrary {
     name: String,
     url: String,
@@ -139,10 +139,7 @@ pub async fn prepare_quilt_download(
     jvm_options: JvmArgs,
     game_options: GameArgs,
 ) -> Result<DownloadArgs> {
-    let meta_url = format!(
-        "https://meta.quiltmc.org/v3/versions/loader/{}",
-        game_version
-    );
+    let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
     let response = reqwest::get(meta_url).await?;
     let version_manifest: Value = response.json().await?;
     let current_size = Arc::new(AtomicUsize::new(0));
@@ -150,11 +147,16 @@ pub async fn prepare_quilt_download(
     let mut download_list = Vec::<FabricLibrary>::deserialize(
         &version_manifest[0]["launcherMeta"]["libraries"]["common"],
     )?;
-    let special_library_list = version_manifest[0].as_object().unwrap();
-    let special = vec!["loader", "hashed", "intermediary"];
-    for x in special {
-        let b = special_library_list.get(x).unwrap();
-        let maven = b["maven"].as_str().unwrap();
+    let quilt_loader_list = version_manifest[0].as_object().unwrap();
+    let quilt_loader_types = vec!["loader", "hashed", "intermediary"];
+    for loader_type in quilt_loader_types {
+        let maven = quilt_loader_list
+            .get(loader_type)
+            .ok_or_else(|| anyhow!("fail to get quilt_maven"))?
+            .get("maven")
+            .ok_or_else(|| anyhow!("fail to get quilt maven"))?
+            .as_str()
+            .ok_or_else(|| anyhow!("quilt maven is not a string!"))?;
         download_list.push(FabricLibrary {
             name: maven.to_string(),
             url: if maven.contains("quiltmc") {
@@ -177,7 +179,7 @@ pub async fn prepare_quilt_download(
         .iter()
         .map(|x| convert_maven_to_path(&x.name))
         .collect::<Vec<_>>();
-    for x in path_vec.iter() {
+    for x in &path_vec {
         fs::create_dir_all(x.parent().unwrap())?;
     }
     let mut jvm_options = jvm_options;
@@ -191,16 +193,12 @@ pub async fn prepare_quilt_download(
             .collect::<Vec<_>>()
             .join(":"),
     );
-    for x in 0..launch_args.jvm_args.len() {
-        if launch_args.jvm_args[x] == "-cp".to_string() {
-            launch_args.jvm_args[x + 1] = jvm_options.classpath.clone();
-            break;
-        }
+    if let Some(classpath_position) = launch_args.jvm_args.iter().position(|x| x == "-cp") {
+        launch_args.jvm_args[classpath_position + 1] = jvm_options.classpath.clone();
     }
-    dbg!(&launch_args.jvm_args);
     launch_args.main_class = version_manifest[0]["launcherMeta"]["mainClass"]["client"]
         .as_str()
-        .unwrap()
+        .ok_or_else(|| anyhow!("fail to get quilt mainclass"))?
         .to_string();
     let path_vec_arc = Arc::new(path_vec);
     let url_vec_arc = Arc::new(url_vec);
@@ -216,7 +214,7 @@ pub async fn prepare_quilt_download(
                 let library = &download_list_clone[index];
                 let url = format!("{}{}", library.url, url_vec_clone[index]);
                 let path = &path_vec_clone[index];
-                download_file(url, Some(&path), current_size_clone).await
+                download_file(url, Some(path), current_size_clone).await
             } else {
                 Ok(())
             }
@@ -233,13 +231,13 @@ pub async fn prepare_quilt_download(
 }
 fn convert_maven_to_path(input: &str) -> String {
     let parts: Vec<&str> = input.split(':').collect();
-    let org = parts[0].replace(".", "/");
+    let org = parts[0].replace('.', "/");
     let package = parts[1];
     let version = parts[2];
-    let file_name = format!("{}-{}.jar", package, version);
-    let path = format!("{}/{}/{}", org, package, version);
+    let file_name = format!("{package}-{version}.jar");
+    let path = format!("{org}/{package}/{version}");
 
-    format!("{}/{}", path, file_name)
+    format!("{path}/{file_name}")
 }
 
 pub async fn get_game_manifest(
@@ -311,7 +309,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
             .as_str()
             .unwrap()
             .to_string(),
-        auth_uuid: "".to_string(),
+        auth_uuid: String::new(),
         user_type: "mojang".to_string(),
         version_type: "release".to_string(),
     };
@@ -357,7 +355,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     let mut jvm_options = JvmArgs {
         launcher_name: "era-connect".to_string(),
         launcher_version: "0.0.1".to_string(),
-        classpath: "".to_string(),
+        classpath: String::new(),
         classpath_separator: ":".to_string(),
         primary_jar: client_jar.to_string_lossy().to_string(),
         library_directory: RustOpaque::new(library_directory.canonicalize()?),
@@ -365,7 +363,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
         native_directory: RustOpaque::new(native_directory.canonicalize()?),
     };
 
-    let max_concurrent_tasks = 256;
+    let max_concurrent_tasks = 128;
     let semaphore = Arc::new(Semaphore::new(max_concurrent_tasks));
     let mut handles = FuturesUnordered::new();
 
@@ -396,7 +394,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
 
     let mut parsed_library_list = Vec::new();
     for library in library_list_arc.iter() {
-        let (process_native, os_okto_download, _) = os_match(&library, &current_os_type).await;
+        let (process_native, os_okto_download, _) = os_match(library, &current_os_type);
         if os_okto_download && !process_native {
             parsed_library_list.push(library);
         }
@@ -476,22 +474,33 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     })
 }
 
-fn jvm_args_parse(jvm_flags: &Vec<String>, jvm_options: &JvmArgs) -> Vec<String> {
+fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmArgs) -> Vec<String> {
     let mut parsed_argument = Vec::new();
 
     for argument in jvm_flags.iter() {
-        parsed_argument.push(
-            argument
-                .replace("${", "")
-                .replace("}", "")
-                .replace(
-                    "natives_directory",
-                    &jvm_options.native_directory.to_string_lossy(),
-                )
-                .replace("launcher_name", &jvm_options.launcher_name)
-                .replace("launcher_version", &jvm_options.launcher_version)
-                .replace("classpath", &jvm_options.classpath),
-        );
+        let mut s = argument.as_str();
+        let mut buf = String::with_capacity(s.len());
+
+        while let Some(pos) = s.find("${") {
+            buf.push_str(&s[..pos]);
+            let start = &s[pos + 2..];
+
+            let Some(closing) = start.find("}") else { panic!("missing closing brace"); };
+            let var = &start[..closing];
+            // make processing string to next part
+            s = &start[closing + 1..];
+
+            let natives_directory = jvm_options.native_directory.to_string_lossy().to_string();
+            buf.push_str(match var {
+                "natives_directory" => &natives_directory,
+                "launcher_name" => &jvm_options.launcher_name,
+                "launcher_version" => &jvm_options.launcher_version,
+                "classpath" => &jvm_options.classpath,
+                _ => "",
+            });
+        }
+        buf.push_str(s);
+        parsed_argument.push(buf);
     }
     parsed_argument
 }
@@ -500,32 +509,34 @@ fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameArgs) -> Vec<Str
     let mut modified_arguments = Vec::new();
 
     for argument in &game_flags.arguments {
-        modified_arguments.push(
-            argument
-                .replace("${", "")
-                .replace("}", "")
-                .replace("auth_player_name", &game_arguments.auth_player_name)
-                .replace("version_name", &game_arguments.game_version_name)
-                .replace(
-                    "game_directory",
-                    game_arguments
-                        .game_directory
-                        .to_string_lossy()
-                        .to_string()
-                        .as_str(),
-                )
-                .replace(
-                    "assets_root",
-                    game_arguments
-                        .assets_root
-                        .to_string_lossy()
-                        .to_string()
-                        .as_str(),
-                )
-                .replace("assets_index_name", &game_arguments.assets_index_name)
-                .replace("auth_uuid", &game_arguments.auth_uuid)
-                .replace("version_type", &game_arguments.version_type),
-        );
+        let mut s = argument.as_str();
+        let mut buf = String::with_capacity(s.len());
+
+        while let Some(pos) = s.find("${") {
+            buf.push_str(&s[..pos]);
+            let start = &s[pos + 2..];
+
+            let Some(closing) = start.find("}") else { panic!("missing closing brace"); };
+            let var = &start[..closing];
+            // make processing string to next part
+            s = &start[closing + 1..];
+
+            let game_directory = game_arguments.game_directory.to_string_lossy().to_string();
+            let assets_root = game_arguments.assets_root.to_string_lossy().to_string();
+
+            buf.push_str(match var {
+                "auth_player_name" => &game_arguments.auth_player_name,
+                "version_name" => &game_arguments.game_version_name,
+                "game_directory" => &game_directory,
+                "assets_root" => &assets_root,
+                "assets_index_name" => &game_arguments.assets_index_name,
+                "auth_uuid" => &game_arguments.auth_uuid,
+                "version_type" => &game_arguments.version_type,
+                _ => "",
+            });
+        }
+        buf.push_str(s);
+        modified_arguments.push(buf);
     }
     modified_arguments
 }
