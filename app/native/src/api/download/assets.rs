@@ -1,11 +1,12 @@
 use super::util::{download_file, validate_sha1};
 use anyhow::{anyhow, Context, Result};
 use async_semaphore::Semaphore;
-use futures::stream::FuturesUnordered;
+use futures::Future;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
     path::PathBuf,
+    pin::Pin,
     sync::{atomic::AtomicUsize, atomic::Ordering, Arc},
 };
 use tokio::fs;
@@ -82,7 +83,7 @@ pub async fn parallel_assets(
     assets: AssetSettings,
     current_size: &Arc<AtomicUsize>,
     total_size: &Arc<AtomicUsize>,
-    handles: &mut FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
+    handles: &mut Vec<Pin<Box<dyn Future<Output = Result<()>>>>>,
 ) -> Result<()> {
     let asset_download_list_arc = Arc::new(assets.asset_download_list);
     let asset_download_hash_arc = Arc::new(assets.asset_download_hash);
@@ -115,7 +116,7 @@ pub async fn parallel_assets(
         };
         if okto_download {
             total_size.fetch_add(asset_download_size_arc[index], Ordering::Relaxed);
-            handles.push(tokio::spawn(async move {
+            handles.push(Box::pin(async move {
                 download_file(
                     asset_download_list_clone[index].clone(),
                     Some(&asset_download_path_clone[index]),

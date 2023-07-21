@@ -1,12 +1,12 @@
 use anyhow::{anyhow, bail};
 use anyhow::{Context, Result};
-use async_semaphore::Semaphore;
 use flutter_rust_bridge::{RustOpaque, StreamSink};
-use futures::{stream::FuturesUnordered, StreamExt};
+use futures::{Future, StreamExt};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs::create_dir_all;
 pub use std::path::PathBuf;
+use std::pin::Pin;
 use std::process::Command;
 use std::{
     sync::{
@@ -17,6 +17,7 @@ use std::{
     time::Duration,
 };
 use tokio::time::{self, Instant};
+use tokio_stream::{self as stream};
 
 use crate::api::download::library::os_match;
 use crate::api::download::rules::OsName;
@@ -252,7 +253,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
         native_directory: RustOpaque::new(native_directory.canonicalize()?),
     };
 
-    let mut handles = FuturesUnordered::new();
+    let mut handles = Vec::new();
 
     let current_size = Arc::new(AtomicUsize::new(0));
     let (library_path, native_library_path) = (
@@ -312,14 +313,14 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
 
     jvm_flags.arguments = jvm_args_parse(&jvm_flags.arguments, &jvm_options);
 
-    let client_download = || {
+    let mut client_download = || {
         let client_jar_future = download_file(
             downloads_list.client.url.clone(),
             None,
             Arc::clone(&current_size),
         );
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
-        handles.push(tokio::spawn(async move { client_jar_future.await }));
+        handles.push(Box::pin(async move { client_jar_future.await }));
     };
 
     if !PathBuf::from(extract_filename(&downloads_list.client.url)?).exists() {
@@ -423,7 +424,7 @@ fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameArgs) -> Vec<Str
 pub struct DownloadArgs {
     pub current_size: Arc<AtomicUsize>,
     pub total_size: Arc<AtomicUsize>,
-    pub handles: FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
+    pub handles: Vec<Pin<Box<dyn Future<Output = Result<()>>>>>,
     pub launch_args: LaunchArgs,
     pub jvm_args: JvmArgs,
     pub game_args: GameArgs,
@@ -431,7 +432,7 @@ pub struct DownloadArgs {
 
 // get progress and and launch download
 pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadArgs) -> Result<()> {
-    let mut handles = download_args.handles;
+    let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&download_args.current_size);
@@ -470,23 +471,12 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
         sink.close();
     });
     // Create a semaphore with a limit on the number of concurrent downloads
-    let concurrency_limit = 3;
-    let semaphore = Arc::new(Semaphore::new(concurrency_limit));
+    let concurrency_limit = 1024;
 
     // Create a stream of download tasks using futures_ordered
-    let download_stream = stream::iter(handles)
-        .map(|t| {
-            let semaphore = Arc::clone(&semaphore);
-            async move {
-                let _permit = semaphore.acquire_arc().await;
-                t.await
-            }
-        })
-        .buffer_unordered(concurrency_limit);
-    let results: Vec<_> = download_stream.collect().await;
-    // Check if any downloads failed
-    for result in results {
-        result??
+    let mut download_stream = stream::iter(handles).buffer_unordered(concurrency_limit);
+    while let Some(val) = download_stream.next().await {
+        val?
     }
     download_complete.store(true, Ordering::Release);
     task.await?;

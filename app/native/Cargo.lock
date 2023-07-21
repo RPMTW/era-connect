@@ -954,6 +954,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "tokio-scoped",
+ "tokio-stream",
  "zip",
 ]
 

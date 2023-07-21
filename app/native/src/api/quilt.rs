@@ -1,10 +1,13 @@
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
+use std::{
+    pin::Pin,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
 };
 
 use anyhow::{anyhow, Result};
-use futures::stream::FuturesUnordered;
+use futures::Future;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::{
@@ -90,7 +93,8 @@ pub async fn prepare_quilt_download(
         .ok_or_else(|| anyhow!("fail to get quilt mainclass"))?
         .to_string();
 
-    let handles = FuturesUnordered::new();
+    // HACK: dk why rust can't dedcue the type here
+    let mut handles: Vec<Pin<Box<dyn Future<Output = Result<()>>>>> = Vec::new();
     let index_counter = Arc::new(AtomicUsize::new(0));
     let current_size = Arc::new(AtomicUsize::new(0));
     let total_size = Arc::new(AtomicUsize::new(0));
@@ -105,7 +109,7 @@ pub async fn prepare_quilt_download(
         let current_size_clone = Arc::clone(&current_size);
         let download_list_clone = Arc::clone(&download_list_arc);
         let path_vec_clone = Arc::clone(&path_vec_arc);
-        handles.push(tokio::spawn(async move {
+        handles.push(Box::pin(async move {
             let index = index_counter_clone.fetch_add(1, Ordering::SeqCst);
 
             if index < num_libraries {

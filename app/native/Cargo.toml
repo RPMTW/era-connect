@@ -31,4 +31,5 @@ sha1 = "0.10.5"
 tempfile = "3.6.0"
 tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros", "fs", "sync"] }
 tokio-scoped = "0.2.0"
+tokio-stream = "0.1.14"
 zip = "0.6.6"
