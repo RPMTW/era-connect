@@ -1,4 +1,5 @@
 use std::{
+    future::IntoFuture,
     pin::Pin,
     sync::{
         atomic::{AtomicUsize, Ordering},
@@ -93,7 +94,7 @@ pub async fn prepare_quilt_download(
         .ok_or_else(|| anyhow!("fail to get quilt mainclass"))?
         .to_string();
 
-    // HACK: dk why rust can't dedcue the type here
+    // HACK: idk why rust can't dedcue the type here
     let mut handles: Vec<Pin<Box<dyn Future<Output = Result<()>>>>> = Vec::new();
     let index_counter = Arc::new(AtomicUsize::new(0));
     let current_size = Arc::new(AtomicUsize::new(0));
@@ -118,7 +119,10 @@ pub async fn prepare_quilt_download(
                 let path = &path_vec_clone[index];
                 let sha1_path = path.with_extension("jar.sha1");
                 let sha1_url = url.clone() + ".sha1";
-                download_file(sha1_url, Some(&sha1_path), Arc::clone(&current_size_clone)).await?;
+                if !sha1_path.exists() {
+                    download_file(sha1_url, Some(&sha1_path), Arc::clone(&current_size_clone))
+                        .await?;
+                }
                 let mut sha1 = String::new();
                 File::open(&sha1_path)
                     .await?
@@ -143,7 +147,8 @@ pub async fn prepare_quilt_download(
         launch_args,
         jvm_args: jvm_options,
         game_args: game_options,
-    })
+    }
+    .into())
 }
 fn convert_maven_to_path(input: &str) -> String {
     let parts: Vec<&str> = input.split(':').collect();

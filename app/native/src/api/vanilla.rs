@@ -471,7 +471,7 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
         sink.close();
     });
     // Create a semaphore with a limit on the number of concurrent downloads
-    let concurrency_limit = 1024;
+    let concurrency_limit = 128;
 
     // Create a stream of download tasks using futures_ordered
     let mut download_stream = stream::iter(handles).buffer_unordered(concurrency_limit);
