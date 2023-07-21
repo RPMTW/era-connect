@@ -281,8 +281,8 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
 
     let mut parsed_library_list = Vec::new();
     for library in library_list_arc.iter() {
-        let (process_native, os_okto_download, _) = os_match(library, &current_os_type);
-        if os_okto_download && !process_native {
+        let (process_native, is_native_library, _) = os_match(library, &current_os_type);
+        if !process_native && !is_native_library {
             parsed_library_list.push(library);
         }
     }

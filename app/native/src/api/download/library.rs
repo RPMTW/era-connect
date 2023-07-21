@@ -1,5 +1,5 @@
 use std::{
-    path::{Path, PathBuf},
+    path::PathBuf,
     pin::Pin,
     sync::{
         atomic::{AtomicUsize, Ordering},
@@ -39,36 +39,28 @@ pub struct Library {
 
 pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bool, &'a str) {
     let mut process_native = false;
-    let mut os_okto_download = false;
+    let mut is_native_library = false;
     let mut library_extension_type = "";
-    match &library.rules {
-        Some(rule) => {
-            for x in rule {
-                if let Some(os) = &x.os {
-                    if let Some(name) = os.name {
-                        if current_os_type == &name {
-                            match x.action {
-                                ActionType::Allow => {
-                                    process_native = true;
-                                    os_okto_download = true;
-                                }
-                                ActionType::Disallow => os_okto_download = false,
-                            }
+    if let Some(rule) = &library.rules {
+        for x in rule {
+            if let Some(os) = &x.os {
+                if let Some(name) = os.name {
+                    if current_os_type == &name {
+                        if x.action == ActionType::Allow {
+                            process_native = true;
                         }
-                        library_extension_type = match current_os_type {
-                            OsName::Osx => ".dylib",
-                            OsName::Linux => ".so",
-                            OsName::Windows => ".dll",
-                        }
+                    }
+                    is_native_library = true;
+                    library_extension_type = match current_os_type {
+                        OsName::Osx => ".dylib",
+                        OsName::Linux => ".so",
+                        OsName::Windows => ".dll",
                     }
                 }
             }
         }
-        None => {
-            os_okto_download = true;
-        }
     }
-    (process_native, os_okto_download, library_extension_type)
+    (process_native, is_native_library, library_extension_type)
 }
 pub async fn parallel_library(
     library_list_arc: Arc<Vec<Library>>,
@@ -78,7 +70,7 @@ pub async fn parallel_library(
     library_download_handles: &mut Vec<Pin<Box<dyn Future<Output = Result<()>>>>>,
 ) -> Result<Arc<AtomicUsize>> {
     let index_counter = Arc::new(AtomicUsize::new(0));
-    let size_counter = current;
+    let current_size = current;
     let download_total_size = Arc::new(AtomicUsize::new(0));
     let num_libraries = library_list_arc.len();
 
@@ -93,8 +85,8 @@ pub async fn parallel_library(
     for _ in 0..num_libraries {
         let library_list_clone = Arc::clone(&library_list_arc);
         let counter_clone = Arc::clone(&index_counter);
-        let size_clone = Arc::clone(&size_counter);
-        let folder_clone = folder.clone();
+        let current_size_clone = Arc::clone(&current_size);
+        let folder_clone = Arc::clone(&folder);
         let download_total_size_clone = Arc::clone(&download_total_size);
         let native_folder_clone = Arc::clone(&native_folder);
         let handle = Box::pin(async move {
@@ -102,14 +94,15 @@ pub async fn parallel_library(
             if index < num_libraries {
                 let library = &library_list_clone[index];
                 let path = library.downloads.artifact.path.clone();
-                let (process_native, os_okto_download, library_extension) =
+                let (process_native, is_native_library, library_extension) =
                     os_match(library, &current_os_type);
-                let download_path = folder_clone.join(&path);
-                let okto_download = if download_path.exists() {
-                    if let Err(x) = if process_native {
-                        Ok(())
+                let non_native_download_path = folder_clone.join(&path);
+                let need_redownload = if non_native_download_path.exists() {
+                    if let Err(x) = if !process_native && !is_native_library {
+                        validate_sha1(&non_native_download_path, &library.downloads.artifact.sha1)
+                            .await
                     } else {
-                        validate_sha1(&download_path, &library.downloads.artifact.sha1).await
+                        Ok(())
                     } {
                         eprintln!("{x}, \nredownloading.");
                         true
@@ -119,43 +112,43 @@ pub async fn parallel_library(
                 } else {
                     true
                 };
-                if !os_okto_download || !okto_download {
-                    Ok(())
-                } else if process_native {
-                    async {
-                        let url = library.downloads.artifact.url.to_string();
-                        let mut response = reqwest::get(&url).await?;
-                        let mut data = Vec::new();
 
-                        while let Some(chunk) = response.chunk().await? {
-                            size_clone.fetch_add(chunk.len(), Ordering::Relaxed);
-                            data.extend_from_slice(&chunk);
-                        }
-                        let reader = std::io::Cursor::new(&data);
-                        if let Ok(mut archive) = zip::ZipArchive::new(reader) {
-                            archive.extract(native_folder_clone.join("temp").as_path())?;
-                            for x in archive.file_names() {
-                                if (x.contains(library_extension) || x.contains(".sha1"))
-                                    && !x.contains(".git")
-                                {
-                                    std::fs::rename(
-                                        native_folder_clone.join("temp").join(x),
-                                        native_folder_clone
-                                            .join(PathBuf::from(x).file_name().unwrap()),
-                                    )?;
-                                }
+                // always download(kinda required for now.)
+                if process_native {
+                    let url = library.downloads.artifact.url.to_string();
+                    let response = reqwest::get(&url).await?;
+                    let bytes = response.bytes().await?;
+                    current_size_clone.fetch_add(bytes.len(), Ordering::Relaxed);
+                    let reader = std::io::Cursor::new(bytes);
+                    if let Ok(mut archive) = zip::ZipArchive::new(reader) {
+                        let native_temp_dir = native_folder_clone.join("temp");
+                        archive.extract(&native_temp_dir.as_path())?;
+                        for x in archive.file_names() {
+                            if (x.contains(library_extension) || x.contains(".sha1"))
+                                && !x.contains(".git")
+                            {
+                                std::fs::rename(
+                                    native_temp_dir.join(x),
+                                    native_folder_clone.join(PathBuf::from(x).file_name().unwrap()),
+                                )?;
                             }
                         }
-                        Ok(())
                     }
-                    .await
+                    Ok(())
+                } else if !need_redownload {
+                    Ok(())
                 } else {
                     download_total_size_clone
                         .fetch_add(library.downloads.artifact.size, Ordering::Relaxed);
-                    let parent_dir = download_path.parent().unwrap();
+                    let parent_dir = non_native_download_path.parent().unwrap();
                     fs::create_dir_all(parent_dir).await?;
                     let url = &library.downloads.artifact.url;
-                    download_file(url.clone(), Some(&download_path), size_clone).await
+                    download_file(
+                        url.clone(),
+                        Some(&non_native_download_path),
+                        current_size_clone,
+                    )
+                    .await
                 }
             } else {
                 Ok(())
