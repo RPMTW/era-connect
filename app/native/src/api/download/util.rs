@@ -31,7 +31,26 @@ pub async fn download_file(
         .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
         .build()
         .map_err(|err| anyhow!("{err:?}\n{}", filename.to_string()))?;
-    let mut response = client.get(&url).send().await.unwrap();
+    let response_result = client.get(&url).send().await;
+    let retry_amount = 3;
+    let mut response = match response_result {
+        Ok(x) => Ok(x),
+        Err(err) => {
+            let mut temp = Err(err);
+            for i in 0..retry_amount {
+                match client.get(&url).send().await {
+                    Ok(x) => {
+                        temp = Ok(x);
+                        break;
+                    }
+                    Err(x) => {
+                        eprintln!("{}, retry count: {}", x, i);
+                    }
+                }
+            }
+            temp
+        }
+    }?;
     let mut file = File::create(&filename).await?;
     while let Some(chunk) = response.chunk().await? {
         file.write_all(&chunk).await?;
