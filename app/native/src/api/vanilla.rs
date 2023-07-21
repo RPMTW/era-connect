@@ -2,17 +2,12 @@ use anyhow::{anyhow, bail};
 use anyhow::{Context, Result};
 use async_semaphore::Semaphore;
 use flutter_rust_bridge::{RustOpaque, StreamSink};
-use futures::stream;
 use futures::{stream::FuturesUnordered, StreamExt};
-use glob::Pattern;
-use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::fs::{self, create_dir_all, File};
-use std::io::Read;
+use std::fs::create_dir_all;
 pub use std::path::PathBuf;
 use std::process::Command;
-use std::rc::Rc;
 use std::{
     sync::{
         atomic::Ordering,
@@ -129,163 +124,9 @@ pub fn launch_game(launch_args: LaunchArgs) -> Result<()> {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct FabricLibrary {
+pub struct QuiltLibrary {
     name: String,
     url: String,
-}
-
-pub async fn prepare_quilt_download(
-    game_version: String,
-    launch_args: LaunchArgs,
-    jvm_options: JvmArgs,
-    game_options: GameArgs,
-) -> Result<DownloadArgs> {
-    let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
-    let response = reqwest::get(meta_url).await?;
-    let version_manifest: Value = response.json().await?;
-    let current_size = Arc::new(AtomicUsize::new(0));
-    let total_size = Arc::new(AtomicUsize::new(0));
-    let mut download_list = Vec::<FabricLibrary>::deserialize(
-        &version_manifest[0]["launcherMeta"]["libraries"]["common"],
-    )?;
-    let quilt_loader_list = version_manifest[0].as_object().unwrap();
-    let quilt_loader_types = vec!["loader", "hashed", "intermediary"];
-    for loader_type in quilt_loader_types {
-        let maven = quilt_loader_list
-            .get(loader_type)
-            .ok_or_else(|| anyhow!("fail to get quilt_maven"))?
-            .get("maven")
-            .ok_or_else(|| anyhow!("fail to get quilt maven"))?
-            .as_str()
-            .ok_or_else(|| anyhow!("quilt maven is not a string!"))?;
-        download_list.push(FabricLibrary {
-            name: maven.to_string(),
-            url: if maven.contains("quiltmc") {
-                "https://maven.quiltmc.org/repository/release/".to_string()
-            } else {
-                "https://maven.fabricmc.net/".to_string()
-            },
-        });
-    }
-    let handles = FuturesUnordered::new();
-    let index_counter = Arc::new(AtomicUsize::new(0));
-    let library_directory = jvm_options.library_directory.clone();
-    let num_libraries = download_list.len();
-    let download_list_arc = Arc::new(download_list);
-    let path_vec = download_list_arc
-        .iter()
-        .map(|x| library_directory.join(convert_maven_to_path(&x.name)))
-        .collect::<Vec<_>>();
-    let sha1_path_vec = download_list_arc
-        .iter()
-        .map(|x| library_directory.join(format!("{}.sha1", convert_maven_to_path(&x.name))))
-        .collect::<Vec<_>>();
-    let url_vec = download_list_arc
-        .iter()
-        .map(|x| convert_maven_to_path(&x.name))
-        .collect::<Vec<_>>();
-    let sha1_url_vec = download_list_arc
-        .iter()
-        .map(|x| format!("{}.sha1", convert_maven_to_path(&x.name)))
-        .collect::<Vec<_>>();
-    for x in &path_vec {
-        fs::create_dir_all(x.parent().unwrap())?;
-    }
-    let mut jvm_options = jvm_options;
-    let mut launch_args = launch_args;
-    // HACK
-    jvm_options.classpath.push(':');
-    jvm_options.classpath.push_str(
-        &path_vec
-            .iter()
-            .map(|x| x.to_string_lossy().to_string())
-            .collect::<Vec<_>>()
-            .join(":"),
-    );
-    if let Some(classpath_position) = launch_args.jvm_args.iter().position(|x| x == "-cp") {
-        launch_args.jvm_args[classpath_position + 1] = jvm_options.classpath.clone();
-    }
-    launch_args.main_class = version_manifest[0]["launcherMeta"]["mainClass"]["client"]
-        .as_str()
-        .ok_or_else(|| anyhow!("fail to get quilt mainclass"))?
-        .to_string();
-    let path_vec_arc = Arc::new(path_vec);
-    let url_vec_arc = Arc::new(url_vec);
-    let sha1_path_vec_arc = Arc::new(sha1_path_vec);
-    let sha1_url_vec_arc = Arc::new(sha1_url_vec);
-    let mut sha1_vec = FuturesUnordered::new();
-    for _ in 0..num_libraries {
-        let index_counter_clone = Arc::clone(&index_counter);
-        let current_size_clone = Arc::clone(&current_size);
-        let sha1_path_vec_clone = Arc::clone(&sha1_path_vec_arc);
-        let sha1_url_vec_clone = Arc::clone(&sha1_url_vec_arc);
-        let download_list_clone = Arc::clone(&download_list_arc);
-        sha1_vec.push(tokio::spawn(async move {
-            let index = index_counter_clone.fetch_add(1, Ordering::SeqCst);
-            if index < num_libraries {
-                let library = &download_list_clone[index];
-                let url = format!("{}{}", library.url, sha1_url_vec_clone[index]);
-                let path = &sha1_path_vec_clone[index];
-                if !path.exists() {
-                    dbg!(&url, path);
-                    download_file(url, Some(path), current_size_clone).await
-                } else {
-                    Ok(())
-                }
-            } else {
-                Ok(())
-            }
-        }));
-    }
-    while let Some(future) = sha1_vec.next().await {
-        future??
-    }
-    for _ in 0..num_libraries {
-        let index_counter_clone = Arc::clone(&index_counter);
-        let current_size_clone = Arc::clone(&current_size);
-        let sha1_path_vec_clone = Arc::clone(&sha1_path_vec_arc);
-        let path_vec_clone = Arc::clone(&path_vec_arc);
-        let url_vec_clone = Arc::clone(&url_vec_arc);
-        let download_list_clone = Arc::clone(&download_list_arc);
-        handles.push(tokio::spawn(async move {
-            let index = index_counter_clone.fetch_add(1, Ordering::SeqCst);
-            if index < num_libraries {
-                let library = &download_list_clone[index];
-                let sha1_path = &sha1_path_vec_clone[index];
-                let mut sha1 = String::new();
-                File::open(sha1_path)?.read_to_string(&mut sha1)?;
-                let url = format!("{}{}", library.url, url_vec_clone[index]);
-                let path = &path_vec_clone[index];
-                if !path.exists() {
-                    download_file(url, Some(path), current_size_clone).await
-                } else if !validate_sha1(path, sha1.as_str()).await.is_ok() {
-                    download_file(url, Some(path), current_size_clone).await
-                } else {
-                    Ok(())
-                }
-            } else {
-                Ok(())
-            }
-        }));
-    }
-    Ok(DownloadArgs {
-        current_size: Arc::clone(&current_size),
-        total_size: Arc::clone(&total_size),
-        handles,
-        launch_args,
-        jvm_args: jvm_options,
-        game_args: game_options,
-    })
-}
-fn convert_maven_to_path(input: &str) -> String {
-    let parts: Vec<&str> = input.split(':').collect();
-    let org = parts[0].replace('.', "/");
-    let package = parts[1];
-    let version = parts[2];
-    let file_name = format!("{package}-{version}.jar");
-    let path = format!("{org}/{package}/{version}");
-
-    format!("{path}/{file_name}")
 }
 
 pub async fn get_game_manifest(
@@ -379,7 +220,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     let library_list: Vec<Library> = Vec::<Library>::deserialize(&game_manifest["libraries"])
         .context("Failed to Serialize contents[\"libraries\"]")?;
 
-    let logging: LoggingConfig = LoggingConfig::deserialize(&game_manifest["logging"])
+    let _logging: LoggingConfig = LoggingConfig::deserialize(&game_manifest["logging"])
         .context("Failed to Serialize logging")?;
 
     let main_class: String =
@@ -533,7 +374,7 @@ fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmArgs) -> Vec<String> {
             buf.push_str(&s[..pos]);
             let start = &s[pos + 2..];
 
-            let Some(closing) = start.find("}") else { panic!("missing closing brace"); };
+            let Some(closing) = start.find('}') else { panic!("missing closing brace"); };
             let var = &start[..closing];
             // make processing string to next part
             s = &start[closing + 1..];
@@ -564,7 +405,7 @@ fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameArgs) -> Vec<Str
             buf.push_str(&s[..pos]);
             let start = &s[pos + 2..];
 
-            let Some(closing) = start.find("}") else { panic!("missing closing brace"); };
+            let Some(closing) = start.find('}') else { panic!("missing closing brace"); };
             let var = &start[..closing];
             // make processing string to next part
             s = &start[closing + 1..];
@@ -590,9 +431,9 @@ fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameArgs) -> Vec<Str
 }
 
 pub struct DownloadArgs {
-    current_size: Arc<AtomicUsize>,
-    total_size: Arc<AtomicUsize>,
-    handles: FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
+    pub current_size: Arc<AtomicUsize>,
+    pub total_size: Arc<AtomicUsize>,
+    pub handles: FuturesUnordered<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>,
     pub launch_args: LaunchArgs,
     pub jvm_args: JvmArgs,
     pub game_args: GameArgs,
