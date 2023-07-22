@@ -90,7 +90,7 @@ pub async fn prepare_quilt_download<'a>(
         .ok_or_else(|| anyhow!("fail to get quilt mainclass"))?
         .to_string();
 
-    // NOTE: rust can't dedcue the type here
+    // NOTE: rust can't dedcue the type here(cause dyn trait)
     let mut handles: HandlesType = Vec::new();
     let index_counter = Arc::new(AtomicUsize::new(0));
     let current_size = Arc::new(AtomicUsize::new(0));

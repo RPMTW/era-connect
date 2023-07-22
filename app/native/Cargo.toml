@@ -9,27 +9,20 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-anyhow = "1.0.71"
-async-semaphore = "1.2.0"
+anyhow = { version = "1.0.72", features = ["backtrace"] }
 bytes = "1.4.0"
-chrono = "0.4.26"
+color-eyre = "0.6.2"
 dirs = "5.0.1"
-duct = "0.13.6"
 error-chain = "0.12.4"
 flutter_rust_bridge = { version = "1.78.0", features = ["zero-copy"] }
 futures = "0.3.28"
 glob = "0.3.1"
 hex = "0.4.3"
-indicatif = "0.17.5"
 os-version = "0.2.0"
-os_info = "3.7.0"
-os_type = "2.6.0"
 reqwest = { version = "0.11.18", features = ["blocking", "json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json =  { version ="1.0.99"}
 sha1 = "0.10.5"
-tempfile = "3.6.0"
 tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros", "fs", "sync"] }
-tokio-scoped = "0.2.0"
 tokio-stream = "0.1.14"
 zip = "0.6.6"

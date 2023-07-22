@@ -31,11 +31,21 @@ void testRust() async {
   final vanilla = api.downloadVanilla();
 
   vanilla.listen((event) {
+    print("speed");
     print(event.progress?.speed);
+    print("totalsize");
+    print(event.progress?.totalSize);
+    print("percent");
+    print(event.progress?.percentages);
     if (event.prepareNameArgs != null) {
       final quilt = api.downloadQuilt(quiltPrepare: event.prepareNameArgs!);
       quilt.listen((event) {
+        print("speed");
         print(event.progress?.speed);
+        print("totalsize");
+        print(event.progress?.totalSize);
+        print("percent");
+        print(event.progress?.percentages);
         if (event.prepareNameArgs != null) {
           api.launchGame(preLaunchArguments: event.prepareNameArgs!);
         }

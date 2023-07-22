@@ -17,7 +17,6 @@ use std::{
     time::Duration,
 };
 use tokio::time::{self, Instant};
-use tokio_stream::{self as stream};
 
 use crate::api::download::library::os_match;
 use crate::api::download::rules::OsName;
@@ -187,16 +186,24 @@ pub async fn prepare_vanilla_download<'a>() -> Result<DownloadArgs<'a>> {
         "downloads/.minecraft/versions/{current_version}/natives"
     ));
 
-    create_dir_all(&library_directory)?;
-    create_dir_all(&asset_directory)?;
-    create_dir_all(&game_directory)?;
-    create_dir_all(&native_directory)?;
+    create_dir_all(&library_directory).context("fail to create library_directory(vanilla)")?;
+    create_dir_all(&asset_directory).context("fail to create asset_directory(vanilla)")?;
+    create_dir_all(&game_directory).context("fail to create game_directory(vanilla)")?;
+    create_dir_all(&native_directory).context("fail to create native_directory(vanilla)")?;
 
     let game_options = GameArgs {
         auth_player_name: "Kyle".to_string(),
         game_version_name: current_version,
-        game_directory: RustOpaque::new(game_directory.canonicalize()?),
-        assets_root: RustOpaque::new(asset_directory.canonicalize()?),
+        game_directory: RustOpaque::new(
+            game_directory
+                .canonicalize()
+                .context("Fail to canonicalize game_directory(game_options)")?,
+        ),
+        assets_root: RustOpaque::new(
+            asset_directory
+                .canonicalize()
+                .context("Fail to canonicalize asset_directory(game_options)")?,
+        ),
         assets_index_name: game_manifest["assetIndex"]["id"]
             .as_str()
             .unwrap()
@@ -250,9 +257,21 @@ pub async fn prepare_vanilla_download<'a>() -> Result<DownloadArgs<'a>> {
         classpath: String::new(),
         classpath_separator: ":".to_string(),
         primary_jar: client_jar.to_string_lossy().to_string(),
-        library_directory: RustOpaque::new(library_directory.canonicalize()?),
-        game_directory: RustOpaque::new(game_directory.canonicalize()?),
-        native_directory: RustOpaque::new(native_directory.canonicalize()?),
+        library_directory: RustOpaque::new(
+            library_directory
+                .canonicalize()
+                .context("Fail to canonicalize library_directory(jvm_options)")?,
+        ),
+        game_directory: RustOpaque::new(
+            game_directory
+                .canonicalize()
+                .context("Fail to canonicalize game_directory(jvm_options)")?,
+        ),
+        native_directory: RustOpaque::new(
+            native_directory
+                .canonicalize()
+                .context("Fail to canonicalize native_directory(jvm_options)")?,
+        ),
     };
 
     let mut handles = Vec::new();
@@ -478,7 +497,8 @@ pub async fn run_download(
     // Create a semaphore with a limit on the number of concurrent downloads
     let concurrency_limit = 128;
 
-    let mut download_stream = stream::iter(handles.iter_mut()).buffer_unordered(concurrency_limit);
+    let mut download_stream =
+        tokio_stream::iter(handles.iter_mut()).buffer_unordered(concurrency_limit);
     while let Some(val) = download_stream.next().await {
         val?
     }

@@ -6,7 +6,7 @@ use std::{
     },
 };
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use flutter_rust_bridge::RustOpaque;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
@@ -116,8 +116,13 @@ pub async fn parallel_library(
                 // always download(kinda required for now.)
                 if process_native {
                     let url = library.downloads.artifact.url.to_string();
-                    let response = reqwest::get(&url).await?;
-                    let bytes = response.bytes().await?;
+                    let response = reqwest::get(&url)
+                        .await
+                        .context("native fail to download")?;
+                    let bytes = response
+                        .bytes()
+                        .await
+                        .context("native fail to convert to bytes")?;
                     current_size_clone.fetch_add(bytes.len(), Ordering::Relaxed);
                     let reader = std::io::Cursor::new(bytes);
                     if let Ok(mut archive) = zip::ZipArchive::new(reader) {
@@ -130,6 +135,9 @@ pub async fn parallel_library(
                                 std::fs::rename(
                                     native_temp_dir.join(x),
                                     native_folder_clone.join(PathBuf::from(x).file_name().unwrap()),
+                                )
+                                .context(
+                                    "Fail to move from native_temp_dir -> native_folder_clone",
                                 )?;
                             }
                         }
@@ -141,7 +149,9 @@ pub async fn parallel_library(
                     download_total_size_clone
                         .fetch_add(library.downloads.artifact.size, Ordering::Relaxed);
                     let parent_dir = non_native_download_path.parent().unwrap();
-                    fs::create_dir_all(parent_dir).await?;
+                    fs::create_dir_all(parent_dir)
+                        .await
+                        .context("Fail to create parent dir(library)")?;
                     let url = &library.downloads.artifact.url;
                     download_file(
                         url.clone(),
