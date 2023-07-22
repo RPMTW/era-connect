@@ -130,6 +130,8 @@ pub struct QuiltLibrary {
     url: String,
 }
 
+pub type HandlesType<'a> = Vec<Pin<Box<dyn Future<Output = Result<()>> + Send + 'a>>>;
+
 pub async fn get_game_manifest(
     download_target: String,
     version: Option<String>,
@@ -157,7 +159,7 @@ pub async fn get_game_manifest(
     Ok((contents, version.unwrap()))
 }
 
-pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
+pub async fn prepare_vanilla_download<'a>() -> Result<DownloadArgs<'a>> {
     let (game_manifest, current_version) = get_game_manifest(
         "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_string(),
         None,
@@ -313,7 +315,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
 
     jvm_flags.arguments = jvm_args_parse(&jvm_flags.arguments, &jvm_options);
 
-    let mut client_download = || {
+    let client_download = async {
         let client_jar_future = download_file(
             downloads_list.client.url.clone(),
             None,
@@ -324,7 +326,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     };
 
     if !PathBuf::from(extract_filename(&downloads_list.client.url)?).exists() {
-        client_download();
+        client_download.await;
     } else if let Err(x) = validate_sha1(
         &PathBuf::from(&extract_filename(&downloads_list.client.url)?),
         &downloads_list.client.sha1,
@@ -332,7 +334,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     .await
     {
         eprintln!("{x}");
-        client_download();
+        client_download.await;
     }
     let asset_settings = extract_assets(asset_index, asset_directory).await?;
 
@@ -421,18 +423,21 @@ fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameArgs) -> Vec<Str
     modified_arguments
 }
 
-pub struct DownloadArgs {
+pub struct DownloadArgs<'a> {
     pub current_size: Arc<AtomicUsize>,
     pub total_size: Arc<AtomicUsize>,
-    pub handles: Vec<Pin<Box<dyn Future<Output = Result<()>>>>>,
+    pub handles: HandlesType<'a>,
     pub launch_args: LaunchArgs,
     pub jvm_args: JvmArgs,
     pub game_args: GameArgs,
 }
 
 // get progress and and launch download
-pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadArgs) -> Result<()> {
-    let handles = download_args.handles;
+pub async fn run_download(
+    sink: StreamSink<ReturnType>,
+    download_args: DownloadArgs<'_>,
+) -> Result<()> {
+    let mut handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&download_args.current_size);
@@ -473,8 +478,7 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
     // Create a semaphore with a limit on the number of concurrent downloads
     let concurrency_limit = 128;
 
-    // Create a stream of download tasks using futures_ordered
-    let mut download_stream = stream::iter(handles).buffer_unordered(concurrency_limit);
+    let mut download_stream = stream::iter(handles.iter_mut()).buffer_unordered(concurrency_limit);
     while let Some(val) = download_stream.next().await {
         val?
     }

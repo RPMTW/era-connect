@@ -1,14 +1,9 @@
-use std::{
-    future::IntoFuture,
-    pin::Pin,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 
 use anyhow::{anyhow, Result};
-use futures::Future;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::{
@@ -18,6 +13,7 @@ use tokio::{
 
 use super::{
     download::util::{download_file, validate_sha1},
+    vanilla::HandlesType,
     DownloadArgs, GameArgs, JvmArgs, LaunchArgs,
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -26,12 +22,12 @@ pub struct QuiltLibrary {
     url: String,
 }
 
-pub async fn prepare_quilt_download(
+pub async fn prepare_quilt_download<'a>(
     game_version: String,
     launch_args: LaunchArgs,
     jvm_options: JvmArgs,
     game_options: GameArgs,
-) -> Result<DownloadArgs> {
+) -> Result<DownloadArgs<'a>> {
     let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
     let response = reqwest::get(meta_url).await?;
     let version_manifest: Value = response.json().await?;
@@ -94,8 +90,8 @@ pub async fn prepare_quilt_download(
         .ok_or_else(|| anyhow!("fail to get quilt mainclass"))?
         .to_string();
 
-    // HACK: idk why rust can't dedcue the type here
-    let mut handles: Vec<Pin<Box<dyn Future<Output = Result<()>>>>> = Vec::new();
+    // NOTE: rust can't dedcue the type here
+    let mut handles: HandlesType = Vec::new();
     let index_counter = Arc::new(AtomicUsize::new(0));
     let current_size = Arc::new(AtomicUsize::new(0));
     let total_size = Arc::new(AtomicUsize::new(0));

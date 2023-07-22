@@ -1,6 +1,5 @@
 use std::{
     path::PathBuf,
-    pin::Pin,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -9,9 +8,10 @@ use std::{
 
 use anyhow::{bail, Result};
 use flutter_rust_bridge::RustOpaque;
-use futures::Future;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
+
+use crate::api::vanilla::HandlesType;
 
 use super::{
     rules::{ActionType, OsName, Rule},
@@ -67,7 +67,7 @@ pub async fn parallel_library(
     folder: Arc<RustOpaque<PathBuf>>,
     native_folder: Arc<RustOpaque<PathBuf>>,
     current: Arc<AtomicUsize>,
-    library_download_handles: &mut Vec<Pin<Box<dyn Future<Output = Result<()>>>>>,
+    library_download_handles: &mut HandlesType<'_>,
 ) -> Result<Arc<AtomicUsize>> {
     let index_counter = Arc::new(AtomicUsize::new(0));
     let current_size = current;

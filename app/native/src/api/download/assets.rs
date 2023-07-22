@@ -1,12 +1,11 @@
+use crate::api::vanilla::HandlesType;
+
 use super::util::{download_file, validate_sha1};
 use anyhow::{anyhow, Context, Result};
-use async_semaphore::Semaphore;
-use futures::Future;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
     path::PathBuf,
-    pin::Pin,
     sync::{atomic::AtomicUsize, atomic::Ordering, Arc},
 };
 use tokio::fs;
@@ -83,7 +82,7 @@ pub async fn parallel_assets(
     assets: AssetSettings,
     current_size: &Arc<AtomicUsize>,
     total_size: &Arc<AtomicUsize>,
-    handles: &mut Vec<Pin<Box<dyn Future<Output = Result<()>>>>>,
+    handles: &mut HandlesType<'_>,
 ) -> Result<()> {
     let asset_download_list_arc = Arc::new(assets.asset_download_list);
     let asset_download_hash_arc = Arc::new(assets.asset_download_hash);
