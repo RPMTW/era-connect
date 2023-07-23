@@ -4,7 +4,6 @@ use flutter_rust_bridge::{RustOpaque, StreamSink};
 use futures::{Future, StreamExt};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::fs::create_dir_all;
 pub use std::path::PathBuf;
 use std::pin::Pin;
 use std::process::Command;
@@ -16,6 +15,8 @@ use std::{
     },
     time::Duration,
 };
+use tokio::fs::{create_dir_all, File};
+use tokio::io::AsyncWriteExt;
 use tokio::time::{self, Instant};
 
 use crate::api::download::library::os_match;
@@ -83,7 +84,7 @@ struct LogFile {
 }
 
 #[derive(Clone, Debug)]
-pub struct JvmArgs {
+pub struct JvmOptions {
     pub launcher_name: String,
     pub launcher_version: String,
     pub classpath: String,
@@ -95,7 +96,7 @@ pub struct JvmArgs {
 }
 
 #[derive(Clone, Debug)]
-pub struct GameArgs {
+pub struct GameOptions {
     pub auth_player_name: String,
     pub game_version_name: String,
     pub game_directory: RustOpaque<PathBuf>,
@@ -129,7 +130,7 @@ pub struct QuiltLibrary {
     url: String,
 }
 
-pub type HandlesType<'a> = Vec<Pin<Box<dyn Future<Output = Result<()>> + Send + 'a>>>;
+pub type HandlesType = Vec<Pin<Box<dyn Future<Output = Result<()>> + Send>>>;
 
 pub async fn get_game_manifest(
     download_target: String,
@@ -158,7 +159,7 @@ pub async fn get_game_manifest(
     Ok((contents, version.unwrap()))
 }
 
-pub async fn prepare_vanilla_download<'a>() -> Result<DownloadArgs<'a>> {
+pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     let (game_manifest, current_version) = get_game_manifest(
         "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_string(),
         None,
@@ -186,12 +187,20 @@ pub async fn prepare_vanilla_download<'a>() -> Result<DownloadArgs<'a>> {
         "downloads/.minecraft/versions/{current_version}/natives"
     ));
 
-    create_dir_all(&library_directory).context("fail to create library_directory(vanilla)")?;
-    create_dir_all(&asset_directory).context("fail to create asset_directory(vanilla)")?;
-    create_dir_all(&game_directory).context("fail to create game_directory(vanilla)")?;
-    create_dir_all(&native_directory).context("fail to create native_directory(vanilla)")?;
+    create_dir_all(&library_directory)
+        .await
+        .context("fail to create library_directory(vanilla)")?;
+    create_dir_all(&asset_directory)
+        .await
+        .context("fail to create asset_directory(vanilla)")?;
+    create_dir_all(&game_directory)
+        .await
+        .context("fail to create game_directory(vanilla)")?;
+    create_dir_all(&native_directory)
+        .await
+        .context("fail to create native_directory(vanilla)")?;
 
-    let game_options = GameArgs {
+    let game_options = GameOptions {
         auth_player_name: "Kyle".to_string(),
         game_version_name: current_version,
         game_directory: RustOpaque::new(
@@ -251,7 +260,7 @@ pub async fn prepare_vanilla_download<'a>() -> Result<DownloadArgs<'a>> {
         additional_arguments: None,
     };
 
-    let mut jvm_options = JvmArgs {
+    let mut jvm_options = JvmOptions {
         launcher_name: "era-connect".to_string(),
         launcher_version: "0.0.1".to_string(),
         classpath: String::new(),
@@ -334,18 +343,14 @@ pub async fn prepare_vanilla_download<'a>() -> Result<DownloadArgs<'a>> {
 
     jvm_flags.arguments = jvm_args_parse(&jvm_flags.arguments, &jvm_options);
 
-    let client_download = async {
-        let client_jar_future = download_file(
-            downloads_list.client.url.clone(),
-            None,
-            Arc::clone(&current_size),
-        );
-        total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
-        handles.push(Box::pin(async move { client_jar_future.await }));
-    };
+    let client_jar_filename = PathBuf::from(extract_filename(&downloads_list.client.url)?);
 
-    if !PathBuf::from(extract_filename(&downloads_list.client.url)?).exists() {
-        client_download.await;
+    if !client_jar_filename.exists() {
+        let bytes =
+            download_file(downloads_list.client.url.clone(), Arc::clone(&current_size)).await?;
+        let mut f = File::create(client_jar_filename).await?;
+        f.write_all(&bytes).await?;
+        total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     } else if let Err(x) = validate_sha1(
         &PathBuf::from(&extract_filename(&downloads_list.client.url)?),
         &downloads_list.client.sha1,
@@ -353,7 +358,11 @@ pub async fn prepare_vanilla_download<'a>() -> Result<DownloadArgs<'a>> {
     .await
     {
         eprintln!("{x}");
-        client_download.await;
+        let bytes =
+            download_file(downloads_list.client.url.clone(), Arc::clone(&current_size)).await?;
+        let mut f = File::create(client_jar_filename).await?;
+        f.write_all(&bytes).await?;
+        total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     }
     let asset_settings = extract_assets(asset_index, asset_directory).await?;
 
@@ -375,7 +384,7 @@ pub async fn prepare_vanilla_download<'a>() -> Result<DownloadArgs<'a>> {
     })
 }
 
-fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmArgs) -> Vec<String> {
+fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmOptions) -> Vec<String> {
     let mut parsed_argument = Vec::new();
 
     for argument in jvm_flags.iter() {
@@ -406,7 +415,7 @@ fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmArgs) -> Vec<String> {
     parsed_argument
 }
 
-fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameArgs) -> Vec<String> {
+fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameOptions) -> Vec<String> {
     let mut modified_arguments = Vec::new();
 
     for argument in &game_flags.arguments {
@@ -442,20 +451,17 @@ fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameArgs) -> Vec<Str
     modified_arguments
 }
 
-pub struct DownloadArgs<'a> {
+pub struct DownloadArgs {
     pub current_size: Arc<AtomicUsize>,
     pub total_size: Arc<AtomicUsize>,
-    pub handles: HandlesType<'a>,
+    pub handles: HandlesType,
     pub launch_args: LaunchArgs,
-    pub jvm_args: JvmArgs,
-    pub game_args: GameArgs,
+    pub jvm_args: JvmOptions,
+    pub game_args: GameOptions,
 }
 
 // get progress and and launch download
-pub async fn run_download(
-    sink: StreamSink<ReturnType>,
-    download_args: DownloadArgs<'_>,
-) -> Result<()> {
+pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadArgs) -> Result<()> {
     let mut handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
     let download_complete_clone = Arc::clone(&download_complete);
@@ -500,7 +506,7 @@ pub async fn run_download(
     let mut download_stream =
         tokio_stream::iter(handles.iter_mut()).buffer_unordered(concurrency_limit);
     while let Some(val) = download_stream.next().await {
-        val?
+        val?;
     }
     download_complete.store(true, Ordering::Release);
     task.await?;

@@ -94,7 +94,7 @@ impl Wire2Api<u8> for u8 {
 
 // Section: impl IntoDart
 
-impl support::IntoDart for GameArgs {
+impl support::IntoDart for GameOptions {
     fn into_dart(self) -> support::DartAbi {
         vec![
             self.auth_player_name.into_dart(),
@@ -109,9 +109,9 @@ impl support::IntoDart for GameArgs {
         .into_dart()
     }
 }
-impl support::IntoDartExceptPrimitive for GameArgs {}
+impl support::IntoDartExceptPrimitive for GameOptions {}
 
-impl support::IntoDart for JvmArgs {
+impl support::IntoDart for JvmOptions {
     fn into_dart(self) -> support::DartAbi {
         vec![
             self.launcher_name.into_dart(),
@@ -126,7 +126,7 @@ impl support::IntoDart for JvmArgs {
         .into_dart()
     }
 }
-impl support::IntoDartExceptPrimitive for JvmArgs {}
+impl support::IntoDartExceptPrimitive for JvmOptions {}
 
 impl support::IntoDart for LaunchArgs {
     fn into_dart(self) -> support::DartAbi {

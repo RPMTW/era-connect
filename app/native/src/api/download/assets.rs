@@ -82,7 +82,7 @@ pub async fn parallel_assets(
     assets: AssetSettings,
     current_size: &Arc<AtomicUsize>,
     total_size: &Arc<AtomicUsize>,
-    handles: &mut HandlesType<'_>,
+    handles: &mut HandlesType,
 ) -> Result<()> {
     let asset_download_list_arc = Arc::new(assets.asset_download_list);
     let asset_download_hash_arc = Arc::new(assets.asset_download_hash);
@@ -116,12 +116,12 @@ pub async fn parallel_assets(
         if okto_download {
             total_size.fetch_add(asset_download_size_arc[index], Ordering::Relaxed);
             handles.push(Box::pin(async move {
-                download_file(
-                    asset_download_list_clone[index].clone(),
-                    Some(&asset_download_path_clone[index]),
-                    current_size_clone,
-                )
-                .await
+                let bytes =
+                    download_file(asset_download_list_clone[index].clone(), current_size_clone)
+                        .await?;
+                fs::write(&asset_download_path_clone[index], bytes)
+                    .await
+                    .map_err(|err| anyhow!(err))
             }));
         }
     }

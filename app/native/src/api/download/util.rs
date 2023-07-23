@@ -1,6 +1,8 @@
 use anyhow::{anyhow, bail, Context, Result};
+use bytes::Bytes;
 use reqwest::Url;
 use std::{
+    io::Read,
     path::PathBuf,
     sync::{atomic::AtomicUsize, atomic::Ordering, Arc},
 };
@@ -8,29 +10,12 @@ use tokio::{
     fs::File,
     io::{AsyncReadExt, AsyncWriteExt, BufReader},
 };
-pub async fn download_file(
-    url: String,
-    name: Option<&PathBuf>,
-    current_bytes: Arc<AtomicUsize>,
-) -> Result<()> {
-    let filename = name.map_or_else(
-        || {
-            extract_filename(&url)
-                .context("Fail to extract filename")
-                .unwrap()
-        },
-        |x| {
-            x.to_str()
-                .ok_or_else(|| anyhow!("Fail to parse filename path"))
-                .unwrap()
-                .to_owned()
-        },
-    );
+pub async fn download_file(url: String, current_size_clone: Arc<AtomicUsize>) -> Result<Bytes> {
     let client = reqwest::Client::builder()
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
         .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
         .build()
-        .map_err(|err| anyhow!("{err:?}\n{}", filename.to_string()))?;
+        .map_err(|err| anyhow!("{err:?}\n{}", &url))?;
     let response_result = client.get(&url).send().await;
     let retry_amount = 3;
     let mut response = match response_result {
@@ -44,19 +29,20 @@ pub async fn download_file(
                         break;
                     }
                     Err(x) => {
-                        eprintln!("{}, retry count: {}", x, i);
+                        eprintln!("{x}, retry count: {i}");
                     }
                 }
             }
             temp
         }
     }?;
-    let mut file = File::create(&filename).await?;
+    let mut t = Vec::new();
     while let Some(chunk) = response.chunk().await? {
-        file.write_all(&chunk).await?;
-        current_bytes.fetch_add(chunk.len(), Ordering::Relaxed);
+        current_size_clone.fetch_add(chunk.len(), Ordering::Relaxed);
+        t.push(chunk);
     }
-    Ok(())
+    let a = t.into_iter().flatten().collect::<Vec<u8>>();
+    Ok(Bytes::from(a))
 }
 
 pub fn extract_filename(url: &str) -> Result<String> {

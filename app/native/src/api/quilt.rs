@@ -14,7 +14,7 @@ use tokio::{
 use super::{
     download::util::{download_file, validate_sha1},
     vanilla::HandlesType,
-    DownloadArgs, GameArgs, JvmArgs, LaunchArgs,
+    DownloadArgs, GameOptions, JvmOptions, LaunchArgs,
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct QuiltLibrary {
@@ -22,12 +22,12 @@ pub struct QuiltLibrary {
     url: String,
 }
 
-pub async fn prepare_quilt_download<'a>(
+pub async fn prepare_quilt_download(
     game_version: String,
     launch_args: LaunchArgs,
-    jvm_options: JvmArgs,
-    game_options: GameArgs,
-) -> Result<DownloadArgs<'a>> {
+    jvm_options: JvmOptions,
+    game_options: GameOptions,
+) -> Result<DownloadArgs> {
     let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
     let response = reqwest::get(meta_url).await?;
     let version_manifest: Value = response.json().await?;
@@ -45,6 +45,7 @@ pub async fn prepare_quilt_download<'a>(
             .ok_or_else(|| anyhow!("fail to get quilt maven"))?
             .as_str()
             .ok_or_else(|| anyhow!("quilt maven is not a string!"))?;
+
         download_list.push(QuiltLibrary {
             name: maven.to_string(),
             url: if maven.contains("quiltmc") {
@@ -115,19 +116,25 @@ pub async fn prepare_quilt_download<'a>(
                 let path = &path_vec_clone[index];
                 let sha1_path = path.with_extension("jar.sha1");
                 let sha1_url = url.clone() + ".sha1";
+                let mut sha1 = String::new();
                 if !sha1_path.exists() {
-                    download_file(sha1_url, Some(&sha1_path), Arc::clone(&current_size_clone))
+                    sha1 = String::from_utf8(
+                        download_file(sha1_url, Arc::clone(&current_size_clone))
+                            .await?
+                            .to_vec(),
+                    )?;
+                } else {
+                    File::open(&sha1_path)
+                        .await?
+                        .read_to_string(&mut sha1)
                         .await?;
                 }
-                let mut sha1 = String::new();
-                File::open(&sha1_path)
-                    .await?
-                    .read_to_string(&mut sha1)
-                    .await?;
                 if !path.exists() {
-                    download_file(url, Some(path), current_size_clone).await
+                    let bytes = download_file(url, current_size_clone).await?;
+                    fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
                 } else if validate_sha1(&sha1_path, &sha1).await.is_err() {
-                    download_file(url, Some(path), current_size_clone).await
+                    let bytes = download_file(url, current_size_clone).await?;
+                    fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
                 } else {
                     Ok(())
                 }
@@ -143,8 +150,7 @@ pub async fn prepare_quilt_download<'a>(
         launch_args,
         jvm_args: jvm_options,
         game_args: game_options,
-    }
-    .into())
+    })
 }
 fn convert_maven_to_path(input: &str) -> String {
     let parts: Vec<&str> = input.split(':').collect();

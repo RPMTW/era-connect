@@ -33,13 +33,13 @@ impl fmt::Display for OsName {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Os {
     pub name: Option<OsName>,
     pub version: Option<String>,
     pub arch: Option<String>,
 }
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Rule {
     pub action: ActionType,
     pub features: Option<HashMap<String, bool>>,

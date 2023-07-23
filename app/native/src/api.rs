@@ -1,4 +1,5 @@
 mod download;
+pub mod forge;
 pub mod quilt;
 pub mod vanilla;
 
@@ -10,8 +11,8 @@ pub use self::vanilla::PathBuf;
 pub use self::vanilla::{run_download, Progress};
 
 pub use self::vanilla::DownloadArgs;
-pub use self::vanilla::GameArgs;
-pub use self::vanilla::JvmArgs;
+pub use self::vanilla::GameOptions;
+pub use self::vanilla::JvmOptions;
 pub use self::vanilla::LaunchArgs;
 
 pub struct ReturnType {
@@ -22,8 +23,8 @@ pub struct ReturnType {
 #[derive(Debug)]
 pub struct PrepareGameArgs {
     pub launch_args: LaunchArgs,
-    pub jvm_args: JvmArgs,
-    pub game_args: GameArgs,
+    pub jvm_args: JvmOptions,
+    pub game_args: GameOptions,
 }
 
 #[tokio::main(flavor = "current_thread")]

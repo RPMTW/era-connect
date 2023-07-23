@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use tokio::fs;
 
 use crate::api::vanilla::HandlesType;
+use anyhow::anyhow;
 
 use super::{
     rules::{ActionType, OsName, Rule},
@@ -30,7 +31,7 @@ pub struct LibraryArtifact {
     pub artifact: LibraryMetadata,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Library {
     pub downloads: LibraryArtifact,
     pub name: String,
@@ -45,10 +46,8 @@ pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bo
         for x in rule {
             if let Some(os) = &x.os {
                 if let Some(name) = os.name {
-                    if current_os_type == &name {
-                        if x.action == ActionType::Allow {
-                            process_native = true;
-                        }
+                    if current_os_type == &name && x.action == ActionType::Allow {
+                        process_native = true;
                     }
                     is_native_library = true;
                     library_extension_type = match current_os_type {
@@ -67,7 +66,7 @@ pub async fn parallel_library(
     folder: Arc<RustOpaque<PathBuf>>,
     native_folder: Arc<RustOpaque<PathBuf>>,
     current: Arc<AtomicUsize>,
-    library_download_handles: &mut HandlesType<'_>,
+    library_download_handles: &mut HandlesType,
 ) -> Result<Arc<AtomicUsize>> {
     let index_counter = Arc::new(AtomicUsize::new(0));
     let current_size = current;
@@ -97,7 +96,7 @@ pub async fn parallel_library(
                 let (process_native, is_native_library, library_extension) =
                     os_match(library, &current_os_type);
                 let non_native_download_path = folder_clone.join(&path);
-                let need_redownload = if non_native_download_path.exists() {
+                let non_native_redownload = if non_native_download_path.exists() {
                     if let Err(x) = if !process_native && !is_native_library {
                         validate_sha1(&non_native_download_path, &library.downloads.artifact.sha1)
                             .await
@@ -115,35 +114,16 @@ pub async fn parallel_library(
 
                 // always download(kinda required for now.)
                 if process_native {
-                    let url = library.downloads.artifact.url.to_string();
-                    let response = reqwest::get(&url)
-                        .await
-                        .context("native fail to download")?;
-                    let bytes = response
-                        .bytes()
-                        .await
-                        .context("native fail to convert to bytes")?;
-                    current_size_clone.fetch_add(bytes.len(), Ordering::Relaxed);
-                    let reader = std::io::Cursor::new(bytes);
-                    if let Ok(mut archive) = zip::ZipArchive::new(reader) {
-                        let native_temp_dir = native_folder_clone.join("temp");
-                        archive.extract(&native_temp_dir.as_path())?;
-                        for x in archive.file_names() {
-                            if (x.contains(library_extension) || x.contains(".sha1"))
-                                && !x.contains(".git")
-                            {
-                                std::fs::rename(
-                                    native_temp_dir.join(x),
-                                    native_folder_clone.join(PathBuf::from(x).file_name().unwrap()),
-                                )
-                                .context(
-                                    "Fail to move from native_temp_dir -> native_folder_clone",
-                                )?;
-                            }
-                        }
-                    }
+                    let url = &library.downloads.artifact.url;
+                    native_download(
+                        url,
+                        &current_size_clone,
+                        native_folder_clone,
+                        library_extension,
+                    )
+                    .await?;
                     Ok(())
-                } else if !need_redownload {
+                } else if !non_native_redownload {
                     Ok(())
                 } else {
                     download_total_size_clone
@@ -153,12 +133,10 @@ pub async fn parallel_library(
                         .await
                         .context("Fail to create parent dir(library)")?;
                     let url = &library.downloads.artifact.url;
-                    download_file(
-                        url.clone(),
-                        Some(&non_native_download_path),
-                        current_size_clone,
-                    )
-                    .await
+                    let bytes = download_file(url.clone(), current_size_clone).await?;
+                    fs::write(&non_native_download_path, bytes)
+                        .await
+                        .map_err(|err| anyhow!(err))
                 }
             } else {
                 Ok(())
@@ -169,4 +147,33 @@ pub async fn parallel_library(
     }
 
     Ok(download_total_size)
+}
+
+async fn native_download(
+    url: &String,
+    current_size_clone: &Arc<AtomicUsize>,
+    native_folder_clone: Arc<RustOpaque<PathBuf>>,
+    library_extension: &str,
+) -> Result<()> {
+    let response = reqwest::get(url).await.context("native fail to download")?;
+    let bytes = response
+        .bytes()
+        .await
+        .context("native fail to convert to bytes")?;
+    current_size_clone.fetch_add(bytes.len(), Ordering::Relaxed);
+    let reader = std::io::Cursor::new(bytes);
+    if let Ok(mut archive) = zip::ZipArchive::new(reader) {
+        let native_temp_dir = native_folder_clone.join("temp");
+        archive.extract(native_temp_dir.as_path())?;
+        for x in archive.file_names() {
+            if (x.contains(library_extension) || x.contains(".sha1")) && !x.contains(".git") {
+                std::fs::rename(
+                    native_temp_dir.join(x),
+                    native_folder_clone.join(PathBuf::from(x).file_name().unwrap()),
+                )
+                .context("Fail to move from native_temp_dir -> native_folder_clone")?;
+            }
+        }
+    }
+    Ok(())
 }

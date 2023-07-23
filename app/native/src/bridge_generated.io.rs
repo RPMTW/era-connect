@@ -91,9 +91,9 @@ impl Wire2Api<PrepareGameArgs> for *mut wire_PrepareGameArgs {
         Wire2Api::<PrepareGameArgs>::wire2api(*wrap).into()
     }
 }
-impl Wire2Api<GameArgs> for wire_GameArgs {
-    fn wire2api(self) -> GameArgs {
-        GameArgs {
+impl Wire2Api<GameOptions> for wire_GameOptions {
+    fn wire2api(self) -> GameOptions {
+        GameOptions {
             auth_player_name: self.auth_player_name.wire2api(),
             game_version_name: self.game_version_name.wire2api(),
             game_directory: self.game_directory.wire2api(),
@@ -105,9 +105,9 @@ impl Wire2Api<GameArgs> for wire_GameArgs {
         }
     }
 }
-impl Wire2Api<JvmArgs> for wire_JvmArgs {
-    fn wire2api(self) -> JvmArgs {
-        JvmArgs {
+impl Wire2Api<JvmOptions> for wire_JvmOptions {
+    fn wire2api(self) -> JvmOptions {
+        JvmOptions {
             launcher_name: self.launcher_name.wire2api(),
             launcher_version: self.launcher_version.wire2api(),
             classpath: self.classpath.wire2api(),
@@ -163,7 +163,7 @@ pub struct wire_StringList {
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct wire_GameArgs {
+pub struct wire_GameOptions {
     auth_player_name: *mut wire_uint_8_list,
     game_version_name: *mut wire_uint_8_list,
     game_directory: wire_PathBuf,
@@ -176,7 +176,7 @@ pub struct wire_GameArgs {
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct wire_JvmArgs {
+pub struct wire_JvmOptions {
     launcher_name: *mut wire_uint_8_list,
     launcher_version: *mut wire_uint_8_list,
     classpath: *mut wire_uint_8_list,
@@ -199,8 +199,8 @@ pub struct wire_LaunchArgs {
 #[derive(Clone)]
 pub struct wire_PrepareGameArgs {
     launch_args: wire_LaunchArgs,
-    jvm_args: wire_JvmArgs,
-    game_args: wire_GameArgs,
+    jvm_args: wire_JvmOptions,
+    game_args: wire_GameOptions,
 }
 
 #[repr(C)]
@@ -230,7 +230,7 @@ impl NewWithNullPtr for wire_PathBuf {
     }
 }
 
-impl NewWithNullPtr for wire_GameArgs {
+impl NewWithNullPtr for wire_GameOptions {
     fn new_with_null_ptr() -> Self {
         Self {
             auth_player_name: core::ptr::null_mut(),
@@ -245,13 +245,13 @@ impl NewWithNullPtr for wire_GameArgs {
     }
 }
 
-impl Default for wire_GameArgs {
+impl Default for wire_GameOptions {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
 }
 
-impl NewWithNullPtr for wire_JvmArgs {
+impl NewWithNullPtr for wire_JvmOptions {
     fn new_with_null_ptr() -> Self {
         Self {
             launcher_name: core::ptr::null_mut(),
@@ -266,7 +266,7 @@ impl NewWithNullPtr for wire_JvmArgs {
     }
 }
 
-impl Default for wire_JvmArgs {
+impl Default for wire_JvmOptions {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
