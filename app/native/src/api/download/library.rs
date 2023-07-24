@@ -133,7 +133,7 @@ pub async fn parallel_library(
                         .await
                         .context("Fail to create parent dir(library)")?;
                     let url = &library.downloads.artifact.url;
-                    let bytes = download_file(url.clone(), current_size_clone).await?;
+                    let bytes = download_file(url.clone(), Some(current_size_clone)).await?;
                     fs::write(&non_native_download_path, bytes)
                         .await
                         .map_err(|err| anyhow!(err))
@@ -155,12 +155,7 @@ async fn native_download(
     native_folder_clone: Arc<RustOpaque<PathBuf>>,
     library_extension: &str,
 ) -> Result<()> {
-    let response = reqwest::get(url).await.context("native fail to download")?;
-    let bytes = response
-        .bytes()
-        .await
-        .context("native fail to convert to bytes")?;
-    current_size_clone.fetch_add(bytes.len(), Ordering::Relaxed);
+    let bytes = download_file(url.to_string(), Some(Arc::clone(current_size_clone))).await?;
     let reader = std::io::Cursor::new(bytes);
     if let Ok(mut archive) = zip::ZipArchive::new(reader) {
         let native_temp_dir = native_folder_clone.join("temp");

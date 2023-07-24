@@ -1,5 +1,4 @@
 mod download;
-pub mod forge;
 pub mod quilt;
 pub mod vanilla;
 

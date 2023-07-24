@@ -136,8 +136,8 @@ pub async fn get_game_manifest(
     download_target: String,
     version: Option<String>,
 ) -> Result<(Value, String)> {
-    let response = reqwest::get(download_target).await?;
-    let version_manifest: Value = response.json().await?;
+    let bytes = download_file(download_target, None).await?;
+    let version_manifest: Value = serde_json::from_slice(&bytes)?;
     let version = if version.is_some() {
         version
     } else {
@@ -153,9 +153,8 @@ pub async fn get_game_manifest(
         .unwrap()["url"]
         .as_str()
         .unwrap();
-    let target = release_url;
-    let response = reqwest::get(target).await?;
-    let contents: Value = response.json().await?;
+    let bytes = download_file(release_url.to_string(), None).await?;
+    let contents: Value = serde_json::from_slice(&bytes)?;
     Ok((contents, version.unwrap()))
 }
 
@@ -346,8 +345,11 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     let client_jar_filename = PathBuf::from(extract_filename(&downloads_list.client.url)?);
 
     if !client_jar_filename.exists() {
-        let bytes =
-            download_file(downloads_list.client.url.clone(), Arc::clone(&current_size)).await?;
+        let bytes = download_file(
+            downloads_list.client.url.clone(),
+            Some(Arc::clone(&current_size)),
+        )
+        .await?;
         let mut f = File::create(client_jar_filename).await?;
         f.write_all(&bytes).await?;
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
@@ -358,8 +360,11 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     .await
     {
         eprintln!("{x}");
-        let bytes =
-            download_file(downloads_list.client.url.clone(), Arc::clone(&current_size)).await?;
+        let bytes = download_file(
+            downloads_list.client.url.clone(),
+            Some(Arc::clone(&current_size)),
+        )
+        .await?;
         let mut f = File::create(client_jar_filename).await?;
         f.write_all(&bytes).await?;
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
@@ -501,15 +506,20 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
         sink.close();
     });
     // Create a semaphore with a limit on the number of concurrent downloads
-    let concurrency_limit = 128;
-
-    let mut download_stream =
-        tokio_stream::iter(handles.iter_mut()).buffer_unordered(concurrency_limit);
-    while let Some(val) = download_stream.next().await {
-        val?;
-    }
+    join_futures(handles, 128).await?;
     download_complete.store(true, Ordering::Release);
     task.await?;
     println!("Complete!");
     Ok(())
+}
+
+pub async fn join_futures(
+    mut handles: HandlesType,
+    concurrency_limit: usize,
+) -> Result<(), anyhow::Error> {
+    let mut download_stream =
+        tokio_stream::iter(handles.iter_mut()).buffer_unordered(concurrency_limit);
+    Ok(while let Some(val) = download_stream.next().await {
+        val?;
+    })
 }

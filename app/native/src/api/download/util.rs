@@ -1,16 +1,18 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, Result};
 use bytes::Bytes;
 use reqwest::Url;
 use std::{
-    io::Read,
     path::PathBuf,
     sync::{atomic::AtomicUsize, atomic::Ordering, Arc},
 };
 use tokio::{
     fs::File,
-    io::{AsyncReadExt, AsyncWriteExt, BufReader},
+    io::{AsyncReadExt, BufReader},
 };
-pub async fn download_file(url: String, current_size_clone: Arc<AtomicUsize>) -> Result<Bytes> {
+pub async fn download_file(
+    url: String,
+    current_size_clone: Option<Arc<AtomicUsize>>,
+) -> Result<Bytes> {
     let client = reqwest::Client::builder()
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
         .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
@@ -36,13 +38,18 @@ pub async fn download_file(url: String, current_size_clone: Arc<AtomicUsize>) ->
             temp
         }
     }?;
-    let mut t = Vec::new();
-    while let Some(chunk) = response.chunk().await? {
-        current_size_clone.fetch_add(chunk.len(), Ordering::Relaxed);
-        t.push(chunk);
+    let mut bytes_vec = Vec::new();
+    if let Some(size) = current_size_clone {
+        while let Some(chunk) = response.chunk().await? {
+            size.fetch_add(chunk.len(), Ordering::Relaxed);
+            bytes_vec.push(chunk);
+        }
+    } else {
+        while let Some(chunk) = response.chunk().await? {
+            bytes_vec.push(chunk);
+        }
     }
-    let a = t.into_iter().flatten().collect::<Vec<u8>>();
-    Ok(Bytes::from(a))
+    Ok(bytes_vec.into_iter().flatten().collect())
 }
 
 pub fn extract_filename(url: &str) -> Result<String> {

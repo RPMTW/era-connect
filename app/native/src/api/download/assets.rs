@@ -37,8 +37,7 @@ pub async fn extract_assets(asset_index: AssetIndex, folder: PathBuf) -> Result<
         let b: &[u8] = &fs::read(asset_index_path).await?;
         serde_json::from_slice(b)?
     } else {
-        let asset_response = reqwest::get(asset_index.url).await?;
-        let asset_response_bytes = asset_response.bytes().await?;
+        let asset_response_bytes = download_file(asset_index.url, None).await?;
         fs::create_dir_all(asset_index_path.parent().unwrap()).await?;
         fs::write(&asset_index_path, &asset_response_bytes).await?;
         serde_json::from_slice(&asset_response_bytes)?
@@ -116,9 +115,11 @@ pub async fn parallel_assets(
         if okto_download {
             total_size.fetch_add(asset_download_size_arc[index], Ordering::Relaxed);
             handles.push(Box::pin(async move {
-                let bytes =
-                    download_file(asset_download_list_clone[index].clone(), current_size_clone)
-                        .await?;
+                let bytes = download_file(
+                    asset_download_list_clone[index].clone(),
+                    Some(current_size_clone),
+                )
+                .await?;
                 fs::write(&asset_download_path_clone[index], bytes)
                     .await
                     .map_err(|err| anyhow!(err))

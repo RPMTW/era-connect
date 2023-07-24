@@ -29,8 +29,9 @@ pub async fn prepare_quilt_download(
     game_options: GameOptions,
 ) -> Result<DownloadArgs> {
     let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
-    let response = reqwest::get(meta_url).await?;
-    let version_manifest: Value = response.json().await?;
+    let bytes = download_file(meta_url, None).await?;
+    let version_manifest: Value = serde_json::from_slice(&bytes)?;
+
     let mut download_list = Vec::<QuiltLibrary>::deserialize(
         &version_manifest[0]["launcherMeta"]["libraries"]["common"],
     )?;
@@ -117,23 +118,23 @@ pub async fn prepare_quilt_download(
                 let sha1_path = path.with_extension("jar.sha1");
                 let sha1_url = url.clone() + ".sha1";
                 let mut sha1 = String::new();
-                if !sha1_path.exists() {
-                    sha1 = String::from_utf8(
-                        download_file(sha1_url, Arc::clone(&current_size_clone))
-                            .await?
-                            .to_vec(),
-                    )?;
-                } else {
+                if sha1_path.exists() {
                     File::open(&sha1_path)
                         .await?
                         .read_to_string(&mut sha1)
                         .await?;
+                } else {
+                    sha1 = String::from_utf8(
+                        download_file(sha1_url, Some(Arc::clone(&current_size_clone)))
+                            .await?
+                            .to_vec(),
+                    )?;
                 }
                 if !path.exists() {
-                    let bytes = download_file(url, current_size_clone).await?;
+                    let bytes = download_file(url, Some(current_size_clone)).await?;
                     fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
                 } else if validate_sha1(&sha1_path, &sha1).await.is_err() {
-                    let bytes = download_file(url, current_size_clone).await?;
+                    let bytes = download_file(url, Some(current_size_clone)).await?;
                     fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
                 } else {
                     Ok(())
