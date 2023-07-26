@@ -13,16 +13,16 @@ void main() async {
 
   const windowOptions = WindowOptions(
       size: Size(1600, 900),
-      minimumSize: Size(1280, 820),
+      minimumSize: Size(1000, 600),
       titleBarStyle: TitleBarStyle.hidden,
       windowButtonVisibility: false);
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
+  await windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
-    await windowManager.setMinimumSize(const Size(1280, 820));
-  });
+    await windowManager.setMinimumSize(const Size(1000, 600));
 
-  runApp(const EraConnectApp());
+    runApp(const EraConnectApp());
+  });
 }
 
 class EraConnectApp extends StatelessWidget {
@@ -71,17 +71,19 @@ class EraConnectApp extends StatelessWidget {
                       );
                     }
 
-                    return Column(
-                      children: [
-                        EraTitleBar(
-                          logo: SvgPicture.asset(
-                            'assets/era_connect_logo.svg',
-                            height: 17,
-                            width: 16,
+                    return DragToResizeArea(
+                      child: Column(
+                        children: [
+                          EraTitleBar(
+                            logo: SvgPicture.asset(
+                              'assets/era_connect_logo.svg',
+                              height: 16,
+                              width: 16,
+                            ),
                           ),
-                        ),
-                        const Expanded(child: MainPage()),
-                      ],
+                          const Expanded(child: MainPage()),
+                        ],
+                      ),
                     );
                   }),
             );

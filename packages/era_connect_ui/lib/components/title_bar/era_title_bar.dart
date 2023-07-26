@@ -1,4 +1,4 @@
-import 'package:era_connect_ui/theme/theme_provider.dart';
+import 'package:era_connect_ui/theme/lib.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -13,12 +13,12 @@ class EraTitleBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return DragToMoveArea(
       child: Container(
-        color: context.theme.primaryColor,
+        color: context.theme.deepBackgroundColor,
         padding: const EdgeInsets.only(left: 20, right: 8, top: 7, bottom: 7),
         child: Container(
-          color: context.theme.primaryColor,
+          color: context.theme.deepBackgroundColor,
           child: Container(
-            constraints: const BoxConstraints(minHeight: 25),
+            constraints: const BoxConstraints(minHeight: 20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -28,7 +28,7 @@ class EraTitleBar extends StatelessWidget {
                     const SizedBox(width: 10),
                     const Text('Era Connect',
                         style: TextStyle(
-                            fontSize: 29,
+                            fontSize: 28,
                             fontWeight: FontWeight.w500,
                             fontFamily: 'Geo',
                             letterSpacing: -1))

@@ -11,8 +11,8 @@ class EraTitleBarAction {
 
   static Widget minimize() {
     return IconButton(
-      icon:
-          SvgPicture.asset('icons/drag_handle.svg', package: 'era_connect_ui'),
+      icon: SvgPicture.asset('icons/drag_handle.svg',
+          package: 'era_connect_ui', height: 20),
       style: _style,
       onPressed: () {
         windowManager.minimize();
@@ -23,7 +23,7 @@ class EraTitleBarAction {
   static Widget maximize() {
     return IconButton(
         icon: SvgPicture.asset('icons/thumbnail_bar.svg',
-            package: 'era_connect_ui'),
+            package: 'era_connect_ui', height: 20),
         style: _style,
         onPressed: () async {
           final isMaximized = await windowManager.isMaximized();
@@ -38,7 +38,8 @@ class EraTitleBarAction {
 
   static Widget close() {
     return IconButton(
-      icon: SvgPicture.asset('icons/close.svg', package: 'era_connect_ui'),
+      icon: SvgPicture.asset('icons/close.svg',
+          package: 'era_connect_ui', height: 20),
       hoverColor: const Color(0xffff0000),
       style: _style,
       onPressed: () {
