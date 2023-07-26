@@ -1,3 +1,6 @@
 {
-    "main_page.menu_bar.home.title": "Home"
+    "main_page.side_bar.universe_chat": "Universe Chat",
+    "main_page.side_bar.home": "Home",
+    "main_page.side_bar.library": "Library",
+    "main_page.size_bar.multiplayer": "Multiplayer"
 }
