@@ -519,7 +519,8 @@ pub async fn join_futures(
 ) -> Result<(), anyhow::Error> {
     let mut download_stream =
         tokio_stream::iter(handles.iter_mut()).buffer_unordered(concurrency_limit);
-    Ok(while let Some(val) = download_stream.next().await {
+    while let Some(val) = download_stream.next().await {
         val?;
-    })
+    }
+    Ok(())
 }
