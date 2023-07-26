@@ -29,7 +29,7 @@ typedef struct wire_PathBuf {
   const void *ptr;
 } wire_PathBuf;
 
-typedef struct wire_JvmArgs {
+typedef struct wire_JvmOptions {
   struct wire_uint_8_list *launcher_name;
   struct wire_uint_8_list *launcher_version;
   struct wire_uint_8_list *classpath;
@@ -38,9 +38,9 @@ typedef struct wire_JvmArgs {
   struct wire_PathBuf library_directory;
   struct wire_PathBuf game_directory;
   struct wire_PathBuf native_directory;
-} wire_JvmArgs;
+} wire_JvmOptions;
 
-typedef struct wire_GameArgs {
+typedef struct wire_GameOptions {
   struct wire_uint_8_list *auth_player_name;
   struct wire_uint_8_list *game_version_name;
   struct wire_PathBuf game_directory;
@@ -49,12 +49,12 @@ typedef struct wire_GameArgs {
   struct wire_uint_8_list *auth_uuid;
   struct wire_uint_8_list *user_type;
   struct wire_uint_8_list *version_type;
-} wire_GameArgs;
+} wire_GameOptions;
 
 typedef struct wire_PrepareGameArgs {
   struct wire_LaunchArgs launch_args;
-  struct wire_JvmArgs jvm_args;
-  struct wire_GameArgs game_args;
+  struct wire_JvmOptions jvm_args;
+  struct wire_GameOptions game_args;
 } wire_PrepareGameArgs;
 
 typedef struct DartCObject *WireSyncReturn;
@@ -69,9 +69,11 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 
 intptr_t init_frb_dart_api_dl(void *obj);
 
-void wire_test(int64_t port_);
+void wire_download_vanilla(int64_t port_);
 
-void wire_launch_quilt(int64_t port_, struct wire_PrepareGameArgs *quilt_prepare);
+void wire_launch_game(int64_t port_, struct wire_PrepareGameArgs *pre_launch_arguments);
+
+void wire_download_quilt(int64_t port_, struct wire_PrepareGameArgs *quilt_prepare);
 
 struct wire_PathBuf new_PathBuf(void);
 
@@ -89,8 +91,9 @@ void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
-    dummy_var ^= ((int64_t) (void*) wire_test);
-    dummy_var ^= ((int64_t) (void*) wire_launch_quilt);
+    dummy_var ^= ((int64_t) (void*) wire_download_vanilla);
+    dummy_var ^= ((int64_t) (void*) wire_launch_game);
+    dummy_var ^= ((int64_t) (void*) wire_download_quilt);
     dummy_var ^= ((int64_t) (void*) new_PathBuf);
     dummy_var ^= ((int64_t) (void*) new_StringList_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_prepare_game_args_0);

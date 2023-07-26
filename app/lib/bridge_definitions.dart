@@ -42,7 +42,7 @@ class PathBuf extends FrbOpaque {
   OpaqueTypeFinalizer get staticFinalizer => bridge.PathBufFinalizer;
 }
 
-class GameArgs {
+class GameOptions {
   final String authPlayerName;
   final String gameVersionName;
   final PathBuf gameDirectory;
@@ -52,7 +52,7 @@ class GameArgs {
   final String userType;
   final String versionType;
 
-  const GameArgs({
+  const GameOptions({
     required this.authPlayerName,
     required this.gameVersionName,
     required this.gameDirectory,
@@ -64,7 +64,7 @@ class GameArgs {
   });
 }
 
-class JvmArgs {
+class JvmOptions {
   final String launcherName;
   final String launcherVersion;
   final String classpath;
@@ -74,7 +74,7 @@ class JvmArgs {
   final PathBuf gameDirectory;
   final PathBuf nativeDirectory;
 
-  const JvmArgs({
+  const JvmOptions({
     required this.launcherName,
     required this.launcherVersion,
     required this.classpath,
@@ -100,8 +100,8 @@ class LaunchArgs {
 
 class PrepareGameArgs {
   final LaunchArgs launchArgs;
-  final JvmArgs jvmArgs;
-  final GameArgs gameArgs;
+  final JvmOptions jvmArgs;
+  final GameOptions gameArgs;
 
   const PrepareGameArgs({
     required this.launchArgs,

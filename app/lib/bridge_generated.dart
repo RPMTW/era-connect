@@ -112,11 +112,11 @@ class NativeImpl implements Native {
     return raw as double;
   }
 
-  GameArgs _wire2api_game_args(dynamic raw) {
+  GameOptions _wire2api_game_options(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 8)
       throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
-    return GameArgs(
+    return GameOptions(
       authPlayerName: _wire2api_String(arr[0]),
       gameVersionName: _wire2api_String(arr[1]),
       gameDirectory: _wire2api_PathBuf(arr[2]),
@@ -128,11 +128,11 @@ class NativeImpl implements Native {
     );
   }
 
-  JvmArgs _wire2api_jvm_args(dynamic raw) {
+  JvmOptions _wire2api_jvm_options(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 8)
       throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
-    return JvmArgs(
+    return JvmOptions(
       launcherName: _wire2api_String(arr[0]),
       launcherVersion: _wire2api_String(arr[1]),
       classpath: _wire2api_String(arr[2]),
@@ -169,8 +169,8 @@ class NativeImpl implements Native {
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return PrepareGameArgs(
       launchArgs: _wire2api_launch_args(arr[0]),
-      jvmArgs: _wire2api_jvm_args(arr[1]),
-      gameArgs: _wire2api_game_args(arr[2]),
+      jvmArgs: _wire2api_jvm_options(arr[1]),
+      gameArgs: _wire2api_game_options(arr[2]),
     );
   }
 
@@ -274,7 +274,8 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     _api_fill_to_wire_prepare_game_args(apiObj, wireObj.ref);
   }
 
-  void _api_fill_to_wire_game_args(GameArgs apiObj, wire_GameArgs wireObj) {
+  void _api_fill_to_wire_game_options(
+      GameOptions apiObj, wire_GameOptions wireObj) {
     wireObj.auth_player_name = api2wire_String(apiObj.authPlayerName);
     wireObj.game_version_name = api2wire_String(apiObj.gameVersionName);
     wireObj.game_directory = api2wire_PathBuf(apiObj.gameDirectory);
@@ -285,7 +286,8 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     wireObj.version_type = api2wire_String(apiObj.versionType);
   }
 
-  void _api_fill_to_wire_jvm_args(JvmArgs apiObj, wire_JvmArgs wireObj) {
+  void _api_fill_to_wire_jvm_options(
+      JvmOptions apiObj, wire_JvmOptions wireObj) {
     wireObj.launcher_name = api2wire_String(apiObj.launcherName);
     wireObj.launcher_version = api2wire_String(apiObj.launcherVersion);
     wireObj.classpath = api2wire_String(apiObj.classpath);
@@ -306,8 +308,8 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   void _api_fill_to_wire_prepare_game_args(
       PrepareGameArgs apiObj, wire_PrepareGameArgs wireObj) {
     _api_fill_to_wire_launch_args(apiObj.launchArgs, wireObj.launch_args);
-    _api_fill_to_wire_jvm_args(apiObj.jvmArgs, wireObj.jvm_args);
-    _api_fill_to_wire_game_args(apiObj.gameArgs, wireObj.game_args);
+    _api_fill_to_wire_jvm_options(apiObj.jvmArgs, wireObj.jvm_args);
+    _api_fill_to_wire_game_options(apiObj.gameArgs, wireObj.game_args);
   }
 }
 
@@ -338,7 +340,7 @@ class NativeWire implements FlutterRustBridgeWireBase {
       : _lookup = lookup;
 
   void store_dart_post_cobject(
-    DartPostCObjectFnType ptr,
+    int ptr,
   ) {
     return _store_dart_post_cobject(
       ptr,
@@ -346,10 +348,10 @@ class NativeWire implements FlutterRustBridgeWireBase {
   }
 
   late final _store_dart_post_cobjectPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(DartPostCObjectFnType)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>(
           'store_dart_post_cobject');
-  late final _store_dart_post_cobject = _store_dart_post_cobjectPtr
-      .asFunction<void Function(DartPostCObjectFnType)>();
+  late final _store_dart_post_cobject =
+      _store_dart_post_cobjectPtr.asFunction<void Function(int)>();
 
   Object get_dart_object(
     int ptr,
@@ -576,7 +578,7 @@ final class wire_PathBuf extends ffi.Struct {
   external ffi.Pointer<ffi.Void> ptr;
 }
 
-final class wire_JvmArgs extends ffi.Struct {
+final class wire_JvmOptions extends ffi.Struct {
   external ffi.Pointer<wire_uint_8_list> launcher_name;
 
   external ffi.Pointer<wire_uint_8_list> launcher_version;
@@ -594,7 +596,7 @@ final class wire_JvmArgs extends ffi.Struct {
   external wire_PathBuf native_directory;
 }
 
-final class wire_GameArgs extends ffi.Struct {
+final class wire_GameOptions extends ffi.Struct {
   external ffi.Pointer<wire_uint_8_list> auth_player_name;
 
   external ffi.Pointer<wire_uint_8_list> game_version_name;
@@ -615,12 +617,7 @@ final class wire_GameArgs extends ffi.Struct {
 final class wire_PrepareGameArgs extends ffi.Struct {
   external wire_LaunchArgs launch_args;
 
-  external wire_JvmArgs jvm_args;
+  external wire_JvmOptions jvm_args;
 
-  external wire_GameArgs game_args;
+  external wire_GameOptions game_args;
 }
-
-typedef DartPostCObjectFnType = ffi.Pointer<
-    ffi.NativeFunction<
-        ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message)>>;
-typedef DartPort = ffi.Int64;
