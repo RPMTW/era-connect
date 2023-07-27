@@ -17,14 +17,16 @@ class _MainPageState extends State<MainPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         showEraDialog(
-            context: context,
-            barrierDismissible: true,
-            dialog: const InteractiveDialog(
-              title: '歡迎使用',
-              description:
-                  '歡迎你來到 Era Connect！\n開始使用啟動器之前，讓我們協助你進行快速設定，就可以盡情地暢玩遊戲啦。',
-              logoBoxText: '01',
-            ));
+          context: context,
+          barrierDismissible: true,
+          dialog: const InteractiveDialog(
+            title: '歡迎使用',
+            description:
+                '歡迎你來到 Era Connect！\n開始使用啟動器之前，讓我們協助你進行快速設定，就可以盡情地暢玩遊戲啦。',
+            logoBoxText: '01',
+            child: Placeholder(),
+          ),
+        );
       }
     });
   }

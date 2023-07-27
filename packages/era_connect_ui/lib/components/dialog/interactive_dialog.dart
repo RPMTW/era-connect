@@ -5,13 +5,23 @@ import 'package:flutter/material.dart';
 class InteractiveDialog extends StatelessWidget {
   final String title;
   final String description;
+
+  /// The text next to the logo box.
   final String logoBoxText;
+
+  /// Whether to show the brand text (Era Connect) in the logo box.
+  final bool hasBrandText;
+
+  /// The content of the dialog (right side).
+  final Widget child;
 
   const InteractiveDialog(
       {super.key,
       required this.title,
       required this.description,
-      required this.logoBoxText});
+      required this.logoBoxText,
+      required this.child,
+      this.hasBrandText = true});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +52,7 @@ class InteractiveDialog extends StatelessWidget {
           children: [
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,
-              runSpacing: 30,
+              runSpacing: 15,
               children: [
                 _buildLogoBox(context),
                 Text(
@@ -50,16 +60,14 @@ class InteractiveDialog extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 60,
                       color: context.theme.textColor,
-                      fontWeight: FontWeight.w900,
-                      height: 1),
+                      fontWeight: FontWeight.w900),
                 ),
                 Text(
                   description,
                   style: TextStyle(
                       fontSize: 17,
                       color: context.theme.tertiaryTextColor,
-                      fontWeight: FontWeight.w500,
-                      height: 1),
+                      fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -71,19 +79,21 @@ class InteractiveDialog extends StatelessWidget {
   Container _buildRightArea(BuildContext context) {
     return Container(
       color: context.theme.deepBackgroundColor,
-      child: const Placeholder(),
+      child: child,
     );
   }
 
   Container _buildLogoBox(BuildContext context) {
     return Container(
-      width: 223,
+      width: hasBrandText ? 220 : 102,
       height: 50,
       clipBehavior: Clip.antiAlias,
       decoration: ShapeDecoration(
         shape: RoundedRectangleBorder(
-          side:
-              BorderSide(width: 2, color: context.theme.secondarySurfaceColor),
+          side: BorderSide(
+              width: 2,
+              color: context.theme.secondarySurfaceColor,
+              strokeAlign: BorderSide.strokeAlignOutside),
           borderRadius: BorderRadius.circular(10),
         ),
       ),
@@ -92,12 +102,15 @@ class InteractiveDialog extends StatelessWidget {
           Expanded(
             child: Container(
               color: context.theme.secondarySurfaceColor,
+              height: 50,
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              child: const Row(
+              child: Row(
                 children: [
-                  EraLogo(size: 20),
-                  SizedBox(width: 10),
-                  EraBrandText(fontSize: 25, height: 0)
+                  const EraLogo(size: 20),
+                  if (hasBrandText) ...const [
+                    SizedBox(width: 10),
+                    EraBrandText(fontSize: 25, height: 0)
+                  ]
                 ],
               ),
             ),

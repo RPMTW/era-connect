@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'dart:ui' as ui;
 
 /// An enum that represents the supported locales for the app.
 enum I18nLocale {
@@ -10,8 +10,9 @@ enum I18nLocale {
 
   const I18nLocale(this.code);
 
-  static I18nLocale getFromSystemLocale() {
-    final systemLocale = WidgetsBinding.instance.platformDispatcher.locale;
+  static I18nLocale getFromSystemLocale(
+      ui.PlatformDispatcher platformDispatcher) {
+    final systemLocale = platformDispatcher.locale;
     final languageTag = systemLocale.toLanguageTag();
 
     return I18nLocale.values.firstWhere(
