@@ -18,6 +18,7 @@ class _MainPageState extends State<MainPage> {
       if (mounted) {
         showEraDialog(
             context: context,
+            barrierDismissible: true,
             dialog: const InteractiveDialog(
               title: '歡迎使用',
               description:

@@ -18,8 +18,8 @@ class I18nManager extends ChangeNotifier implements ReassembleHandler {
 
   /// Returns the translation for the given [key].
   operator [](final String key) {
-    final translations = _data[_locale] ?? _data[defaultLocale]!;
-    return translations[key] ?? key;
+    final translation = _data[_locale]?[key] ?? _data[defaultLocale]?[key];
+    return translation ?? key;
   }
 
   I18nManager({required this.path, required this.defaultLocale})
@@ -34,8 +34,8 @@ class I18nManager extends ChangeNotifier implements ReassembleHandler {
   /// ```
   /// assets/
   ///  i18n/
-  ///   en_us.json
-  ///   zh_tw.json
+  ///   en-US.json
+  ///   zh-TW.json
   /// ```
   Future<void> load() async {
     _data.clear();

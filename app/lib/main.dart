@@ -93,7 +93,9 @@ class _AppHomeState extends State<_AppHome> {
 
   Future<void> load() async {
     if (mounted) {
-      await context.i18n.load();
+      final i18n = context.i18n;
+      i18n.setLocale(I18nLocale.getFromSystemLocale());
+      await i18n.load();
       setState(() {
         isLoaded = true;
       });
