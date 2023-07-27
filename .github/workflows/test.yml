@@ -28,7 +28,7 @@ jobs:
           run: |
             cd app
             flutter pub get
-            flutter test --coverage --coverage-path coverage/lcov.base.info
+            flutter test --coverage --coverage-path packages/coverage/lcov.base.info
             cd ..
 
             cd packages
@@ -41,5 +41,5 @@ jobs:
         - name: Upload Coverage
           uses: codecov/codecov-action@v3
           with:
-            files: coverage/lcov.info
+            files: packages/coverage/lcov.info
             fail_ci_if_error: true
