@@ -28,14 +28,14 @@ jobs:
           run: |
             cd app
             flutter pub get
-            flutter test --coverage
+            flutter test --coverage --coverage-path coverage/lcov.base.info
             cd ..
 
             cd packages
             for d in */ ; do
               cd $d
               flutter pub get
-              flutter test --coverage --coverage-path ../../coverage/lcov.info --merge-coverage
+              flutter test --coverage --merge-coverage
               cd ..
             done
         - name: Upload Coverage
