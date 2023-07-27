@@ -29,6 +29,7 @@ jobs:
             cd app
             flutter pub get
             flutter test --coverage
+            cd ..
 
             cd packages
             for d in */ ; do
