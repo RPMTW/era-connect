@@ -15,6 +15,7 @@ class EraThemeData extends Equatable {
   final Color deepBackgroundColor;
   final Color surfaceColor;
   final Color secondarySurfaceColor;
+  final Color dialogBarrierColor;
   final String? fontFamily;
 
   const EraThemeData({
@@ -27,6 +28,7 @@ class EraThemeData extends Equatable {
     required this.deepBackgroundColor,
     required this.surfaceColor,
     required this.secondarySurfaceColor,
+    this.dialogBarrierColor = const Color(0x80000000),
     this.fontFamily,
   });
 

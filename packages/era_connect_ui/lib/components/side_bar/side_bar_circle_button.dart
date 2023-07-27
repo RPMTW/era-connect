@@ -46,7 +46,7 @@ class SideBarCircleButton extends StatelessWidget {
         isSelected: isSelected);
   }
 
-  factory SideBarCircleButton.squircle(
+  factory SideBarCircleButton.roundedSquare(
       {required VoidCallback onPressed,
       required IconData icon,
       required String tooltip}) {

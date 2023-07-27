@@ -1,13 +1,12 @@
 import 'package:era_connect_ui/theme/lib.dart';
+import 'package:era_connect_ui/components/misc/lib.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'era_title_bar_action.dart';
 
 class EraTitleBar extends StatelessWidget {
-  final Widget logo;
-
-  const EraTitleBar({super.key, required this.logo});
+  const EraTitleBar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,16 +21,11 @@ class EraTitleBar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                const Row(
                   children: [
-                    logo,
-                    const SizedBox(width: 10),
-                    const Text('Era Connect',
-                        style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Geo',
-                            letterSpacing: -1))
+                    EraLogo(size: 16),
+                    SizedBox(width: 10),
+                    EraBrandText(fontSize: 28)
                   ],
                 ),
                 Wrap(spacing: 5, children: [

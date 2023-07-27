@@ -2,8 +2,31 @@ import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   const MainPage({super.key});
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        showEraDialog(
+            context: context,
+            dialog: const InteractiveDialog(
+              title: '歡迎使用',
+              description:
+                  '歡迎你來到 Era Connect！\n開始使用啟動器之前，讓我們協助你進行快速設定，就可以盡情地暢玩遊戲啦。',
+              logoBoxText: '01',
+            ));
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +57,12 @@ class MainPage extends StatelessWidget {
             ),
           ],
           collectionItems: [
-            SideBarCircleButton.squircle(
+            SideBarCircleButton.roundedSquare(
               onPressed: () {},
               icon: Icons.add_rounded,
               tooltip: context.i18n['main_page.side_bar.create_collection'],
             ),
-            SideBarCircleButton.squircle(
+            SideBarCircleButton.roundedSquare(
               onPressed: () {},
               icon: Icons.explore_rounded,
               tooltip: context.i18n['main_page.side_bar.explore'],

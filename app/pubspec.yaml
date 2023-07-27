@@ -54,7 +54,6 @@ flutter:
   assets:
     - assets/icons/
     - assets/i18n/
-    - assets/era_connect_logo.svg
 
   fonts:
     - family: GenSenRounded
