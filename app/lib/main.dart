@@ -1,3 +1,4 @@
+import 'package:era_connect/bridge_definitions.dart' as bridge;
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
@@ -27,17 +28,28 @@ void main() async {
 }
 
 void testRust() async {
-  final vanilla = api.downloadVanilla();
+  var chan = bridge.State.Downloading;
+  final channel = await api.fetch();
+  await api.stateWrite(s: chan, channel: channel);
+  final vanilla = api.downloadVanilla(channels: channel);
 
-  vanilla.listen((event) {
+  vanilla.listen((event) async {
     print("speed");
     print(event.progress?.speed);
     print("totalsize");
     print(event.progress?.totalSize);
     print("percent");
     print(event.progress?.percentages);
+    if (chan == bridge.State.Downloading) {
+      api.stateWrite(channel: channel, s: bridge.State.Paused);
+      await Future.delayed(const Duration(seconds: 5));
+      chan = bridge.State.ForceCancel;
+      api.stateWrite(channel: channel, s: bridge.State.Downloading);
+    }
+    api.stateWrite(channel: channel, s: bridge.State.Downloading);
     if (event.prepareNameArgs != null) {
-      final quilt = api.downloadQuilt(quiltPrepare: event.prepareNameArgs!);
+      final quilt = api.downloadQuilt(
+          quiltPrepare: event.prepareNameArgs!, channels: channel);
       quilt.listen((event) {
         print("speed");
         print(event.progress?.speed);

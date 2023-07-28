@@ -21,14 +21,33 @@ use std::sync::Arc;
 
 // Section: wire functions
 
-fn wire_download_vanilla_impl(port_: MessagePort) {
+fn wire_test_impl(port_: MessagePort, channels: impl Wire2Api<StateChannel> + UnwindSafe) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "test",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_channels = channels.wire2api();
+            move |task_callback| test(api_channels)
+        },
+    )
+}
+fn wire_download_vanilla_impl(
+    port_: MessagePort,
+    channels: impl Wire2Api<StateChannel> + UnwindSafe,
+) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
             debug_name: "download_vanilla",
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
-        move || move |task_callback| download_vanilla(task_callback.stream_sink()),
+        move || {
+            let api_channels = channels.wire2api();
+            move |task_callback| download_vanilla(task_callback.stream_sink(), api_channels)
+        },
     )
 }
 fn wire_launch_game_impl(
@@ -49,6 +68,7 @@ fn wire_launch_game_impl(
 }
 fn wire_download_quilt_impl(
     port_: MessagePort,
+    channels: impl Wire2Api<StateChannel> + UnwindSafe,
     quilt_prepare: impl Wire2Api<PrepareGameArgs> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
@@ -58,8 +78,39 @@ fn wire_download_quilt_impl(
             mode: FfiCallMode::Stream,
         },
         move || {
+            let api_channels = channels.wire2api();
             let api_quilt_prepare = quilt_prepare.wire2api();
-            move |task_callback| download_quilt(task_callback.stream_sink(), api_quilt_prepare)
+            move |task_callback| {
+                download_quilt(task_callback.stream_sink(), api_channels, api_quilt_prepare)
+            }
+        },
+    )
+}
+fn wire_fetch_impl(port_: MessagePort) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "fetch",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || move |task_callback| Ok(fetch()),
+    )
+}
+fn wire_state_write_impl(
+    port_: MessagePort,
+    s: impl Wire2Api<State> + UnwindSafe,
+    channel: impl Wire2Api<StateChannel> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "state_write",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_s = s.wire2api();
+            let api_channel = channel.wire2api();
+            move |task_callback| Ok(state_write(api_s, api_channel))
         },
     )
 }
@@ -83,6 +134,23 @@ where
 {
     fn wire2api(self) -> Option<T> {
         (!self.is_null()).then(|| self.wire2api())
+    }
+}
+
+impl Wire2Api<i32> for i32 {
+    fn wire2api(self) -> i32 {
+        self
+    }
+}
+
+impl Wire2Api<State> for i32 {
+    fn wire2api(self) -> State {
+        match self {
+            0 => State::Downloading,
+            1 => State::Paused,
+            2 => State::ForceCancel,
+            _ => unreachable!("Invalid variant for State: {}", self),
+        }
     }
 }
 
@@ -175,6 +243,13 @@ impl support::IntoDart for ReturnType {
     }
 }
 impl support::IntoDartExceptPrimitive for ReturnType {}
+
+impl support::IntoDart for StateChannel {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.sender.into_dart(), self.receiver.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for StateChannel {}
 
 // Section: executor
 

@@ -2,8 +2,13 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
-pub extern "C" fn wire_download_vanilla(port_: i64) {
-    wire_download_vanilla_impl(port_)
+pub extern "C" fn wire_test(port_: i64, channels: *mut wire_StateChannel) {
+    wire_test_impl(port_, channels)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_download_vanilla(port_: i64, channels: *mut wire_StateChannel) {
+    wire_download_vanilla_impl(port_, channels)
 }
 
 #[no_mangle]
@@ -12,11 +17,35 @@ pub extern "C" fn wire_launch_game(port_: i64, pre_launch_arguments: *mut wire_P
 }
 
 #[no_mangle]
-pub extern "C" fn wire_download_quilt(port_: i64, quilt_prepare: *mut wire_PrepareGameArgs) {
-    wire_download_quilt_impl(port_, quilt_prepare)
+pub extern "C" fn wire_download_quilt(
+    port_: i64,
+    channels: *mut wire_StateChannel,
+    quilt_prepare: *mut wire_PrepareGameArgs,
+) {
+    wire_download_quilt_impl(port_, channels, quilt_prepare)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_fetch(port_: i64) {
+    wire_fetch_impl(port_)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_state_write(port_: i64, s: i32, channel: *mut wire_StateChannel) {
+    wire_state_write_impl(port_, s, channel)
 }
 
 // Section: allocate functions
+
+#[no_mangle]
+pub extern "C" fn new_ChannelReceiverState() -> wire_ChannelReceiverState {
+    wire_ChannelReceiverState::new_with_null_ptr()
+}
+
+#[no_mangle]
+pub extern "C" fn new_ChannelSenderState() -> wire_ChannelSenderState {
+    wire_ChannelSenderState::new_with_null_ptr()
+}
 
 #[no_mangle]
 pub extern "C" fn new_PathBuf() -> wire_PathBuf {
@@ -38,6 +67,11 @@ pub extern "C" fn new_box_autoadd_prepare_game_args_0() -> *mut wire_PrepareGame
 }
 
 #[no_mangle]
+pub extern "C" fn new_box_autoadd_state_channel_0() -> *mut wire_StateChannel {
+    support::new_leak_box_ptr(wire_StateChannel::new_with_null_ptr())
+}
+
+#[no_mangle]
 pub extern "C" fn new_uint_8_list_0(len: i32) -> *mut wire_uint_8_list {
     let ans = wire_uint_8_list {
         ptr: support::new_leak_vec_ptr(Default::default(), len),
@@ -47,6 +81,36 @@ pub extern "C" fn new_uint_8_list_0(len: i32) -> *mut wire_uint_8_list {
 }
 
 // Section: related functions
+
+#[no_mangle]
+pub extern "C" fn drop_opaque_ChannelReceiverState(ptr: *const c_void) {
+    unsafe {
+        Arc::<channel::Receiver<State>>::decrement_strong_count(ptr as _);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn share_opaque_ChannelReceiverState(ptr: *const c_void) -> *const c_void {
+    unsafe {
+        Arc::<channel::Receiver<State>>::increment_strong_count(ptr as _);
+        ptr
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn drop_opaque_ChannelSenderState(ptr: *const c_void) {
+    unsafe {
+        Arc::<channel::Sender<State>>::decrement_strong_count(ptr as _);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn share_opaque_ChannelSenderState(ptr: *const c_void) -> *const c_void {
+    unsafe {
+        Arc::<channel::Sender<State>>::increment_strong_count(ptr as _);
+        ptr
+    }
+}
 
 #[no_mangle]
 pub extern "C" fn drop_opaque_PathBuf(ptr: *const c_void) {
@@ -65,6 +129,16 @@ pub extern "C" fn share_opaque_PathBuf(ptr: *const c_void) -> *const c_void {
 
 // Section: impl Wire2Api
 
+impl Wire2Api<RustOpaque<channel::Receiver<State>>> for wire_ChannelReceiverState {
+    fn wire2api(self) -> RustOpaque<channel::Receiver<State>> {
+        unsafe { support::opaque_from_dart(self.ptr as _) }
+    }
+}
+impl Wire2Api<RustOpaque<channel::Sender<State>>> for wire_ChannelSenderState {
+    fn wire2api(self) -> RustOpaque<channel::Sender<State>> {
+        unsafe { support::opaque_from_dart(self.ptr as _) }
+    }
+}
 impl Wire2Api<RustOpaque<PathBuf>> for wire_PathBuf {
     fn wire2api(self) -> RustOpaque<PathBuf> {
         unsafe { support::opaque_from_dart(self.ptr as _) }
@@ -91,6 +165,12 @@ impl Wire2Api<PrepareGameArgs> for *mut wire_PrepareGameArgs {
         Wire2Api::<PrepareGameArgs>::wire2api(*wrap).into()
     }
 }
+impl Wire2Api<StateChannel> for *mut wire_StateChannel {
+    fn wire2api(self) -> StateChannel {
+        let wrap = unsafe { support::box_from_leak_ptr(self) };
+        Wire2Api::<StateChannel>::wire2api(*wrap).into()
+    }
+}
 impl Wire2Api<GameOptions> for wire_GameOptions {
     fn wire2api(self) -> GameOptions {
         GameOptions {
@@ -105,6 +185,7 @@ impl Wire2Api<GameOptions> for wire_GameOptions {
         }
     }
 }
+
 impl Wire2Api<JvmOptions> for wire_JvmOptions {
     fn wire2api(self) -> JvmOptions {
         JvmOptions {
@@ -138,6 +219,15 @@ impl Wire2Api<PrepareGameArgs> for wire_PrepareGameArgs {
     }
 }
 
+impl Wire2Api<StateChannel> for wire_StateChannel {
+    fn wire2api(self) -> StateChannel {
+        StateChannel {
+            sender: self.sender.wire2api(),
+            receiver: self.receiver.wire2api(),
+        }
+    }
+}
+
 impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
     fn wire2api(self) -> Vec<u8> {
         unsafe {
@@ -147,6 +237,18 @@ impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
     }
 }
 // Section: wire structs
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_ChannelReceiverState {
+    ptr: *const core::ffi::c_void,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_ChannelSenderState {
+    ptr: *const core::ffi::c_void,
+}
 
 #[repr(C)]
 #[derive(Clone)]
@@ -205,6 +307,13 @@ pub struct wire_PrepareGameArgs {
 
 #[repr(C)]
 #[derive(Clone)]
+pub struct wire_StateChannel {
+    sender: wire_ChannelSenderState,
+    receiver: wire_ChannelReceiverState,
+}
+
+#[repr(C)]
+#[derive(Clone)]
 pub struct wire_uint_8_list {
     ptr: *mut u8,
     len: i32,
@@ -222,6 +331,20 @@ impl<T> NewWithNullPtr for *mut T {
     }
 }
 
+impl NewWithNullPtr for wire_ChannelReceiverState {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            ptr: core::ptr::null(),
+        }
+    }
+}
+impl NewWithNullPtr for wire_ChannelSenderState {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            ptr: core::ptr::null(),
+        }
+    }
+}
 impl NewWithNullPtr for wire_PathBuf {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -299,6 +422,21 @@ impl NewWithNullPtr for wire_PrepareGameArgs {
 }
 
 impl Default for wire_PrepareGameArgs {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+
+impl NewWithNullPtr for wire_StateChannel {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            sender: wire_ChannelSenderState::new_with_null_ptr(),
+            receiver: wire_ChannelReceiverState::new_with_null_ptr(),
+        }
+    }
+}
+
+impl Default for wire_StateChannel {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }

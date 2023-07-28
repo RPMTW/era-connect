@@ -2,6 +2,11 @@ mod download;
 pub mod quilt;
 pub mod vanilla;
 
+pub use std::sync::mpsc;
+pub use std::sync::mpsc::{Receiver, Sender};
+use std::sync::Arc;
+
+use flutter_rust_bridge::RustOpaque;
 use flutter_rust_bridge::StreamSink;
 
 pub use self::quilt::prepare_quilt_download;
@@ -26,10 +31,23 @@ pub struct PrepareGameArgs {
     pub game_args: GameOptions,
 }
 
+pub fn test(channels: StateChannel) -> anyhow::Result<()> {
+    std::thread::spawn(move || {
+        println!("imafailure");
+        dbg!(channels.receiver.recv().unwrap());
+    })
+    .join()
+    .unwrap();
+    Ok(())
+}
+
 #[tokio::main(flavor = "current_thread")]
-pub async fn download_vanilla(stream: StreamSink<ReturnType>) -> anyhow::Result<()> {
+pub async fn download_vanilla(
+    stream: StreamSink<ReturnType>,
+    channels: StateChannel,
+) -> anyhow::Result<()> {
     let c = prepare_vanilla_download().await?;
-    run_download(stream, c).await
+    run_download(stream, channels, c).await
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -41,6 +59,7 @@ pub async fn launch_game(pre_launch_arguments: PrepareGameArgs) -> anyhow::Resul
 #[tokio::main(flavor = "current_thread")]
 pub async fn download_quilt(
     stream: StreamSink<ReturnType>,
+    channels: StateChannel,
     quilt_prepare: PrepareGameArgs,
 ) -> anyhow::Result<()> {
     let quilt_download_args = prepare_quilt_download(
@@ -50,6 +69,35 @@ pub async fn download_quilt(
         quilt_prepare.game_args,
     )
     .await?;
-    run_download(stream, quilt_download_args).await?;
+    run_download(stream, channels, quilt_download_args).await?;
     Ok(())
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum State {
+    Downloading,
+    Paused,
+    ForceCancel,
+}
+
+pub use crossbeam::channel;
+#[derive(Debug)]
+pub struct StateChannel {
+    pub sender: RustOpaque<channel::Sender<State>>,
+    pub receiver: RustOpaque<channel::Receiver<State>>,
+}
+
+pub fn fetch() -> StateChannel {
+    let state = State::Paused;
+    let (tx, rx) = channel::unbounded();
+    tx.send(state).unwrap();
+    StateChannel {
+        sender: RustOpaque::new(tx),
+        receiver: RustOpaque::new(rx),
+    }
+}
+
+pub fn state_write(s: State, channel: StateChannel) -> StateChannel {
+    channel.sender.send(s).unwrap();
+    channel
 }

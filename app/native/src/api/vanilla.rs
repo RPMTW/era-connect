@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail};
 use anyhow::{Context, Result};
 use flutter_rust_bridge::{RustOpaque, StreamSink};
-use futures::{Future, StreamExt};
+use futures::{Future, StreamExt, TryStreamExt};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 pub use std::path::PathBuf;
@@ -26,7 +26,7 @@ use super::download::assets::{extract_assets, parallel_assets, AssetIndex};
 use super::download::library::{parallel_library, Library};
 use super::download::rules::{get_rules, ActionType, Rule};
 use super::download::util::{download_file, extract_filename, validate_sha1};
-use super::ReturnType;
+use super::{ReturnType, State, StateChannel};
 
 pub struct Progress {
     pub speed: f64,
@@ -466,9 +466,14 @@ pub struct DownloadArgs {
 }
 
 // get progress and and launch download
-pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadArgs) -> Result<()> {
-    let mut handles = download_args.handles;
+pub async fn run_download(
+    sink: StreamSink<ReturnType>,
+    channel: StateChannel,
+    download_args: DownloadArgs,
+) -> Result<()> {
+    let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
+
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&download_args.current_size);
     let total_size_clone = Arc::clone(&download_args.total_size);
@@ -506,7 +511,7 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
         sink.close();
     });
     // Create a semaphore with a limit on the number of concurrent downloads
-    join_futures(handles, 128).await?;
+    join_futures(handles, 128, channel).await?;
     download_complete.store(true, Ordering::Release);
     task.await?;
     println!("Complete!");
@@ -516,11 +521,22 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
 pub async fn join_futures(
     mut handles: HandlesType,
     concurrency_limit: usize,
+    channel: StateChannel,
 ) -> Result<(), anyhow::Error> {
     let mut download_stream =
         tokio_stream::iter(handles.iter_mut()).buffer_unordered(concurrency_limit);
-    while let Some(val) = download_stream.next().await {
-        val?;
+    let mut prev_state = State::Paused;
+    loop {
+        let state = channel.receiver.try_recv().unwrap_or(prev_state);
+        prev_state = state;
+        if state != State::Paused {
+            if let Some(x) = download_stream.next().await {
+                x?;
+            } else {
+                dbg!("???");
+                break;
+            }
+        }
     }
     Ok(())
 }
