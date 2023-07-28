@@ -21,8 +21,8 @@ void main() async {
     await windowManager.focus();
     await windowManager.setMinimumSize(const Size(1350, 820));
     runApp(const EraConnectApp());
-    
-     testRust();
+
+    testRust();
   });
 }
 
@@ -50,7 +50,7 @@ void testRust() async {
         }
       });
     }
-   });
+  });
 }
 
 class EraConnectApp extends StatefulWidget {
