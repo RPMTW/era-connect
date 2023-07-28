@@ -26,29 +26,8 @@ jobs:
           components: rustfmt, clippy
       - name: Test And Generate Coverage
         run: |
-          dart pub global activate full_coverage
-          mkdir -p coverage
-
-          cd app
-          flutter pub get
-          dart pub global run full_coverage --ignore bridge_generated.dart,bridge_generated.io.dart,ffi.dart
-          flutter test --coverage
-          sed "s/^SF:.*lib/SF:app\/lib/g" coverage/lcov.info >> ../coverage/lcov.info
-
-          cd ..
-
-          cd packages
-          for d in */ ; do
-            cd $d
-            flutter pub get
-            dart pub global run full_coverage
-            flutter test --coverage
-            
-            escapedPath="$(echo packages/$d | sed 's/\//\\\//g')"
-            sed "s/^SF:.*lib/SF:$escapedPath\/lib/g" coverage/lcov.info >> ../../coverage/lcov.info
-            rm -rf coverage
-            cd ..
-          done
+          cargo install just
+          just test
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
         with:
