@@ -37,7 +37,7 @@ class I18nManager extends ChangeNotifier implements ReassembleHandler {
   ///   en-US.json
   ///   zh-TW.json
   /// ```
-  Future<void> load() async {
+  Future<void> load(AssetBundle rootBundle) async {
     _data.clear();
 
     for (final locale in I18nLocale.values) {
@@ -56,7 +56,7 @@ class I18nManager extends ChangeNotifier implements ReassembleHandler {
 
   @override
   void reassemble() {
-    load();
+    load(rootBundle);
   }
 }
 

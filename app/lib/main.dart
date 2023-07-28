@@ -1,6 +1,7 @@
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 // import 'ffi.dart' show api;
 import 'pages/main_page.dart';
@@ -96,7 +97,7 @@ class _AppHomeState extends State<_AppHome> {
       final i18n = context.i18n;
       i18n.setLocale(I18nLocale.getFromSystemLocale(
           WidgetsBinding.instance.platformDispatcher));
-      await i18n.load();
+      await i18n.load(rootBundle);
       setState(() {
         isLoaded = true;
       });

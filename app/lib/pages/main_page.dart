@@ -1,3 +1,4 @@
+import 'package:era_connect/dialog/setup_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
@@ -19,13 +20,7 @@ class _MainPageState extends State<MainPage> {
         showEraDialog(
           context: context,
           barrierDismissible: true,
-          dialog: const InteractiveDialog(
-            title: '歡迎使用',
-            description:
-                '歡迎你來到 Era Connect！\n開始使用啟動器之前，讓我們協助你進行快速設定，就可以盡情地暢玩遊戲啦。',
-            logoBoxText: '01',
-            child: Placeholder(),
-          ),
+          dialog: const SetupDialog(),
         );
       }
     });

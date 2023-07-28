@@ -10,8 +10,6 @@ import 'i18n_locale_test.mocks.dart';
 @GenerateMocks([ui.PlatformDispatcher])
 void main() {
   group('I18nLocale', () {
-    setUp(() => WidgetsFlutterBinding.ensureInitialized());
-
     test(
         'getFromSystemLocale returns americanEnglish when system locale is not supported',
         () {
