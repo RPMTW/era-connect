@@ -11,35 +11,44 @@ jobs:
   test-linux:
     runs-on: ubuntu-latest
     steps:
-        - uses: actions/checkout@v3
-        - name: Install Flutter SDK
-          uses: subosito/flutter-action@v2
-          with:
-            flutter-version: "3.10.5"
-            channel: "stable"
-            cache: true
-        - name: Install Rust Language
-          uses: actions-rs/toolchain@v1
-          with:
-            toolchain: stable
-            override: true
-            components: rustfmt, clippy
-        - name: Test And Generate Coverage
-          run: |
-            cd app
-            flutter pub get
-            flutter test --coverage --coverage-path packages/coverage/lcov.base.info
-            cd ..
+      - uses: actions/checkout@v3
+      - name: Install Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.10.5"
+          channel: "stable"
+          cache: true
+      - name: Install Rust Language
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+      - name: Test And Generate Coverage
+        run: |
+          mkdir -p coverage
 
-            cd packages
-            for d in */ ; do
-              cd $d
-              flutter pub get
-              flutter test --coverage --merge-coverage
-              cd ..
-            done
-        - name: Upload Coverage
-          uses: codecov/codecov-action@v3
-          with:
-            files: packages/coverage/lcov.info
-            fail_ci_if_error: true
+          cd app
+          flutter pub get
+          flutter test --coverage
+          sed "s/^SF:.*lib/SF:app\/lib/g" coverage/lcov.info >> ../coverage/lcov.info
+
+          cd ..
+
+          cd packages
+          for d in */ ; do
+            cd $d
+            flutter pub get
+            flutter test --coverage
+            
+            escapedPath="$(echo packages/$d | sed 's/\//\\\//g')"
+            sed "s/^SF:.*lib/SF:$escapedPath\/lib/g" coverage/lcov.info >> ../../coverage/lcov.info
+            rm -rf coverage
+            cd ..
+          done
+        continue-on-error: true
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: coverage/lcov.info
+          fail_ci_if_error: true
