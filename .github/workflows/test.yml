@@ -26,10 +26,12 @@ jobs:
           components: rustfmt, clippy
       - name: Test And Generate Coverage
         run: |
+          dart pub global activate full_coverage
           mkdir -p coverage
 
           cd app
           flutter pub get
+          dart pub global run full_coverage
           flutter test --coverage
           sed "s/^SF:.*lib/SF:app\/lib/g" coverage/lcov.info >> ../coverage/lcov.info
 
@@ -39,6 +41,7 @@ jobs:
           for d in */ ; do
             cd $d
             flutter pub get
+            dart pub global run full_coverage
             flutter test --coverage
             
             escapedPath="$(echo packages/$d | sed 's/\//\\\//g')"
@@ -46,7 +49,6 @@ jobs:
             rm -rf coverage
             cd ..
           done
-        continue-on-error: true
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
         with:

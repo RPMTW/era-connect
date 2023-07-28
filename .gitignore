@@ -28,4 +28,6 @@ doc/api/
 
 .idea
 
+# Code coverage
 coverage/
+*full_coverage_test.dart
