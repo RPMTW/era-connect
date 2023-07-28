@@ -32,6 +32,7 @@ class EraSideBar extends StatelessWidget {
     return [
       Column(
         children: [
+          const SizedBox(height: 10),
           topItems,
           const SizedBox(height: 15),
           const EraDivider(),

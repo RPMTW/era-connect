@@ -94,7 +94,8 @@ class _AppHomeState extends State<_AppHome> {
   Future<void> load() async {
     if (mounted) {
       final i18n = context.i18n;
-      i18n.setLocale(I18nLocale.getFromSystemLocale(WidgetsBinding.instance.platformDispatcher));
+      i18n.setLocale(I18nLocale.getFromSystemLocale(
+          WidgetsBinding.instance.platformDispatcher));
       await i18n.load();
       setState(() {
         isLoaded = true;
@@ -104,23 +105,21 @@ class _AppHomeState extends State<_AppHome> {
 
   @override
   Widget build(BuildContext context) {
-    return DragToResizeArea(
-      child: Material(
-        child: Builder(builder: (context) {
-          if (!isLoaded) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          return const Column(
-            children: [
-              EraTitleBar(),
-              Expanded(child: MainPage()),
-            ],
+    return Material(
+      child: Builder(builder: (context) {
+        if (!isLoaded) {
+          return const Center(
+            child: CircularProgressIndicator(),
           );
-        }),
-      ),
+        }
+
+        return const Column(
+          children: [
+            EraTitleBar(),
+            Expanded(child: MainPage()),
+          ],
+        );
+      }),
     );
   }
 }
