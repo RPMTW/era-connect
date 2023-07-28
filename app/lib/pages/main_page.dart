@@ -1,51 +1,86 @@
-import 'package:flutter/material.dart';
-import 'package:era_connect_ui/era_connect_ui.dart'
-    show EraMenuBar, EraMenuItemData;
-import 'package:flutter_svg/flutter_svg.dart' show SvgPicture;
+import 'package:era_connect/dialog/setup_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
+import 'package:era_connect_ui/era_connect_ui.dart';
+import 'package:flutter/material.dart';
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   const MainPage({super.key});
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        showEraDialog(
+          context: context,
+          barrierDismissible: true,
+          dialog: const SetupDialog(),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _buildMainMenuBar(context),
-        const Expanded(child: Placeholder()),
-      ],
-    );
-  }
-
-  Widget _buildMainMenuBar(BuildContext context) {
-    return EraMenuBar(
-      items: [
-        EraMenuItemData(
-          icon: SvgPicture.asset(
-            'assets/icons/assistant_navigation_outline.svg',
+        EraSideBar(
+          topItems: SideBarCircleButton.icon(
+            onPressed: () {},
+            icon: Icons.mark_chat_unread_rounded,
+            tooltip: context.i18n['main_page.side_bar.universe_chat'],
           ),
-          selectedIcon: const Icon(Icons.assistant_navigation),
-          title: context.i18n['main_page.menu_bar.home.title'],
-          subtitle: context.i18n['main_page.menu_bar.home.subtitle'],
+          menuItems: [
+            SideBarCircleButton.icon(
+              onPressed: () {},
+              icon: Icons.home_rounded,
+              tooltip: context.i18n['main_page.side_bar.home'],
+            ),
+            SideBarCircleButton.icon(
+              onPressed: () {},
+              icon: Icons.grid_view_rounded,
+              tooltip: context.i18n['main_page.side_bar.library'],
+              isSelected: true,
+            ),
+            SideBarCircleButton.icon(
+              onPressed: () {},
+              icon: Icons.wifi_tethering_rounded,
+              tooltip: context.i18n['main_page.side_bar.multiplayer'],
+            ),
+          ],
+          collectionItems: [
+            SideBarCircleButton.roundedSquare(
+              onPressed: () {},
+              icon: Icons.add_rounded,
+              tooltip: context.i18n['main_page.side_bar.create_collection'],
+            ),
+            SideBarCircleButton.roundedSquare(
+              onPressed: () {},
+              icon: Icons.explore_rounded,
+              tooltip: context.i18n['main_page.side_bar.explore'],
+            ),
+          ],
+          bottomItems: [
+            SideBarCircleButton.icon(
+              onPressed: () {},
+              icon: Icons.download_rounded,
+              tooltip: context.i18n['main_page.side_bar.manage_downloads'],
+            ),
+            const EraDivider(),
+            SideBarCircleButton.icon(
+              onPressed: () {},
+              icon: Icons.no_accounts_rounded,
+              tooltip: context.i18n['main_page.side_bar.manage_accounts'],
+            ),
+          ],
         ),
-        EraMenuItemData(
-          icon: SvgPicture.asset('assets/icons/error_med_outline.svg'),
-          selectedIcon: SvgPicture.asset('assets/icons/error_med_round.svg'),
-          title: context.i18n['main_page.menu_bar.explore.title'],
-          subtitle: context.i18n['main_page.menu_bar.explore.subtitle'],
-        ),
-        EraMenuItemData(
-          icon: SvgPicture.asset('assets/icons/amp_stories_outline.svg'),
-          selectedIcon: SvgPicture.asset('assets/icons/amp_stories_round.svg'),
-          title: context.i18n['main_page.menu_bar.library.title'],
-          subtitle: context.i18n['main_page.menu_bar.library.subtitle'],
-        ),
-        EraMenuItemData(
-          icon: SvgPicture.asset('assets/icons/curtains_outline.svg'),
-          selectedIcon: SvgPicture.asset('assets/icons/curtains_round.svg'),
-          title: context.i18n['main_page.menu_bar.multiplayer.title'],
-          subtitle: context.i18n['main_page.menu_bar.multiplayer.subtitle'],
-        )
+        const Expanded(child: Placeholder()),
       ],
     );
   }

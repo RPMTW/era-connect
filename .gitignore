@@ -27,3 +27,7 @@ doc/api/
 .flutter-plugins-dependencies
 
 .idea
+
+# Code coverage
+coverage/
+*full_coverage_test.dart

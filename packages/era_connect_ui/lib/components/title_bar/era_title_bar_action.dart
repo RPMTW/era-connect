@@ -1,5 +1,5 @@
+import 'package:era_connect_ui/components/lib.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:window_manager/window_manager.dart';
 
 class EraTitleBarAction {
@@ -11,8 +11,7 @@ class EraTitleBarAction {
 
   static Widget minimize() {
     return IconButton(
-      icon:
-          SvgPicture.asset('icons/drag_handle.svg', package: 'era_connect_ui'),
+      icon: const EraIcon(name: 'drag_handle', size: 20),
       style: _style,
       onPressed: () {
         windowManager.minimize();
@@ -22,8 +21,7 @@ class EraTitleBarAction {
 
   static Widget maximize() {
     return IconButton(
-        icon: SvgPicture.asset('icons/thumbnail_bar.svg',
-            package: 'era_connect_ui'),
+        icon: const EraIcon(name: 'thumbnail_bar', size: 20),
         style: _style,
         onPressed: () async {
           final isMaximized = await windowManager.isMaximized();
@@ -38,7 +36,7 @@ class EraTitleBarAction {
 
   static Widget close() {
     return IconButton(
-      icon: SvgPicture.asset('icons/close.svg', package: 'era_connect_ui'),
+      icon: const EraIcon(name: 'close', size: 20),
       hoverColor: const Color(0xffff0000),
       style: _style,
       onPressed: () {

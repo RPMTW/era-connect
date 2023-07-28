@@ -31,22 +31,22 @@ dependencies:
     sdk: flutter
 
   ffi: ^2.0.2
-  flutter_rust_bridge: ^1.78.0
+  flutter_rust_bridge: ^1.79.0
   meta: ^1.8.0
+  flutter_svg: ^2.0.7
+  window_manager: ^0.3.5
+  provider: ^6.0.5
   era_connect_ui:
     path: ../packages/era_connect_ui
   era_connect_i18n:
     path: ../packages/era_connect_i18n
-  flutter_svg: ^2.0.7
-  window_manager: ^0.3.4
-  provider: ^6.0.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^2.0.2
-  ffigen: ^8.0.2
+  ffigen: ^9.0.1
 
 flutter:
   uses-material-design: true
@@ -54,7 +54,6 @@ flutter:
   assets:
     - assets/icons/
     - assets/i18n/
-    - assets/era_connect_logo.svg
 
   fonts:
     - family: GenSenRounded
