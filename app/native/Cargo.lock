@@ -987,6 +987,7 @@ dependencies = [
  "futures",
  "glob",
  "hex",
+ "lazy_static",
  "os-version",
  "reqwest",
  "serde",

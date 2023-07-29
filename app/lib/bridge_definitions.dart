@@ -9,12 +9,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
-  Future<void> test({required StateChannel channels, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kTestConstMeta;
-
-  Stream<ReturnType> downloadVanilla(
-      {required StateChannel channels, dynamic hint});
+  Stream<ReturnType> downloadVanilla({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kDownloadVanillaConstMeta;
 
@@ -24,63 +19,21 @@ abstract class Native {
   FlutterRustBridgeTaskConstMeta get kLaunchGameConstMeta;
 
   Stream<ReturnType> downloadQuilt(
-      {required StateChannel channels,
-      required PrepareGameArgs quiltPrepare,
-      dynamic hint});
+      {required PrepareGameArgs quiltPrepare, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kDownloadQuiltConstMeta;
 
-  Future<StateChannel> fetch({dynamic hint});
+  Future<State> fetch({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kFetchConstMeta;
 
-  Future<StateChannel> stateWrite(
-      {required State s, required StateChannel channel, dynamic hint});
+  Future<void> write({required State s, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kStateWriteConstMeta;
-
-  DropFnType get dropOpaqueChannelReceiverState;
-  ShareFnType get shareOpaqueChannelReceiverState;
-  OpaqueTypeFinalizer get ChannelReceiverStateFinalizer;
-
-  DropFnType get dropOpaqueChannelSenderState;
-  ShareFnType get shareOpaqueChannelSenderState;
-  OpaqueTypeFinalizer get ChannelSenderStateFinalizer;
+  FlutterRustBridgeTaskConstMeta get kWriteConstMeta;
 
   DropFnType get dropOpaquePathBuf;
   ShareFnType get shareOpaquePathBuf;
   OpaqueTypeFinalizer get PathBufFinalizer;
-}
-
-@sealed
-class ChannelReceiverState extends FrbOpaque {
-  final Native bridge;
-  ChannelReceiverState.fromRaw(int ptr, int size, this.bridge)
-      : super.unsafe(ptr, size);
-  @override
-  DropFnType get dropFn => bridge.dropOpaqueChannelReceiverState;
-
-  @override
-  ShareFnType get shareFn => bridge.shareOpaqueChannelReceiverState;
-
-  @override
-  OpaqueTypeFinalizer get staticFinalizer =>
-      bridge.ChannelReceiverStateFinalizer;
-}
-
-@sealed
-class ChannelSenderState extends FrbOpaque {
-  final Native bridge;
-  ChannelSenderState.fromRaw(int ptr, int size, this.bridge)
-      : super.unsafe(ptr, size);
-  @override
-  DropFnType get dropFn => bridge.dropOpaqueChannelSenderState;
-
-  @override
-  ShareFnType get shareFn => bridge.shareOpaqueChannelSenderState;
-
-  @override
-  OpaqueTypeFinalizer get staticFinalizer => bridge.ChannelSenderStateFinalizer;
 }
 
 @sealed
@@ -192,15 +145,5 @@ class ReturnType {
 enum State {
   Downloading,
   Paused,
-  ForceCancel,
-}
-
-class StateChannel {
-  final ChannelSenderState sender;
-  final ChannelReceiverState receiver;
-
-  const StateChannel({
-    required this.sender,
-    required this.receiver,
-  });
+  Stopped,
 }

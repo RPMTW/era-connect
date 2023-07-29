@@ -17,6 +17,7 @@ use std::{
 };
 use tokio::fs::{create_dir_all, File};
 use tokio::io::AsyncWriteExt;
+use tokio::sync::RwLock;
 use tokio::time::{self, Instant};
 
 use crate::api::download::library::os_match;
@@ -26,7 +27,7 @@ use super::download::assets::{extract_assets, parallel_assets, AssetIndex};
 use super::download::library::{parallel_library, Library};
 use super::download::rules::{get_rules, ActionType, Rule};
 use super::download::util::{download_file, extract_filename, validate_sha1};
-use super::{ReturnType, State, StateChannel};
+use super::{ReturnType, State, STATE};
 
 pub struct Progress {
     pub speed: f64,
@@ -466,11 +467,7 @@ pub struct DownloadArgs {
 }
 
 // get progress and and launch download
-pub async fn run_download(
-    sink: StreamSink<ReturnType>,
-    channel: StateChannel,
-    download_args: DownloadArgs,
-) -> Result<()> {
+pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadArgs) -> Result<()> {
     let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
 
@@ -499,6 +496,7 @@ pub async fn run_download(
                 progress: Some(progress),
                 prepare_name_args: None,
             });
+            dbg!(*STATE.read().await);
         }
         sink.add(ReturnType {
             progress: None,
@@ -511,7 +509,7 @@ pub async fn run_download(
         sink.close();
     });
     // Create a semaphore with a limit on the number of concurrent downloads
-    join_futures(handles, 128, channel).await?;
+    join_futures(handles, 128).await?;
     download_complete.store(true, Ordering::Release);
     task.await?;
     println!("Complete!");
@@ -521,22 +519,11 @@ pub async fn run_download(
 pub async fn join_futures(
     mut handles: HandlesType,
     concurrency_limit: usize,
-    channel: StateChannel,
 ) -> Result<(), anyhow::Error> {
     let mut download_stream =
         tokio_stream::iter(handles.iter_mut()).buffer_unordered(concurrency_limit);
-    let mut prev_state = State::Paused;
-    loop {
-        let state = channel.receiver.try_recv().unwrap_or(prev_state);
-        prev_state = state;
-        if state != State::Paused {
-            if let Some(x) = download_stream.next().await {
-                x?;
-            } else {
-                dbg!("???");
-                break;
-            }
-        }
+    while let Some(x) = download_stream.next().await {
+        x?;
     }
     Ok(())
 }

@@ -26,31 +26,12 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  Future<void> test({required StateChannel channels, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_state_channel(channels);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_test(port_, arg0),
-      parseSuccessData: _wire2api_unit,
-      constMeta: kTestConstMeta,
-      argValues: [channels],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kTestConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "test",
-        argNames: ["channels"],
-      );
-
-  Stream<ReturnType> downloadVanilla(
-      {required StateChannel channels, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_state_channel(channels);
+  Stream<ReturnType> downloadVanilla({dynamic hint}) {
     return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_download_vanilla(port_, arg0),
+      callFfi: (port_) => _platform.inner.wire_download_vanilla(port_),
       parseSuccessData: _wire2api_return_type,
       constMeta: kDownloadVanillaConstMeta,
-      argValues: [channels],
+      argValues: [],
       hint: hint,
     ));
   }
@@ -58,7 +39,7 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kDownloadVanillaConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "download_vanilla",
-        argNames: ["channels"],
+        argNames: [],
       );
 
   Future<void> launchGame(
@@ -81,17 +62,13 @@ class NativeImpl implements Native {
       );
 
   Stream<ReturnType> downloadQuilt(
-      {required StateChannel channels,
-      required PrepareGameArgs quiltPrepare,
-      dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_state_channel(channels);
-    var arg1 = _platform.api2wire_box_autoadd_prepare_game_args(quiltPrepare);
+      {required PrepareGameArgs quiltPrepare, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_prepare_game_args(quiltPrepare);
     return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_download_quilt(port_, arg0, arg1),
+      callFfi: (port_) => _platform.inner.wire_download_quilt(port_, arg0),
       parseSuccessData: _wire2api_return_type,
       constMeta: kDownloadQuiltConstMeta,
-      argValues: [channels, quiltPrepare],
+      argValues: [quiltPrepare],
       hint: hint,
     ));
   }
@@ -99,13 +76,13 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kDownloadQuiltConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "download_quilt",
-        argNames: ["channels", "quiltPrepare"],
+        argNames: ["quiltPrepare"],
       );
 
-  Future<StateChannel> fetch({dynamic hint}) {
+  Future<State> fetch({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_fetch(port_),
-      parseSuccessData: _wire2api_state_channel,
+      parseSuccessData: _wire2api_state,
       constMeta: kFetchConstMeta,
       argValues: [],
       hint: hint,
@@ -118,38 +95,22 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
-  Future<StateChannel> stateWrite(
-      {required State s, required StateChannel channel, dynamic hint}) {
+  Future<void> write({required State s, dynamic hint}) {
     var arg0 = api2wire_state(s);
-    var arg1 = _platform.api2wire_box_autoadd_state_channel(channel);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_state_write(port_, arg0, arg1),
-      parseSuccessData: _wire2api_state_channel,
-      constMeta: kStateWriteConstMeta,
-      argValues: [s, channel],
+      callFfi: (port_) => _platform.inner.wire_write(port_, arg0),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kWriteConstMeta,
+      argValues: [s],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kStateWriteConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kWriteConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "state_write",
-        argNames: ["s", "channel"],
+        debugName: "write",
+        argNames: ["s"],
       );
-
-  DropFnType get dropOpaqueChannelReceiverState =>
-      _platform.inner.drop_opaque_ChannelReceiverState;
-  ShareFnType get shareOpaqueChannelReceiverState =>
-      _platform.inner.share_opaque_ChannelReceiverState;
-  OpaqueTypeFinalizer get ChannelReceiverStateFinalizer =>
-      _platform.ChannelReceiverStateFinalizer;
-
-  DropFnType get dropOpaqueChannelSenderState =>
-      _platform.inner.drop_opaque_ChannelSenderState;
-  ShareFnType get shareOpaqueChannelSenderState =>
-      _platform.inner.share_opaque_ChannelSenderState;
-  OpaqueTypeFinalizer get ChannelSenderStateFinalizer =>
-      _platform.ChannelSenderStateFinalizer;
 
   DropFnType get dropOpaquePathBuf => _platform.inner.drop_opaque_PathBuf;
   ShareFnType get shareOpaquePathBuf => _platform.inner.share_opaque_PathBuf;
@@ -159,14 +120,6 @@ class NativeImpl implements Native {
     _platform.dispose();
   }
 // Section: wire2api
-
-  ChannelReceiverState _wire2api_ChannelReceiverState(dynamic raw) {
-    return ChannelReceiverState.fromRaw(raw[0], raw[1], this);
-  }
-
-  ChannelSenderState _wire2api_ChannelSenderState(dynamic raw) {
-    return ChannelSenderState.fromRaw(raw[0], raw[1], this);
-  }
 
   PathBuf _wire2api_PathBuf(dynamic raw) {
     return PathBuf.fromRaw(raw[0], raw[1], this);
@@ -206,6 +159,10 @@ class NativeImpl implements Native {
       userType: _wire2api_String(arr[6]),
       versionType: _wire2api_String(arr[7]),
     );
+  }
+
+  int _wire2api_i32(dynamic raw) {
+    return raw as int;
   }
 
   JvmOptions _wire2api_jvm_options(dynamic raw) {
@@ -276,14 +233,8 @@ class NativeImpl implements Native {
     );
   }
 
-  StateChannel _wire2api_state_channel(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return StateChannel(
-      sender: _wire2api_ChannelSenderState(arr[0]),
-      receiver: _wire2api_ChannelReceiverState(arr[1]),
-    );
+  State _wire2api_state(dynamic raw) {
+    return State.values[raw as int];
   }
 
   int _wire2api_u8(dynamic raw) {
@@ -324,21 +275,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 // Section: api2wire
 
   @protected
-  wire_ChannelReceiverState api2wire_ChannelReceiverState(
-      ChannelReceiverState raw) {
-    final ptr = inner.new_ChannelReceiverState();
-    _api_fill_to_wire_ChannelReceiverState(raw, ptr);
-    return ptr;
-  }
-
-  @protected
-  wire_ChannelSenderState api2wire_ChannelSenderState(ChannelSenderState raw) {
-    final ptr = inner.new_ChannelSenderState();
-    _api_fill_to_wire_ChannelSenderState(raw, ptr);
-    return ptr;
-  }
-
-  @protected
   wire_PathBuf api2wire_PathBuf(PathBuf raw) {
     final ptr = inner.new_PathBuf();
     _api_fill_to_wire_PathBuf(raw, ptr);
@@ -368,14 +304,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
-  ffi.Pointer<wire_StateChannel> api2wire_box_autoadd_state_channel(
-      StateChannel raw) {
-    final ptr = inner.new_box_autoadd_state_channel_0();
-    _api_fill_to_wire_state_channel(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
   ffi.Pointer<wire_uint_8_list> api2wire_uint_8_list(Uint8List raw) {
     final ans = inner.new_uint_8_list_0(raw.length);
     ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
@@ -383,28 +311,10 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 // Section: finalizer
 
-  late final OpaqueTypeFinalizer _ChannelReceiverStateFinalizer =
-      OpaqueTypeFinalizer(inner._drop_opaque_ChannelReceiverStatePtr);
-  OpaqueTypeFinalizer get ChannelReceiverStateFinalizer =>
-      _ChannelReceiverStateFinalizer;
-  late final OpaqueTypeFinalizer _ChannelSenderStateFinalizer =
-      OpaqueTypeFinalizer(inner._drop_opaque_ChannelSenderStatePtr);
-  OpaqueTypeFinalizer get ChannelSenderStateFinalizer =>
-      _ChannelSenderStateFinalizer;
   late final OpaqueTypeFinalizer _PathBufFinalizer =
       OpaqueTypeFinalizer(inner._drop_opaque_PathBufPtr);
   OpaqueTypeFinalizer get PathBufFinalizer => _PathBufFinalizer;
 // Section: api_fill_to_wire
-
-  void _api_fill_to_wire_ChannelReceiverState(
-      ChannelReceiverState apiObj, wire_ChannelReceiverState wireObj) {
-    wireObj.ptr = apiObj.shareOrMove();
-  }
-
-  void _api_fill_to_wire_ChannelSenderState(
-      ChannelSenderState apiObj, wire_ChannelSenderState wireObj) {
-    wireObj.ptr = apiObj.shareOrMove();
-  }
 
   void _api_fill_to_wire_PathBuf(PathBuf apiObj, wire_PathBuf wireObj) {
     wireObj.ptr = apiObj.shareOrMove();
@@ -413,11 +323,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   void _api_fill_to_wire_box_autoadd_prepare_game_args(
       PrepareGameArgs apiObj, ffi.Pointer<wire_PrepareGameArgs> wireObj) {
     _api_fill_to_wire_prepare_game_args(apiObj, wireObj.ref);
-  }
-
-  void _api_fill_to_wire_box_autoadd_state_channel(
-      StateChannel apiObj, ffi.Pointer<wire_StateChannel> wireObj) {
-    _api_fill_to_wire_state_channel(apiObj, wireObj.ref);
   }
 
   void _api_fill_to_wire_game_options(
@@ -456,12 +361,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     _api_fill_to_wire_launch_args(apiObj.launchArgs, wireObj.launch_args);
     _api_fill_to_wire_jvm_options(apiObj.jvmArgs, wireObj.jvm_args);
     _api_fill_to_wire_game_options(apiObj.gameArgs, wireObj.game_args);
-  }
-
-  void _api_fill_to_wire_state_channel(
-      StateChannel apiObj, wire_StateChannel wireObj) {
-    wireObj.sender = api2wire_ChannelSenderState(apiObj.sender);
-    wireObj.receiver = api2wire_ChannelReceiverState(apiObj.receiver);
   }
 }
 
@@ -561,39 +460,19 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _init_frb_dart_api_dl = _init_frb_dart_api_dlPtr
       .asFunction<int Function(ffi.Pointer<ffi.Void>)>();
 
-  void wire_test(
-    int port_,
-    ffi.Pointer<wire_StateChannel> channels,
-  ) {
-    return _wire_test(
-      port_,
-      channels,
-    );
-  }
-
-  late final _wire_testPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Int64, ffi.Pointer<wire_StateChannel>)>>('wire_test');
-  late final _wire_test = _wire_testPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_StateChannel>)>();
-
   void wire_download_vanilla(
     int port_,
-    ffi.Pointer<wire_StateChannel> channels,
   ) {
     return _wire_download_vanilla(
       port_,
-      channels,
     );
   }
 
-  late final _wire_download_vanillaPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_StateChannel>)>>('wire_download_vanilla');
-  late final _wire_download_vanilla = _wire_download_vanillaPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_StateChannel>)>();
+  late final _wire_download_vanillaPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_download_vanilla');
+  late final _wire_download_vanilla =
+      _wire_download_vanillaPtr.asFunction<void Function(int)>();
 
   void wire_launch_game(
     int port_,
@@ -614,23 +493,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
 
   void wire_download_quilt(
     int port_,
-    ffi.Pointer<wire_StateChannel> channels,
     ffi.Pointer<wire_PrepareGameArgs> quilt_prepare,
   ) {
     return _wire_download_quilt(
       port_,
-      channels,
       quilt_prepare,
     );
   }
 
   late final _wire_download_quiltPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_StateChannel>,
+          ffi.Void Function(ffi.Int64,
               ffi.Pointer<wire_PrepareGameArgs>)>>('wire_download_quilt');
-  late final _wire_download_quilt = _wire_download_quiltPtr.asFunction<
-      void Function(int, ffi.Pointer<wire_StateChannel>,
-          ffi.Pointer<wire_PrepareGameArgs>)>();
+  late final _wire_download_quilt = _wire_download_quiltPtr
+      .asFunction<void Function(int, ffi.Pointer<wire_PrepareGameArgs>)>();
 
   void wire_fetch(
     int port_,
@@ -644,44 +520,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('wire_fetch');
   late final _wire_fetch = _wire_fetchPtr.asFunction<void Function(int)>();
 
-  void wire_state_write(
+  void wire_write(
     int port_,
     int s,
-    ffi.Pointer<wire_StateChannel> channel,
   ) {
-    return _wire_state_write(
+    return _wire_write(
       port_,
       s,
-      channel,
     );
   }
 
-  late final _wire_state_writePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Int32,
-              ffi.Pointer<wire_StateChannel>)>>('wire_state_write');
-  late final _wire_state_write = _wire_state_writePtr
-      .asFunction<void Function(int, int, ffi.Pointer<wire_StateChannel>)>();
-
-  wire_ChannelReceiverState new_ChannelReceiverState() {
-    return _new_ChannelReceiverState();
-  }
-
-  late final _new_ChannelReceiverStatePtr =
-      _lookup<ffi.NativeFunction<wire_ChannelReceiverState Function()>>(
-          'new_ChannelReceiverState');
-  late final _new_ChannelReceiverState = _new_ChannelReceiverStatePtr
-      .asFunction<wire_ChannelReceiverState Function()>();
-
-  wire_ChannelSenderState new_ChannelSenderState() {
-    return _new_ChannelSenderState();
-  }
-
-  late final _new_ChannelSenderStatePtr =
-      _lookup<ffi.NativeFunction<wire_ChannelSenderState Function()>>(
-          'new_ChannelSenderState');
-  late final _new_ChannelSenderState = _new_ChannelSenderStatePtr
-      .asFunction<wire_ChannelSenderState Function()>();
+  late final _wire_writePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Int32)>>(
+          'wire_write');
+  late final _wire_write = _wire_writePtr.asFunction<void Function(int, int)>();
 
   wire_PathBuf new_PathBuf() {
     return _new_PathBuf();
@@ -717,17 +569,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _new_box_autoadd_prepare_game_args_0Ptr
           .asFunction<ffi.Pointer<wire_PrepareGameArgs> Function()>();
 
-  ffi.Pointer<wire_StateChannel> new_box_autoadd_state_channel_0() {
-    return _new_box_autoadd_state_channel_0();
-  }
-
-  late final _new_box_autoadd_state_channel_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_StateChannel> Function()>>(
-          'new_box_autoadd_state_channel_0');
-  late final _new_box_autoadd_state_channel_0 =
-      _new_box_autoadd_state_channel_0Ptr
-          .asFunction<ffi.Pointer<wire_StateChannel> Function()>();
-
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,
   ) {
@@ -742,68 +583,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Int32)>>('new_uint_8_list_0');
   late final _new_uint_8_list_0 = _new_uint_8_list_0Ptr
       .asFunction<ffi.Pointer<wire_uint_8_list> Function(int)>();
-
-  void drop_opaque_ChannelReceiverState(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _drop_opaque_ChannelReceiverState(
-      ptr,
-    );
-  }
-
-  late final _drop_opaque_ChannelReceiverStatePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'drop_opaque_ChannelReceiverState');
-  late final _drop_opaque_ChannelReceiverState =
-      _drop_opaque_ChannelReceiverStatePtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  ffi.Pointer<ffi.Void> share_opaque_ChannelReceiverState(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _share_opaque_ChannelReceiverState(
-      ptr,
-    );
-  }
-
-  late final _share_opaque_ChannelReceiverStatePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<ffi.Void> Function(
-              ffi.Pointer<ffi.Void>)>>('share_opaque_ChannelReceiverState');
-  late final _share_opaque_ChannelReceiverState =
-      _share_opaque_ChannelReceiverStatePtr
-          .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
-
-  void drop_opaque_ChannelSenderState(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _drop_opaque_ChannelSenderState(
-      ptr,
-    );
-  }
-
-  late final _drop_opaque_ChannelSenderStatePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'drop_opaque_ChannelSenderState');
-  late final _drop_opaque_ChannelSenderState =
-      _drop_opaque_ChannelSenderStatePtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  ffi.Pointer<ffi.Void> share_opaque_ChannelSenderState(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _share_opaque_ChannelSenderState(
-      ptr,
-    );
-  }
-
-  late final _share_opaque_ChannelSenderStatePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<ffi.Void> Function(
-              ffi.Pointer<ffi.Void>)>>('share_opaque_ChannelSenderState');
-  late final _share_opaque_ChannelSenderState =
-      _share_opaque_ChannelSenderStatePtr
-          .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
 
   void drop_opaque_PathBuf(
     ffi.Pointer<ffi.Void> ptr,
@@ -850,20 +629,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
 }
 
 final class _Dart_Handle extends ffi.Opaque {}
-
-final class wire_ChannelSenderState extends ffi.Struct {
-  external ffi.Pointer<ffi.Void> ptr;
-}
-
-final class wire_ChannelReceiverState extends ffi.Struct {
-  external ffi.Pointer<ffi.Void> ptr;
-}
-
-final class wire_StateChannel extends ffi.Struct {
-  external wire_ChannelSenderState sender;
-
-  external wire_ChannelReceiverState receiver;
-}
 
 final class wire_uint_8_list extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> ptr;

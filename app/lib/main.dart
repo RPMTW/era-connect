@@ -29,9 +29,10 @@ void main() async {
 
 void testRust() async {
   var chan = bridge.State.Downloading;
-  final channel = await api.fetch();
-  await api.stateWrite(s: chan, channel: channel);
-  final vanilla = api.downloadVanilla(channels: channel);
+  final currentState = await api.fetch();
+  print(currentState);
+  await api.write(s: chan);
+  final vanilla = api.downloadVanilla();
 
   vanilla.listen((event) async {
     print("speed");
@@ -41,15 +42,14 @@ void testRust() async {
     print("percent");
     print(event.progress?.percentages);
     if (chan == bridge.State.Downloading) {
-      api.stateWrite(channel: channel, s: bridge.State.Paused);
+      api.write(s: bridge.State.Paused);
       await Future.delayed(const Duration(seconds: 5));
-      chan = bridge.State.ForceCancel;
-      api.stateWrite(channel: channel, s: bridge.State.Downloading);
+      chan = bridge.State.Stopped;
+      api.write(s: bridge.State.Downloading);
     }
-    api.stateWrite(channel: channel, s: bridge.State.Downloading);
+    api.write(s: bridge.State.Downloading);
     if (event.prepareNameArgs != null) {
-      final quilt = api.downloadQuilt(
-          quiltPrepare: event.prepareNameArgs!, channels: channel);
+      final quilt = api.downloadQuilt(quiltPrepare: event.prepareNameArgs!);
       quilt.listen((event) {
         print("speed");
         print(event.progress?.speed);
