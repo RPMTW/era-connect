@@ -1,4 +1,5 @@
 import 'package:era_connect/bridge_definitions.dart' as bridge;
+import 'dart:io';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
@@ -12,11 +13,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  const windowOptions = WindowOptions(
-      size: Size(1600, 900),
-      minimumSize: Size(1350, 820),
+  final windowOptions = WindowOptions(
+      size: const Size(1600, 900),
+      minimumSize: const Size(1350, 820),
       titleBarStyle: TitleBarStyle.hidden,
-      windowButtonVisibility: false);
+      windowButtonVisibility: Platform.isMacOS ? true : false);
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();

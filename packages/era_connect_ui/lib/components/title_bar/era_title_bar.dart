@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:era_connect_ui/theme/lib.dart';
 import 'package:era_connect_ui/components/misc/lib.dart';
 import 'package:flutter/material.dart';
@@ -64,25 +66,37 @@ class _TitleBar extends StatelessWidget {
           width: MediaQuery.of(context).size.width,
           height: 50,
           padding: const EdgeInsets.only(left: 20, right: 8, top: 5, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  EraLogo(size: 16),
-                  SizedBox(width: 10),
-                  EraBrandText(fontSize: 28)
-                ],
-              ),
-              Wrap(spacing: 5, children: [
-                EraTitleBarAction.minimize(),
-                EraTitleBarAction.maximize(),
-                EraTitleBarAction.close()
-              ])
-            ],
-          ),
+          child: Builder(builder: (context) {
+            if (Platform.isMacOS) {
+              return Center(child: _buildTitle(MainAxisAlignment.center));
+            }
+
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [_buildTitle(MainAxisAlignment.start), _buildActions()],
+            );
+          }),
         ),
       ),
     );
+  }
+
+  Row _buildTitle(MainAxisAlignment mainAxisAlignment) {
+    return Row(
+      mainAxisAlignment: mainAxisAlignment,
+      children: const [
+        EraLogo(size: 16),
+        SizedBox(width: 10),
+        EraBrandText(fontSize: 28)
+      ],
+    );
+  }
+
+  Wrap _buildActions() {
+    return Wrap(spacing: 5, children: [
+      EraTitleBarAction.minimize(),
+      EraTitleBarAction.maximize(),
+      EraTitleBarAction.close()
+    ]);
   }
 }
