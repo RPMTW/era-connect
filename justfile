@@ -22,7 +22,7 @@ test:
     mkdir -p coverage
 
     cd app && flutter pub get
-    cd app && dart pub global run full_coverage --ignore bridge_generated.dart,bridge_generated.io.dart,ffi.dart
+    cd app && dart pub global run full_coverage --ignore bridge_generated.dart,bridge_definitions.dart,bridge_generated.io.dart,ffi.dart
     cd app && flutter test --coverage
     cd app && sed "s/^SF:.*lib/SF:app\/lib/g" coverage/lcov.info >> ../coverage/lcov.info
 

@@ -1,3 +1,4 @@
+import 'package:era_connect/components/step_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
@@ -15,32 +16,36 @@ class SetupDialog extends StatelessWidget {
           description: context.i18n['dialog.setup.01.description'],
           logoBoxText: '01',
           skippable: true,
-          contentBuilder: _step1,
+          contents: [Builder(builder: (context) => _step1(context))],
         ),
         StepData(
             stepDescription: '登入帳號',
             title: context.i18n['dialog.setup.welcome'],
             description: 'Test Description',
             logoBoxText: '02',
-            contentBuilder: (_) => const Text('Test 2')),
+            contents: [const Text('Test 2')]),
         StepData(
             stepDescription: '建立第一個收藏',
             title: context.i18n['dialog.setup.welcome'],
             description: 'Test Description',
             logoBoxText: '03',
-            contentBuilder: (_) => const Text('Test 3')),
+            contents: [
+              const Text('Test 3 PAGE 1'),
+              const Text('Test 3 PAGE 2'),
+              const Text('Test 3 PAGE 3')
+            ]),
         StepData(
             stepDescription: '為您的收藏加入內容',
             title: context.i18n['dialog.setup.welcome'],
             description: 'Test Description',
             logoBoxText: '04',
-            contentBuilder: (_) => const Text('Test 4')),
+            contents: [const Text('Test 4')]),
         StepData(
             stepDescription: '大功告成！',
             title: '大功告成！',
             description: 'Test Description',
             logoBoxText: '05',
-            contentBuilder: (_) => const SizedBox.shrink())
+            contents: [const SizedBox.shrink()])
       ],
     );
   }

@@ -1,3 +1,4 @@
+import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/components/lib.dart';
 import 'package:era_connect_ui/theme/lib.dart';
 import 'package:flutter/material.dart';
@@ -12,21 +13,57 @@ class StepDialog extends StatefulWidget {
 
 class _StepDialogState extends State<StepDialog> {
   int _currentStep = 0;
+  int _contentIndex = 0;
 
   void _nextStep() {
-    if (_isLastStep()) {
-      Navigator.of(context).pop();
-    } else {
+    final step = _getCurrentStep();
+    if (_contentIndex < step.contents.length - 1) {
       setState(() {
-        _currentStep++;
+        _contentIndex++;
       });
+      return;
     }
+
+    if (_isLastStep()) {
+      return Navigator.of(context).pop();
+    }
+
+    setState(() {
+      _contentIndex = 0;
+      _currentStep++;
+    });
+  }
+
+  void _previousStep() {
+    if (_contentIndex > 0) {
+      setState(() {
+        _contentIndex--;
+      });
+      return;
+    }
+
+    final step = _getCurrentStep();
+    if (step.skippable) {
+      return _nextStep();
+    }
+
+    setState(() {
+      _contentIndex = 0;
+      _currentStep--;
+    });
   }
 
   StepData _getCurrentStep() => widget.steps[_currentStep];
   int _getStepIndex(StepData step) => widget.steps.indexOf(step);
-  String _getStepName(StepData step) =>
-      step.stepName ?? '0${_getStepIndex(step) + 1}';
+  String _getStepName(StepData step) {
+    if (step.stepName != null) {
+      return step.stepName!;
+    }
+
+    final index = _getStepIndex(step) + 1;
+    return index < 10 ? '0$index' : '$index';
+  }
+
   bool _isLastStep() => _currentStep == widget.steps.length - 1;
 
   @override
@@ -106,7 +143,7 @@ class _StepDialogState extends State<StepDialog> {
     );
   }
 
-  Builder _buildBody() {
+  Widget _buildBody() {
     final step = _getCurrentStep();
 
     return Builder(
@@ -118,29 +155,28 @@ class _StepDialogState extends State<StepDialog> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: step.contentBuilder(context)),
+              Expanded(child: step.contents[_contentIndex]),
               const SizedBox(height: 35),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   EraTextButton.secondary(
-                    text: step.skippable ? '略過' : '上一步',
+                    text: step.skippable
+                        ? context.i18n['dialog.ui.skip']
+                        : context.i18n['dialog.ui.back'],
                     onPressed: () {
-                      if (step.skippable) {
-                        _nextStep();
-                      } else {
-                        setState(() {
-                          _currentStep--;
-                        });
-                      }
+                      _previousStep();
                     },
                   ),
                   const SizedBox(width: 10),
                   EraTextButton.primary(
-                      text: _isLastStep() ? '完成' : '繼續',
-                      onPressed: () {
-                        _nextStep();
-                      }),
+                    text: _isLastStep()
+                        ? context.i18n['dialog.ui.done']
+                        : context.i18n['dialog.ui.next'],
+                    onPressed: () {
+                      _nextStep();
+                    },
+                  ),
                 ],
               )
             ],
@@ -158,7 +194,7 @@ class StepData {
   final String description;
   final String logoBoxText;
   final bool skippable;
-  final WidgetBuilder contentBuilder;
+  final List<Widget> contents;
 
   const StepData(
       {this.stepName,
@@ -167,5 +203,6 @@ class StepData {
       required this.description,
       required this.logoBoxText,
       this.skippable = false,
-      required this.contentBuilder});
+      required this.contents})
+      : assert(contents.length > 0);
 }
