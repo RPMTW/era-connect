@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:era_connect_ui/theme/lib.dart';
 import 'package:era_connect_ui/components/misc/lib.dart';
 import 'package:flutter/material.dart';
@@ -67,7 +65,7 @@ class _TitleBar extends StatelessWidget {
           height: 50,
           padding: const EdgeInsets.only(left: 20, right: 8, top: 5, bottom: 5),
           child: Builder(builder: (context) {
-            if (Platform.isMacOS) {
+            if (Theme.of(context).platform == TargetPlatform.macOS) {
               return Center(child: _buildTitle(MainAxisAlignment.center));
             }
 

@@ -1,9 +1,7 @@
 import 'package:era_connect_ui/components/button/era_text_button.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../test_util.dart';
+import '../../test_util.dart';
 
 void main() {
   group('EraTextButton', () {
@@ -50,11 +48,11 @@ void main() {
           ),
         ),
       );
-      final beforeColor = _getDecorationColor(tester)!;
+      final beforeColor = getDecorationColor(tester)!;
 
       // Act
       await mouseHover(tester, find.text('Click me!'));
-      final afterColor = _getDecorationColor(tester)!;
+      final afterColor = getDecorationColor(tester)!;
 
       // Assert
       expect(beforeColor, isNot(equals(afterColor)));
@@ -71,7 +69,7 @@ void main() {
           ),
         ),
       );
-      final backgroundColor = _getDecorationColor(tester)!;
+      final backgroundColor = getDecorationColor(tester)!;
 
       // Assert
       expect(backgroundColor, equals(getDefaultTheme().surfaceColor));
@@ -91,7 +89,7 @@ void main() {
 
       // Act
       await mouseHover(tester, find.text('Click me!'));
-      final hoverColor = _getDecorationColor(tester)!;
+      final hoverColor = getDecorationColor(tester)!;
 
       // Assert
       expect(hoverColor, equals(getDefaultTheme().accentColor));
@@ -109,7 +107,7 @@ void main() {
         ),
       );
 
-      final backgroundColor = _getDecorationColor(tester);
+      final backgroundColor = getDecorationColor(tester);
 
       // Assert
       expect(backgroundColor, equals(getDefaultTheme().backgroundColor));
@@ -129,7 +127,7 @@ void main() {
 
       // Act
       await mouseHover(tester, find.text('Click me!'));
-      final hoverColor = _getDecorationColor(tester)!;
+      final hoverColor = getDecorationColor(tester)!;
 
       // Assert
       expect(hoverColor, equals(getDefaultTheme().surfaceColor));
@@ -137,15 +135,3 @@ void main() {
   });
 }
 
-Color? _getDecorationColor(WidgetTester tester) {
-  for (var widget in tester.allWidgets) {
-    if (widget is Container) {
-      final decoration = widget.decoration;
-      if (decoration is BoxDecoration && decoration.color != null) {
-        return decoration.color!;
-      }
-    }
-  }
-
-  return null;
-}

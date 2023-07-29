@@ -2,43 +2,56 @@ import 'package:era_connect_ui/components/lib.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-class EraTitleBarAction {
-  static final _style = IconButton.styleFrom(
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(0),
-    ),
-  );
+class EraTitleBarAction extends StatelessWidget {
+  final String icon;
+  final VoidCallback onPressed;
+  final Color? hoverColor;
 
-  static Widget minimize() {
+  const EraTitleBarAction._(
+      {required this.icon, required this.onPressed, this.hoverColor});
+
+  @override
+  Widget build(BuildContext context) {
     return IconButton(
-      icon: const EraIcon(name: 'drag_handle', size: 20),
-      style: _style,
+      icon: EraIcon(name: icon, size: 20),
+      hoverColor: hoverColor,
+      style: IconButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(0),
+        ),
+      ),
+      onPressed: onPressed,
+    );
+  }
+
+  factory EraTitleBarAction.minimize() {
+    return EraTitleBarAction._(
+      icon: 'drag_handle',
       onPressed: () {
         windowManager.minimize();
       },
     );
   }
 
-  static Widget maximize() {
-    return IconButton(
-        icon: const EraIcon(name: 'thumbnail_bar', size: 20),
-        style: _style,
-        onPressed: () async {
-          final isMaximized = await windowManager.isMaximized();
+  factory EraTitleBarAction.maximize() {
+    return EraTitleBarAction._(
+      icon: 'thumbnail_bar',
+      onPressed: () async {
+        final isMaximized = await windowManager.isMaximized();
 
-          if (isMaximized) {
-            await windowManager.unmaximize();
-          } else {
-            await windowManager.maximize();
-          }
-        });
+        if (isMaximized) {
+          await windowManager.unmaximize();
+        } else {
+          await windowManager.maximize();
+        }
+      },
+    );
   }
 
-  static Widget close() {
-    return IconButton(
-      icon: const EraIcon(name: 'close', size: 20),
+  factory EraTitleBarAction.close() {
+    return EraTitleBarAction._(
+      icon: 'close',
       hoverColor: const Color(0xffff0000),
-      style: _style,
       onPressed: () {
         windowManager.close();
       },

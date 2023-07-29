@@ -17,43 +17,50 @@ class SetupDialog extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.i18n['dialog.setup.01.content.title'],
-                  style: TextStyle(
-                    color: context.theme.textColor,
-                    fontSize: 40,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  context.i18n['dialog.setup.01.content.description'],
-                  style: TextStyle(
-                      color: context.theme.tertiaryTextColor, fontSize: 15),
-                ),
-                const SizedBox(height: 25),
-                DialogRectangleTab(
-                  title: '選擇方式',
-                  tabs: [
-                    TabItem(
-                      title: context
-                          .i18n['dialog.setup.01.content.tabs.empty.title'],
-                      icon: 'deployed_code',
-                      content: const Text('這是從頭開始的頁面',
-                          style: TextStyle(fontSize: 30)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.i18n['dialog.setup.01.content.title'],
+                    style: TextStyle(
+                      color: context.theme.textColor,
+                      fontSize: 40,
+                      fontWeight: FontWeight.w700,
                     ),
-                    TabItem(
-                        title: context
-                            .i18n['dialog.setup.01.content.tabs.import.title'],
-                        icon: 'deployed_code_update',
-                        content: const Text('這是匯入設定的頁面',
-                            style: TextStyle(fontSize: 50))),
-                  ],
-                )
-              ],
+                  ),
+                  Text(
+                    context.i18n['dialog.setup.01.content.description'],
+                    style: TextStyle(
+                        color: context.theme.tertiaryTextColor, fontSize: 15),
+                  ),
+                  const SizedBox(height: 25),
+                  Expanded(
+                    child: DialogRectangleTab(
+                      title: '選擇方式',
+                      tabs: [
+                        TabItem(
+                          title: context
+                              .i18n['dialog.setup.01.content.tabs.empty.title'],
+                          icon: 'deployed_code',
+                          content: const Text('這是從頭開始的頁面',
+                              style: TextStyle(fontSize: 30)),
+                        ),
+                        TabItem(
+                            title: context.i18n[
+                                'dialog.setup.01.content.tabs.import.title'],
+                            icon: 'deployed_code_update',
+                            content: const DialogContentBox(
+                              title: '匯入平台',
+                              content: SizedBox.shrink(),
+                            )),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(height: 35),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

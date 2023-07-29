@@ -30,7 +30,7 @@ class _DialogRectangleTabState extends State<DialogRectangleTab> {
       children: [
         Text(
           widget.title,
-          style: const TextStyle(fontSize: 16),
+          style: TextStyle(fontSize: 16, color: context.theme.textColor),
         ),
         const SizedBox(height: 10),
         Wrap(
@@ -43,22 +43,24 @@ class _DialogRectangleTabState extends State<DialogRectangleTab> {
   }
 
   Widget _buildContent() {
-    return AnimatedSwitcher(
-        transitionBuilder: (child, animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: SizeTransition(
-              sizeFactor: animation,
-              child: child,
-            ),
-          );
-        },
-        switchInCurve: Curves.easeInOut,
-        switchOutCurve: Curves.easeInOut,
-        duration: const Duration(milliseconds: 150),
-        child: Container(
-            key: ValueKey<int>(_currentPage),
-            child: widget.tabs[_currentPage].content));
+    return Expanded(
+      child: AnimatedSwitcher(
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SizeTransition(
+                sizeFactor: animation,
+                child: child,
+              ),
+            );
+          },
+          switchInCurve: Curves.easeInOut,
+          switchOutCurve: Curves.easeInOut,
+          duration: const Duration(milliseconds: 150),
+          child: Container(
+              key: ValueKey<int>(_currentPage),
+              child: widget.tabs[_currentPage].content)),
+    );
   }
 
   Widget _buildTab(TabItem e) {
@@ -118,7 +120,7 @@ class _TabItemWidget extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, color: context.theme.textColor),
             )
           ],
         ),

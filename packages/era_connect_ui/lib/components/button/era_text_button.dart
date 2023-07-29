@@ -62,11 +62,7 @@ class _EraTextButtonState extends State<EraTextButton> {
                 horizontal: widget.horizontalPadding, vertical: 20),
             child: Text(
               widget.text,
-              style: TextStyle(
-                color: context.theme.textColor,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(color: context.theme.textColor, fontSize: 18),
             ),
           ),
         ),
