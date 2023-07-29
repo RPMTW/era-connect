@@ -30,7 +30,6 @@ void main() async {
 void testRust() async {
   var chan = bridge.State.Downloading;
   final currentState = await api.fetch();
-  print(currentState);
   await api.write(s: chan);
   final vanilla = api.downloadVanilla();
 

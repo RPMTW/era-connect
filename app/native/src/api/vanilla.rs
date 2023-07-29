@@ -1,7 +1,8 @@
 use anyhow::{anyhow, bail};
 use anyhow::{Context, Result};
 use flutter_rust_bridge::{RustOpaque, StreamSink};
-use futures::{Future, StreamExt, TryStreamExt};
+use futures::stream::{AbortHandle, Abortable};
+use futures::{Future, StreamExt};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 pub use std::path::PathBuf;
@@ -17,7 +18,6 @@ use std::{
 };
 use tokio::fs::{create_dir_all, File};
 use tokio::io::AsyncWriteExt;
-use tokio::sync::RwLock;
 use tokio::time::{self, Instant};
 
 use crate::api::download::library::os_match;
@@ -496,7 +496,16 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
                 progress: Some(progress),
                 prepare_name_args: None,
             });
-            dbg!(*STATE.read().await);
+            let state = *STATE.read().await;
+            match state {
+                State::Downloading => {}
+                State::Paused => {
+                    while *STATE.read().await != State::Downloading {
+                        time::sleep(Duration::from_millis(100)).await;
+                    }
+                }
+                State::Stopped => break,
+            }
         }
         sink.add(ReturnType {
             progress: None,
@@ -517,13 +526,20 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
 }
 
 pub async fn join_futures(
-    mut handles: HandlesType,
+    handles: HandlesType,
     concurrency_limit: usize,
 ) -> Result<(), anyhow::Error> {
-    let mut download_stream =
-        tokio_stream::iter(handles.iter_mut()).buffer_unordered(concurrency_limit);
+    let mut download_stream = tokio_stream::iter(handles).buffer_unordered(concurrency_limit);
     while let Some(x) = download_stream.next().await {
-        x?;
+        let state = *STATE.read().await;
+        match state {
+            State::Downloading => x?,
+            State::Paused => {
+                dbg!("pausing!");
+            }
+            State::Stopped => break,
+        }
+        time::sleep(Duration::from_millis(100)).await;
     }
     Ok(())
 }
