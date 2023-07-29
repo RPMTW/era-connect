@@ -47,8 +47,9 @@ class _StepDialogState extends State<StepDialog> {
       return _nextStep();
     }
 
+    final previousStep = widget.steps[_currentStep - 1];
     setState(() {
-      _contentIndex = 0;
+      _contentIndex = previousStep.contents.length - 1;
       _currentStep--;
     });
   }
