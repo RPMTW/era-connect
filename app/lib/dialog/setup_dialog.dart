@@ -7,71 +7,82 @@ class SetupDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InteractiveDialog(
-      title: context.i18n['dialog.setup.01.title'],
-      description: context.i18n['dialog.setup.01.description'],
-      logoBoxText: '01',
-      body: Padding(
-        padding:
-            const EdgeInsets.only(top: 45, bottom: 35, left: 45, right: 45),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.i18n['dialog.setup.01.content.title'],
-                    style: TextStyle(
-                      color: context.theme.textColor,
-                      fontSize: 40,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    context.i18n['dialog.setup.01.content.description'],
-                    style: TextStyle(
-                        color: context.theme.tertiaryTextColor, fontSize: 15),
-                  ),
-                  const SizedBox(height: 25),
-                  Expanded(
-                    child: DialogRectangleTab(
-                      title: '選擇方式',
-                      tabs: [
-                        TabItem(
-                          title: context
-                              .i18n['dialog.setup.01.content.tabs.empty.title'],
-                          icon: 'deployed_code',
-                          content: const Text('這是從頭開始的頁面',
-                              style: TextStyle(fontSize: 30)),
-                        ),
-                        TabItem(
-                            title: context.i18n[
-                                'dialog.setup.01.content.tabs.import.title'],
-                            icon: 'deployed_code_update',
-                            content: const DialogContentBox(
-                              title: '匯入平台',
-                              content: SizedBox.shrink(),
-                            )),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 35),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                EraTextButton.secondary(text: '略過', onPressed: () {}),
-                const SizedBox(width: 10),
-                EraTextButton.primary(text: '繼續', onPressed: () {}),
-              ],
-            )
-          ],
+    return StepDialog(
+      steps: [
+        StepData(
+          stepDescription: '匯入或新建設定',
+          title: context.i18n['dialog.setup.welcome'],
+          description: context.i18n['dialog.setup.01.description'],
+          logoBoxText: '01',
+          skippable: true,
+          contentBuilder: _step1,
         ),
-      ),
+        StepData(
+            stepDescription: '登入帳號',
+            title: context.i18n['dialog.setup.welcome'],
+            description: 'Test Description',
+            logoBoxText: '02',
+            contentBuilder: (_) => const Text('Test 2')),
+        StepData(
+            stepDescription: '建立第一個收藏',
+            title: context.i18n['dialog.setup.welcome'],
+            description: 'Test Description',
+            logoBoxText: '03',
+            contentBuilder: (_) => const Text('Test 3')),
+        StepData(
+            stepDescription: '為您的收藏加入內容',
+            title: context.i18n['dialog.setup.welcome'],
+            description: 'Test Description',
+            logoBoxText: '04',
+            contentBuilder: (_) => const Text('Test 4')),
+        StepData(
+            stepDescription: '大功告成！',
+            title: '大功告成！',
+            description: 'Test Description',
+            logoBoxText: '05',
+            contentBuilder: (_) => const SizedBox.shrink())
+      ],
+    );
+  }
+
+  Widget _step1(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.i18n['dialog.setup.01.content.title'],
+          style: TextStyle(
+            color: context.theme.textColor,
+            fontSize: 40,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Text(
+          context.i18n['dialog.setup.01.content.description'],
+          style:
+              TextStyle(color: context.theme.tertiaryTextColor, fontSize: 15),
+        ),
+        const SizedBox(height: 25),
+        Expanded(
+          child: DialogRectangleTab(
+            title: '選擇方式',
+            tabs: [
+              TabItem(
+                title: context.i18n['dialog.setup.01.content.tabs.empty.title'],
+                icon: 'deployed_code',
+              ),
+              TabItem(
+                  title:
+                      context.i18n['dialog.setup.01.content.tabs.import.title'],
+                  icon: 'deployed_code_update',
+                  content: const DialogContentBox(
+                    title: '匯入平台',
+                    content: SizedBox.shrink(),
+                  )),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

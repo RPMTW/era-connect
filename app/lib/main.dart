@@ -5,7 +5,7 @@ import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'ffi.dart' show PrepareGameArgs, api;
+import 'ffi.dart' show api;
 import 'pages/main_page.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -24,23 +24,20 @@ void main() async {
     await windowManager.setMinimumSize(const Size(1350, 820));
     runApp(const EraConnectApp());
 
-    testRust();
+    // testRust();
   });
 }
 
 void testRust() async {
   var chan = bridge.State.Downloading;
-  final currentState = await api.fetch();
+  // final currentState = await api.fetch();
   await api.write(s: chan);
   final vanilla = api.downloadVanilla();
 
   vanilla.listen((event) async {
-    print("speed");
-    print(event.progress?.speed);
-    print("totalsize");
-    print(event.progress?.totalSize);
-    print("percent");
-    print(event.progress?.percentages);
+    print("speed: ${event.progress?.speed}");
+    print("total size: ${event.progress?.totalSize}");
+    print("percent: ${event.progress?.percentages}");
     if (chan == bridge.State.Downloading) {
       api.write(s: bridge.State.Paused);
       await Future.delayed(const Duration(seconds: 5));
@@ -51,12 +48,9 @@ void testRust() async {
     if (event.prepareNameArgs != null) {
       final quilt = api.downloadQuilt(quiltPrepare: event.prepareNameArgs!);
       quilt.listen((event) {
-        print("speed");
-        print(event.progress?.speed);
-        print("totalsize");
-        print(event.progress?.totalSize);
-        print("percent");
-        print(event.progress?.percentages);
+        print("speed: ${event.progress?.speed}");
+        print("total size: ${event.progress?.totalSize}");
+        print("percent: ${event.progress?.percentages}");
         if (event.prepareNameArgs != null) {
           api.launchGame(preLaunchArguments: event.prepareNameArgs!);
         }

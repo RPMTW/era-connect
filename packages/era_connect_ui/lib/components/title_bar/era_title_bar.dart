@@ -45,10 +45,7 @@ class _EraTitleBarState extends State<EraTitleBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        color: context.theme.deepBackgroundColor,
-        width: MediaQuery.of(context).size.width,
-        height: 50);
+    return SizedBox(width: MediaQuery.of(context).size.width, height: 50);
   }
 }
 

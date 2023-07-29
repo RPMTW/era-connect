@@ -67,3 +67,6 @@ flutter:
     - family: Geo
       fonts:
         - asset: assets/fonts/Geo-Regular.ttf
+    - family: Graduate
+      fonts:
+        - asset: assets/fonts/Graduate-Regular.ttf

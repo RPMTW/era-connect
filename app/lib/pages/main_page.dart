@@ -80,7 +80,7 @@ class _MainPageState extends State<MainPage> {
             ),
           ],
         ),
-        const Expanded(child: Placeholder()),
+        Expanded(child: Container(color: context.theme.backgroundColor)),
       ],
     );
   }

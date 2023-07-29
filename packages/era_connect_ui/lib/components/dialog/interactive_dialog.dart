@@ -57,7 +57,9 @@ class InteractiveDialog extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildLogoBox(context),
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: _buildLogoBox(context)),
                 const SizedBox(height: 15),
                 Text(
                   title,

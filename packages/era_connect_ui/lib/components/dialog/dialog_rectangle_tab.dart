@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 class TabItem {
   final String title;
   final String icon;
-  final Widget content;
+  final Widget? content;
 
-  const TabItem(
-      {required this.title, required this.icon, required this.content});
+  const TabItem({required this.title, required this.icon, this.content});
 }
 
 class DialogRectangleTab extends StatefulWidget {
@@ -58,7 +57,7 @@ class _DialogRectangleTabState extends State<DialogRectangleTab> {
           switchOutCurve: Curves.easeInOut,
           duration: const Duration(milliseconds: 150),
           child: Container(
-              key: ValueKey<int>(_currentPage),
+              key: ValueKey(_currentPage),
               child: widget.tabs[_currentPage].content)),
     );
   }
@@ -70,7 +69,7 @@ class _DialogRectangleTabState extends State<DialogRectangleTab> {
       },
       duration: const Duration(milliseconds: 150),
       child: _TabItemWidget(
-        key: ValueKey<int>(_currentPage),
+        key: ValueKey(_currentPage),
         title: e.title,
         icon: e.icon,
         isSelected: widget.tabs.indexOf(e) == _currentPage,

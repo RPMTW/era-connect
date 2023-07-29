@@ -7,5 +7,5 @@
     "main_page.side_bar.explore": "Explore Collections",
     "main_page.side_bar.manage_downloads": "Manage Downloads",
     "main_page.side_bar.manage_accounts": "Manage Accounts",
-    "dialog.setup.01.title": "Welcome"
+    "dialog.setup.welcome": "Welcome"
 }
