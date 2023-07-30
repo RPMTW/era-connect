@@ -1,3 +1,4 @@
+mod config;
 mod download;
 pub mod quilt;
 pub mod vanilla;
@@ -7,6 +8,8 @@ pub use std::sync::mpsc::{Receiver, Sender};
 
 use flutter_rust_bridge::StreamSink;
 pub use tokio::sync::{Mutex, RwLock};
+
+pub use self::config::ui_layout::UILayout;
 
 pub use self::quilt::prepare_quilt_download;
 pub use self::vanilla::prepare_vanilla_download;
@@ -73,14 +76,20 @@ impl Default for State {
 
 lazy_static::lazy_static! {
     static ref STATE: RwLock<State> = RwLock::new(State::default());
+    static ref UI_LAYOUT: RwLock<UILayout> = RwLock::new(UILayout::new());
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn fetch() -> State {
+pub async fn fetch_state() -> State {
     *STATE.read().await
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn write(s: State) {
+pub async fn write_state(s: State) {
     *STATE.write().await = s;
+}
+
+#[tokio::main(flavor = "current_thread")]
+pub async fn fetch_ui_layout() -> UILayout {
+    *UI_LAYOUT.read().await
 }

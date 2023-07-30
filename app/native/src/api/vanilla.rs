@@ -1,7 +1,6 @@
 use anyhow::{anyhow, bail};
 use anyhow::{Context, Result};
 use flutter_rust_bridge::{RustOpaque, StreamSink};
-use futures::stream::{AbortHandle, Abortable};
 use futures::{Future, StreamExt};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

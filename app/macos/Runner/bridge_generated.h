@@ -75,9 +75,11 @@ void wire_launch_game(int64_t port_, struct wire_PrepareGameArgs *pre_launch_arg
 
 void wire_download_quilt(int64_t port_, struct wire_PrepareGameArgs *quilt_prepare);
 
-void wire_fetch(int64_t port_);
+void wire_fetch_state(int64_t port_);
 
-void wire_write(int64_t port_, int32_t s);
+void wire_write_state(int64_t port_, int32_t s);
+
+void wire_fetch_ui_layout(int64_t port_);
 
 struct wire_PathBuf new_PathBuf(void);
 
@@ -98,8 +100,9 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_download_vanilla);
     dummy_var ^= ((int64_t) (void*) wire_launch_game);
     dummy_var ^= ((int64_t) (void*) wire_download_quilt);
-    dummy_var ^= ((int64_t) (void*) wire_fetch);
-    dummy_var ^= ((int64_t) (void*) wire_write);
+    dummy_var ^= ((int64_t) (void*) wire_fetch_state);
+    dummy_var ^= ((int64_t) (void*) wire_write_state);
+    dummy_var ^= ((int64_t) (void*) wire_fetch_ui_layout);
     dummy_var ^= ((int64_t) (void*) new_PathBuf);
     dummy_var ^= ((int64_t) (void*) new_StringList_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_prepare_game_args_0);

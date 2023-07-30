@@ -17,13 +17,18 @@ pub extern "C" fn wire_download_quilt(port_: i64, quilt_prepare: *mut wire_Prepa
 }
 
 #[no_mangle]
-pub extern "C" fn wire_fetch(port_: i64) {
-    wire_fetch_impl(port_)
+pub extern "C" fn wire_fetch_state(port_: i64) {
+    wire_fetch_state_impl(port_)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_write(port_: i64, s: i32) {
-    wire_write_impl(port_, s)
+pub extern "C" fn wire_write_state(port_: i64, s: i32) {
+    wire_write_state_impl(port_, s)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_fetch_ui_layout(port_: i64) {
+    wire_fetch_ui_layout_impl(port_)
 }
 
 // Section: allocate functions

@@ -1,4 +1,5 @@
 import 'package:era_connect/dialog/setup_dialog.dart';
+import 'package:era_connect/ffi.dart' show api;
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
@@ -15,8 +16,9 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final uiLayout = await api.fetchUiLayout();
+      if (mounted && !uiLayout.completedSetup) {
         showEraDialog(
           context: context,
           barrierDismissible: true,
