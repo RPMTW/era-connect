@@ -27,8 +27,13 @@ pub extern "C" fn wire_write_state(port_: i64, s: i32) {
 }
 
 #[no_mangle]
-pub extern "C" fn wire_fetch_ui_layout(port_: i64) {
-    wire_fetch_ui_layout_impl(port_)
+pub extern "C" fn wire_get_ui_layout_config(port_: i64) {
+    wire_get_ui_layout_config_impl(port_)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_set_ui_layout_config(port_: i64, config: *mut wire_UILayout) {
+    wire_set_ui_layout_config_impl(port_, config)
 }
 
 // Section: allocate functions
@@ -50,6 +55,11 @@ pub extern "C" fn new_StringList_0(len: i32) -> *mut wire_StringList {
 #[no_mangle]
 pub extern "C" fn new_box_autoadd_prepare_game_args_0() -> *mut wire_PrepareGameArgs {
     support::new_leak_box_ptr(wire_PrepareGameArgs::new_with_null_ptr())
+}
+
+#[no_mangle]
+pub extern "C" fn new_box_autoadd_ui_layout_0() -> *mut wire_UILayout {
+    support::new_leak_box_ptr(wire_UILayout::new_with_null_ptr())
 }
 
 #[no_mangle]
@@ -100,12 +110,20 @@ impl Wire2Api<Vec<String>> for *mut wire_StringList {
         vec.into_iter().map(Wire2Api::wire2api).collect()
     }
 }
+
 impl Wire2Api<PrepareGameArgs> for *mut wire_PrepareGameArgs {
     fn wire2api(self) -> PrepareGameArgs {
         let wrap = unsafe { support::box_from_leak_ptr(self) };
         Wire2Api::<PrepareGameArgs>::wire2api(*wrap).into()
     }
 }
+impl Wire2Api<UILayout> for *mut wire_UILayout {
+    fn wire2api(self) -> UILayout {
+        let wrap = unsafe { support::box_from_leak_ptr(self) };
+        Wire2Api::<UILayout>::wire2api(*wrap).into()
+    }
+}
+
 impl Wire2Api<GameOptions> for wire_GameOptions {
     fn wire2api(self) -> GameOptions {
         GameOptions {
@@ -154,6 +172,13 @@ impl Wire2Api<PrepareGameArgs> for wire_PrepareGameArgs {
     }
 }
 
+impl Wire2Api<UILayout> for wire_UILayout {
+    fn wire2api(self) -> UILayout {
+        UILayout {
+            completed_setup: self.completed_setup.wire2api(),
+        }
+    }
+}
 impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
     fn wire2api(self) -> Vec<u8> {
         unsafe {
@@ -217,6 +242,12 @@ pub struct wire_PrepareGameArgs {
     launch_args: wire_LaunchArgs,
     jvm_args: wire_JvmOptions,
     game_args: wire_GameOptions,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_UILayout {
+    completed_setup: bool,
 }
 
 #[repr(C)]
@@ -315,6 +346,20 @@ impl NewWithNullPtr for wire_PrepareGameArgs {
 }
 
 impl Default for wire_PrepareGameArgs {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+
+impl NewWithNullPtr for wire_UILayout {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            completed_setup: Default::default(),
+        }
+    }
+}
+
+impl Default for wire_UILayout {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }

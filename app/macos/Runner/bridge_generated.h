@@ -57,6 +57,10 @@ typedef struct wire_PrepareGameArgs {
   struct wire_GameOptions game_args;
 } wire_PrepareGameArgs;
 
+typedef struct wire_UILayout {
+  bool completed_setup;
+} wire_UILayout;
+
 typedef struct DartCObject *WireSyncReturn;
 
 void store_dart_post_cobject(DartPostCObjectFnType ptr);
@@ -79,13 +83,17 @@ void wire_fetch_state(int64_t port_);
 
 void wire_write_state(int64_t port_, int32_t s);
 
-void wire_fetch_ui_layout(int64_t port_);
+void wire_get_ui_layout_config(int64_t port_);
+
+void wire_set_ui_layout_config(int64_t port_, struct wire_UILayout *config);
 
 struct wire_PathBuf new_PathBuf(void);
 
 struct wire_StringList *new_StringList_0(int32_t len);
 
 struct wire_PrepareGameArgs *new_box_autoadd_prepare_game_args_0(void);
+
+struct wire_UILayout *new_box_autoadd_ui_layout_0(void);
 
 struct wire_uint_8_list *new_uint_8_list_0(int32_t len);
 
@@ -102,10 +110,12 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_download_quilt);
     dummy_var ^= ((int64_t) (void*) wire_fetch_state);
     dummy_var ^= ((int64_t) (void*) wire_write_state);
-    dummy_var ^= ((int64_t) (void*) wire_fetch_ui_layout);
+    dummy_var ^= ((int64_t) (void*) wire_get_ui_layout_config);
+    dummy_var ^= ((int64_t) (void*) wire_set_ui_layout_config);
     dummy_var ^= ((int64_t) (void*) new_PathBuf);
     dummy_var ^= ((int64_t) (void*) new_StringList_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_prepare_game_args_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_ui_layout_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
     dummy_var ^= ((int64_t) (void*) drop_opaque_PathBuf);
     dummy_var ^= ((int64_t) (void*) share_opaque_PathBuf);

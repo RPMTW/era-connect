@@ -70,7 +70,7 @@ fn wire_download_quilt_impl(
     )
 }
 fn wire_fetch_state_impl(port_: MessagePort) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, State>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, DownloadState>(
         WrapInfo {
             debug_name: "fetch_state",
             port: Some(port_),
@@ -79,7 +79,7 @@ fn wire_fetch_state_impl(port_: MessagePort) {
         move || move |task_callback| Ok(fetch_state()),
     )
 }
-fn wire_write_state_impl(port_: MessagePort, s: impl Wire2Api<State> + UnwindSafe) {
+fn wire_write_state_impl(port_: MessagePort, s: impl Wire2Api<DownloadState> + UnwindSafe) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
             debug_name: "write_state",
@@ -92,14 +92,30 @@ fn wire_write_state_impl(port_: MessagePort, s: impl Wire2Api<State> + UnwindSaf
         },
     )
 }
-fn wire_fetch_ui_layout_impl(port_: MessagePort) {
+fn wire_get_ui_layout_config_impl(port_: MessagePort) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, UILayout>(
         WrapInfo {
-            debug_name: "fetch_ui_layout",
+            debug_name: "get_ui_layout_config",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
-        move || move |task_callback| Ok(fetch_ui_layout()),
+        move || move |task_callback| Ok(get_ui_layout_config()),
+    )
+}
+fn wire_set_ui_layout_config_impl(
+    port_: MessagePort,
+    config: impl Wire2Api<UILayout> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "set_ui_layout_config",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_config = config.wire2api();
+            move |task_callback| set_ui_layout_config(api_config)
+        },
     )
 }
 // Section: wrapper structs
@@ -125,22 +141,29 @@ where
     }
 }
 
+impl Wire2Api<bool> for bool {
+    fn wire2api(self) -> bool {
+        self
+    }
+}
+
+impl Wire2Api<DownloadState> for i32 {
+    fn wire2api(self) -> DownloadState {
+        match self {
+            0 => DownloadState::Downloading,
+            1 => DownloadState::Paused,
+            2 => DownloadState::Stopped,
+            _ => unreachable!("Invalid variant for DownloadState: {}", self),
+        }
+    }
+}
+
 impl Wire2Api<i32> for i32 {
     fn wire2api(self) -> i32 {
         self
     }
 }
 
-impl Wire2Api<State> for i32 {
-    fn wire2api(self) -> State {
-        match self {
-            0 => State::Downloading,
-            1 => State::Paused,
-            2 => State::Stopped,
-            _ => unreachable!("Invalid variant for State: {}", self),
-        }
-    }
-}
 impl Wire2Api<u8> for u8 {
     fn wire2api(self) -> u8 {
         self
@@ -148,6 +171,23 @@ impl Wire2Api<u8> for u8 {
 }
 
 // Section: impl IntoDart
+
+impl support::IntoDart for DownloadState {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::Downloading => 0,
+            Self::Paused => 1,
+            Self::Stopped => 2,
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for DownloadState {}
+impl rust2dart::IntoIntoDart<DownloadState> for DownloadState {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
 
 impl support::IntoDart for GameOptions {
     fn into_dart(self) -> support::DartAbi {
@@ -256,23 +296,6 @@ impl support::IntoDart for ReturnType {
 }
 impl support::IntoDartExceptPrimitive for ReturnType {}
 impl rust2dart::IntoIntoDart<ReturnType> for ReturnType {
-    fn into_into_dart(self) -> Self {
-        self
-    }
-}
-
-impl support::IntoDart for State {
-    fn into_dart(self) -> support::DartAbi {
-        match self {
-            Self::Downloading => 0,
-            Self::Paused => 1,
-            Self::Stopped => 2,
-        }
-        .into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for State {}
-impl rust2dart::IntoIntoDart<State> for State {
     fn into_into_dart(self) -> Self {
         self
     }

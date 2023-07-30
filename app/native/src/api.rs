@@ -1,5 +1,6 @@
-mod config;
+pub mod config;
 mod download;
+pub mod logger;
 pub mod quilt;
 pub mod vanilla;
 
@@ -9,17 +10,21 @@ pub use std::sync::mpsc::{Receiver, Sender};
 use flutter_rust_bridge::StreamSink;
 pub use tokio::sync::{Mutex, RwLock};
 
+use self::config::config_state::ConfigState;
 pub use self::config::ui_layout::UILayout;
-
 pub use self::quilt::prepare_quilt_download;
 pub use self::vanilla::prepare_vanilla_download;
 pub use self::vanilla::PathBuf;
 pub use self::vanilla::{run_download, Progress};
 
-pub use self::vanilla::DownloadArgs;
-pub use self::vanilla::GameOptions;
-pub use self::vanilla::JvmOptions;
-pub use self::vanilla::LaunchArgs;
+pub use self::logger::{EraConnectLogger, LogEntry, LogLevel};
+pub use self::vanilla::{DownloadArgs, GameOptions, JvmOptions, LaunchArgs};
+
+lazy_static::lazy_static! {
+    static ref DATA_DIR : PathBuf = dirs::data_dir().unwrap().join("era-connect");
+    static ref STATE: RwLock<DownloadState> = RwLock::new(DownloadState::default());
+    static ref CONFIG: ConfigState = ConfigState::new();
+}
 
 pub struct ReturnType {
     pub progress: Option<Progress>,
@@ -32,6 +37,11 @@ pub struct PrepareGameArgs {
     pub jvm_args: JvmOptions,
     pub game_args: GameOptions,
 }
+
+// pub async fn setup_logger(stream: StreamSink<LogEntry>) -> anyhow::Result<()> {
+//     let logger = EraConnectLogger { stream };
+//     log::set_logger(&logger).map_err(|e| anyhow::anyhow!(e))
+// }
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn download_vanilla(stream: StreamSink<ReturnType>) -> anyhow::Result<()> {
@@ -62,34 +72,35 @@ pub async fn download_quilt(
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum State {
+pub enum DownloadState {
     Downloading,
     Paused,
     Stopped,
 }
 
-impl Default for State {
+impl Default for DownloadState {
     fn default() -> Self {
         Self::Stopped
     }
 }
 
-lazy_static::lazy_static! {
-    static ref STATE: RwLock<State> = RwLock::new(State::default());
-    static ref UI_LAYOUT: RwLock<UILayout> = RwLock::new(UILayout::new());
-}
-
 #[tokio::main(flavor = "current_thread")]
-pub async fn fetch_state() -> State {
+pub async fn fetch_state() -> DownloadState {
     *STATE.read().await
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn write_state(s: State) {
+pub async fn write_state(s: DownloadState) {
     *STATE.write().await = s;
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn fetch_ui_layout() -> UILayout {
-    *UI_LAYOUT.read().await
+pub async fn get_ui_layout_config() -> UILayout {
+    *CONFIG.ui_layout.read().await
+}
+
+#[tokio::main(flavor = "current_thread")]
+pub async fn set_ui_layout_config(config: UILayout) -> anyhow::Result<()> {
+    *CONFIG.ui_layout.write().await = config;
+    config.save()
 }

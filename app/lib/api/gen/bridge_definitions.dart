@@ -7,6 +7,9 @@ import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
+import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+
+part 'bridge_definitions.freezed.dart';
 
 abstract class Native {
   Stream<ReturnType> downloadVanilla({dynamic hint});
@@ -23,17 +26,21 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kDownloadQuiltConstMeta;
 
-  Future<State> fetchState({dynamic hint});
+  Future<DownloadState> fetchState({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kFetchStateConstMeta;
 
-  Future<void> writeState({required State s, dynamic hint});
+  Future<void> writeState({required DownloadState s, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kWriteStateConstMeta;
 
-  Future<UILayout> fetchUiLayout({dynamic hint});
+  Future<UILayout> getUiLayoutConfig({dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kFetchUiLayoutConstMeta;
+  FlutterRustBridgeTaskConstMeta get kGetUiLayoutConfigConstMeta;
+
+  Future<void> setUiLayoutConfig({required UILayout config, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kSetUiLayoutConfigConstMeta;
 
   DropFnType get dropOpaquePathBuf;
   ShareFnType get shareOpaquePathBuf;
@@ -52,6 +59,12 @@ class PathBuf extends FrbOpaque {
 
   @override
   OpaqueTypeFinalizer get staticFinalizer => bridge.PathBufFinalizer;
+}
+
+enum DownloadState {
+  Downloading,
+  Paused,
+  Stopped,
 }
 
 class GameOptions {
@@ -146,16 +159,9 @@ class ReturnType {
   });
 }
 
-enum State {
-  Downloading,
-  Paused,
-  Stopped,
-}
-
-class UILayout {
-  final bool completedSetup;
-
-  const UILayout({
-    required this.completedSetup,
-  });
+@freezed
+class UILayout with _$UILayout {
+  const factory UILayout({
+    required bool completedSetup,
+  }) = _UILayout;
 }

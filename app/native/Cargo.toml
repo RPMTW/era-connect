@@ -33,3 +33,5 @@ tokio = { version = "1.29.1", features = [
 ] }
 tokio-stream = "0.1.14"
 zip = "0.6.6"
+log = "0.4"
+chrono = "0.4.26"

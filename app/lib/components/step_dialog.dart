@@ -96,6 +96,8 @@ class _StepDialogState extends State<StepDialog> {
                 ),
               );
             },
+            switchInCurve: Curves.easeInOut,
+            switchOutCurve: Curves.easeInOut,
             duration: const Duration(milliseconds: 200),
             child: _buildStepState(e),
           );
@@ -104,7 +106,7 @@ class _StepDialogState extends State<StepDialog> {
     );
   }
 
-  RenderObjectWidget _buildStepState(StepData step) {
+  Widget _buildStepState(StepData step) {
     final bool isCurrentStep = _getStepIndex(step) == _currentStep;
     if (_getStepIndex(step) > _currentStep) {
       return const SizedBox.shrink();
