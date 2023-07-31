@@ -2,8 +2,8 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
-pub extern "C" fn wire_get_logger(port_: i64) {
-    wire_get_logger_impl(port_)
+pub extern "C" fn wire_setup_logger(port_: i64) {
+    wire_setup_logger_impl(port_)
 }
 
 #[no_mangle]

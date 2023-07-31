@@ -8,6 +8,7 @@ pub use std::sync::mpsc;
 pub use std::sync::mpsc::{Receiver, Sender};
 
 pub use flutter_rust_bridge::StreamSink;
+use log::info;
 pub use tokio::sync::{Mutex, RwLock};
 
 use self::config::config_state::ConfigState;
@@ -39,10 +40,16 @@ pub struct PrepareGameArgs {
     pub game_args: GameOptions,
 }
 
-pub fn get_logger(stream: StreamSink<LogEntry>) -> anyhow::Result<()> {
-    let logger = EraConnectLogger { stream };
-    let t: &'static mut EraConnectLogger = Box::leak(Box::new(logger));
-    log::set_logger(t).map_err(|e| anyhow::anyhow!(e))
+pub fn setup_logger(stream: StreamSink<LogEntry>) -> anyhow::Result<()> {
+    let logger: &'static mut EraConnectLogger = Box::leak(Box::new(EraConnectLogger { stream }));
+    let result = log::set_logger(logger).map_err(|e| anyhow::anyhow!(e));
+    match result {
+        Ok(_) => {
+            info!("Successfully set up rust side logger");
+            Ok(())
+        }
+        Err(e) => Err(e),
+    }
 }
 
 #[tokio::main(flavor = "current_thread")]

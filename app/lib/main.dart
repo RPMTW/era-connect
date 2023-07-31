@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:era_connect/api/lib.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
     await windowManager.setMinimumSize(const Size(1350, 820));
+    initializeAPIs();
     runApp(const EraConnectApp());
 
     // testRust();

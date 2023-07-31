@@ -13,7 +13,7 @@ pub enum LogLevel {
 pub struct LogEntry {
     pub level: LogLevel,
     pub message: String,
-    pub time_millis: i64,
+    pub timestamp: i64,
 }
 pub struct EraConnectLogger {
     pub stream: StreamSink<LogEntry>,
@@ -44,7 +44,7 @@ impl Log for EraConnectLogger {
         let entry = LogEntry {
             level: LogLevel::from(record.level()),
             message: record.args().to_string(),
-            time_millis: Utc::now().timestamp_millis(),
+            timestamp: Utc::now().timestamp_millis(),
         };
         self.stream.add(entry);
     }

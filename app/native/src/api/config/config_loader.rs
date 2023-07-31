@@ -37,7 +37,7 @@ impl ConfigLoader {
     pub fn save<T: Serialize>(&self, config: &T) -> anyhow::Result<()> {
         create_dir_all(Self::get_config_directory())?;
 
-        let file = File::create(&self.get_path())?;
+        let file = File::create(self.get_path())?;
         let writer = BufWriter::new(file);
         serde_json::to_writer(writer, config)?;
         Ok(())

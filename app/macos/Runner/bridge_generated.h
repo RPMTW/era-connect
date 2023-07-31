@@ -73,7 +73,7 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 
 intptr_t init_frb_dart_api_dl(void *obj);
 
-void wire_get_logger(int64_t port_);
+void wire_setup_logger(int64_t port_);
 
 void wire_download_vanilla(int64_t port_);
 
@@ -107,7 +107,7 @@ void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
-    dummy_var ^= ((int64_t) (void*) wire_get_logger);
+    dummy_var ^= ((int64_t) (void*) wire_setup_logger);
     dummy_var ^= ((int64_t) (void*) wire_download_vanilla);
     dummy_var ^= ((int64_t) (void*) wire_launch_game);
     dummy_var ^= ((int64_t) (void*) wire_download_quilt);
