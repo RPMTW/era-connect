@@ -39,8 +39,7 @@ pub struct PrepareGameArgs {
     pub game_args: GameOptions,
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn get_logger(stream: StreamSink<LogEntry>) -> anyhow::Result<()> {
+pub fn get_logger(stream: StreamSink<LogEntry>) -> anyhow::Result<()> {
     let logger = EraConnectLogger { stream };
     let t: &'static mut EraConnectLogger = Box::leak(Box::new(logger));
     log::set_logger(t).map_err(|e| anyhow::anyhow!(e))
@@ -52,8 +51,7 @@ pub async fn download_vanilla(stream: StreamSink<ReturnType>) -> anyhow::Result<
     run_download(stream, c).await
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn launch_game(pre_launch_arguments: PrepareGameArgs) -> anyhow::Result<()> {
+pub fn launch_game(pre_launch_arguments: PrepareGameArgs) -> anyhow::Result<()> {
     vanilla::launch_game(pre_launch_arguments.launch_args)?;
     Ok(())
 }
@@ -86,24 +84,19 @@ impl Default for DownloadState {
         Self::Stopped
     }
 }
-
-#[tokio::main(flavor = "current_thread")]
-pub async fn fetch_state() -> DownloadState {
-    *STATE.read().await
+pub fn fetch_state() -> DownloadState {
+    *STATE.blocking_read()
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn write_state(s: DownloadState) {
-    *STATE.write().await = s;
+pub fn write_state(s: DownloadState) {
+    *STATE.blocking_write() = s;
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn get_ui_layout_config() -> UILayout {
-    *CONFIG.ui_layout.read().await
+pub fn get_ui_layout_config() -> UILayout {
+    *CONFIG.ui_layout.blocking_read()
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn set_ui_layout_config(config: UILayout) -> anyhow::Result<()> {
-    *CONFIG.ui_layout.write().await = config;
+pub fn set_ui_layout_config(config: UILayout) -> anyhow::Result<()> {
+    *CONFIG.ui_layout.blocking_write() = config;
     config.save()
 }
