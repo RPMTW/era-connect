@@ -2,8 +2,12 @@ use chrono::Utc;
 use flutter_rust_bridge::StreamSink;
 use log::{Level, Log};
 
-pub struct EraConnectLogger {
-    stream: StreamSink<LogEntry>,
+pub enum LogLevel {
+    Error,
+    Warn,
+    Info,
+    Debug,
+    Trace,
 }
 
 pub struct LogEntry {
@@ -11,13 +15,8 @@ pub struct LogEntry {
     pub message: String,
     pub time_millis: i64,
 }
-
-pub enum LogLevel {
-    Error,
-    Warn,
-    Info,
-    Debug,
-    Trace,
+pub struct EraConnectLogger {
+    pub stream: StreamSink<LogEntry>,
 }
 
 impl LogLevel {
