@@ -58,6 +58,7 @@ typedef struct wire_PrepareGameArgs {
 } wire_PrepareGameArgs;
 
 typedef struct wire_UILayout {
+  struct wire_uint_8_list *fail;
   bool completed_setup;
 } wire_UILayout;
 
@@ -85,7 +86,7 @@ void wire_fetch_state(int64_t port_);
 
 void wire_write_state(int64_t port_, int32_t s);
 
-void wire_get_ui_layout_config(int64_t port_);
+void wire_get_ui_layout_config(int64_t port_, int32_t key);
 
 void wire_set_ui_layout_config(int64_t port_, struct wire_UILayout *config);
 

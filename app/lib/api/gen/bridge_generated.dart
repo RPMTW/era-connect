@@ -128,12 +128,14 @@ class NativeImpl implements Native {
         argNames: ["s"],
       );
 
-  Future<UILayout> getUiLayoutConfig({dynamic hint}) {
+  Future<Value> getUiLayoutConfig({required Key key, dynamic hint}) {
+    var arg0 = api2wire_key(key);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_get_ui_layout_config(port_),
-      parseSuccessData: _wire2api_ui_layout,
+      callFfi: (port_) =>
+          _platform.inner.wire_get_ui_layout_config(port_, arg0),
+      parseSuccessData: _wire2api_value,
       constMeta: kGetUiLayoutConfigConstMeta,
-      argValues: [],
+      argValues: [key],
       hint: hint,
     ));
   }
@@ -141,7 +143,7 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kGetUiLayoutConfigConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "get_ui_layout_config",
-        argNames: [],
+        argNames: ["key"],
       );
 
   Future<void> setUiLayoutConfig({required UILayout config, dynamic hint}) {
@@ -314,21 +316,27 @@ class NativeImpl implements Native {
     return raw as int;
   }
 
-  UILayout _wire2api_ui_layout(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return UILayout(
-      completedSetup: _wire2api_bool(arr[0]),
-    );
-  }
-
   Uint8List _wire2api_uint_8_list(dynamic raw) {
     return raw as Uint8List;
   }
 
   void _wire2api_unit(dynamic raw) {
     return;
+  }
+
+  Value _wire2api_value(dynamic raw) {
+    switch (raw[0]) {
+      case 0:
+        return Value_fail(
+          _wire2api_String(raw[1]),
+        );
+      case 1:
+        return Value_completed_setup(
+          _wire2api_bool(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 }
 
@@ -347,6 +355,11 @@ int api2wire_download_state(DownloadState raw) {
 @protected
 int api2wire_i32(int raw) {
   return raw;
+}
+
+@protected
+int api2wire_key(Key raw) {
+  return api2wire_i32(raw.index);
 }
 
 @protected
@@ -463,6 +476,7 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   void _api_fill_to_wire_ui_layout(UILayout apiObj, wire_UILayout wireObj) {
+    wireObj.fail = api2wire_String(apiObj.fail);
     wireObj.completed_setup = api2wire_bool(apiObj.completedSetup);
   }
 }
@@ -657,17 +671,19 @@ class NativeWire implements FlutterRustBridgeWireBase {
 
   void wire_get_ui_layout_config(
     int port_,
+    int key,
   ) {
     return _wire_get_ui_layout_config(
       port_,
+      key,
     );
   }
 
   late final _wire_get_ui_layout_configPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Int32)>>(
           'wire_get_ui_layout_config');
   late final _wire_get_ui_layout_config =
-      _wire_get_ui_layout_configPtr.asFunction<void Function(int)>();
+      _wire_get_ui_layout_configPtr.asFunction<void Function(int, int)>();
 
   void wire_set_ui_layout_config(
     int port_,
@@ -862,6 +878,8 @@ final class wire_PrepareGameArgs extends ffi.Struct {
 }
 
 final class wire_UILayout extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> fail;
+
   @ffi.Bool()
   external bool completed_setup;
 }

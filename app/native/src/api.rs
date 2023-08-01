@@ -8,11 +8,11 @@ pub use std::sync::mpsc;
 pub use std::sync::mpsc::{Receiver, Sender};
 
 pub use flutter_rust_bridge::StreamSink;
-use log::info;
+pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
 pub use tokio::sync::{Mutex, RwLock};
 
 use self::config::config_state::ConfigState;
-pub use self::config::ui_layout::UILayout;
+pub use self::config::ui_layout::{Key, UILayout, Value};
 use self::logger::EraConnectLogger;
 pub use self::logger::{LogEntry, LogLevel};
 pub use self::quilt::prepare_quilt_download;
@@ -91,6 +91,7 @@ impl Default for DownloadState {
         Self::Stopped
     }
 }
+
 pub fn fetch_state() -> DownloadState {
     *STATE.blocking_read()
 }
@@ -99,11 +100,11 @@ pub fn write_state(s: DownloadState) {
     *STATE.blocking_write() = s;
 }
 
-pub fn get_ui_layout_config() -> UILayout {
-    *CONFIG.ui_layout.blocking_read()
+pub fn get_ui_layout_config(key: Key) -> Value {
+    CONFIG.ui_layout.blocking_read().get_value(key)
 }
 
 pub fn set_ui_layout_config(config: UILayout) -> anyhow::Result<()> {
-    *CONFIG.ui_layout.blocking_write() = config;
+    *CONFIG.ui_layout.blocking_write() = config.clone();
     config.save()
 }

@@ -38,7 +38,7 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kWriteStateConstMeta;
 
-  Future<UILayout> getUiLayoutConfig({dynamic hint});
+  Future<Value> getUiLayoutConfig({required Key key, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetUiLayoutConfigConstMeta;
 
@@ -115,6 +115,11 @@ class JvmOptions {
   });
 }
 
+enum Key {
+  fail,
+  completed_setup,
+}
+
 class LaunchArgs {
   final List<String> jvmArgs;
   final String mainClass;
@@ -186,6 +191,17 @@ class ReturnType {
 @freezed
 class UILayout with _$UILayout {
   const factory UILayout({
+    required String fail,
     required bool completedSetup,
   }) = _UILayout;
+}
+
+@freezed
+sealed class Value with _$Value {
+  const factory Value.fail(
+    String field0,
+  ) = Value_fail;
+  const factory Value.completedSetup(
+    bool field0,
+  ) = Value_completed_setup;
 }

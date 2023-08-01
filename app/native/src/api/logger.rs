@@ -20,7 +20,7 @@ pub struct EraConnectLogger {
 }
 
 impl LogLevel {
-    fn from(level: Level) -> Self {
+    const fn from(level: Level) -> Self {
         match level {
             Level::Error => Self::Error,
             Level::Warn => Self::Warn,

@@ -32,8 +32,8 @@ pub extern "C" fn wire_write_state(port_: i64, s: i32) {
 }
 
 #[no_mangle]
-pub extern "C" fn wire_get_ui_layout_config(port_: i64) {
-    wire_get_ui_layout_config_impl(port_)
+pub extern "C" fn wire_get_ui_layout_config(port_: i64, key: i32) {
+    wire_get_ui_layout_config_impl(port_, key)
 }
 
 #[no_mangle]
@@ -158,6 +158,7 @@ impl Wire2Api<JvmOptions> for wire_JvmOptions {
         }
     }
 }
+
 impl Wire2Api<LaunchArgs> for wire_LaunchArgs {
     fn wire2api(self) -> LaunchArgs {
         LaunchArgs {
@@ -180,6 +181,7 @@ impl Wire2Api<PrepareGameArgs> for wire_PrepareGameArgs {
 impl Wire2Api<UILayout> for wire_UILayout {
     fn wire2api(self) -> UILayout {
         UILayout {
+            fail: self.fail.wire2api(),
             completed_setup: self.completed_setup.wire2api(),
         }
     }
@@ -252,6 +254,7 @@ pub struct wire_PrepareGameArgs {
 #[repr(C)]
 #[derive(Clone)]
 pub struct wire_UILayout {
+    fail: *mut wire_uint_8_list,
     completed_setup: bool,
 }
 
@@ -359,6 +362,7 @@ impl Default for wire_PrepareGameArgs {
 impl NewWithNullPtr for wire_UILayout {
     fn new_with_null_ptr() -> Self {
         Self {
+            fail: core::ptr::null_mut(),
             completed_setup: Default::default(),
         }
     }
