@@ -115,10 +115,7 @@ fn wire_get_ui_layout_config_impl(port_: MessagePort, key: impl Wire2Api<Key> + 
         },
     )
 }
-fn wire_set_ui_layout_config_impl(
-    port_: MessagePort,
-    config: impl Wire2Api<UILayout> + UnwindSafe,
-) {
+fn wire_set_ui_layout_config_impl(port_: MessagePort, value: impl Wire2Api<Value> + UnwindSafe) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
             debug_name: "set_ui_layout_config",
@@ -126,8 +123,8 @@ fn wire_set_ui_layout_config_impl(
             mode: FfiCallMode::Normal,
         },
         move || {
-            let api_config = config.wire2api();
-            move |task_callback| set_ui_layout_config(api_config)
+            let api_value = value.wire2api();
+            move |task_callback| set_ui_layout_config(api_value)
         },
     )
 }

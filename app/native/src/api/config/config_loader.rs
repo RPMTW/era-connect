@@ -21,7 +21,7 @@ impl ConfigLoader {
     }
 
     pub fn load<T: Default + DeserializeOwned + Serialize>(&self) -> anyhow::Result<T> {
-        let path: &PathBuf = &self.get_path();
+        let path = self.get_path_buf();
         if !path.exists() {
             let config = T::default();
             self.save(&config)?;
@@ -37,13 +37,13 @@ impl ConfigLoader {
     pub fn save<T: Serialize>(&self, config: &T) -> anyhow::Result<()> {
         create_dir_all(Self::get_config_directory())?;
 
-        let file = File::create(self.get_path())?;
+        let file = File::create(self.get_path_buf())?;
         let writer = BufWriter::new(file);
         serde_json::to_writer(writer, config)?;
         Ok(())
     }
 
-    fn get_path(&self) -> PathBuf {
+    fn get_path_buf(&self) -> PathBuf {
         Self::get_config_directory().join(&self.file_name)
     }
 

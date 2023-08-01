@@ -28,6 +28,12 @@ impl UILayout {
             Key::CompletedSetup => Value::CompletedSetup(self.completed_setup),
         }
     }
+    pub fn set_value(&mut self, value: Value) {
+        match value {
+            Value::Fail(x) => self.fail = x,
+            Value::CompletedSetup(x) => self.completed_setup = x,
+        }
+    }
     pub fn load() -> anyhow::Result<Self> {
         let loader = ConfigLoader::new(UI_LAYOUT_FILE_NAME);
         loader.load()

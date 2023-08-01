@@ -42,7 +42,7 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kGetUiLayoutConfigConstMeta;
 
-  Future<void> setUiLayoutConfig({required UILayout config, dynamic hint});
+  Future<void> setUiLayoutConfig({required Value value, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kSetUiLayoutConfigConstMeta;
 
@@ -186,14 +186,6 @@ class ReturnType {
     this.progress,
     this.prepareNameArgs,
   });
-}
-
-@freezed
-class UILayout with _$UILayout {
-  const factory UILayout({
-    required String fail,
-    required bool completedSetup,
-  }) = _UILayout;
 }
 
 @freezed

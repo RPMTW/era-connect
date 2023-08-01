@@ -9,6 +9,7 @@ pub use std::sync::mpsc::{Receiver, Sender};
 
 pub use flutter_rust_bridge::StreamSink;
 pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
+use log::info;
 pub use tokio::sync::{Mutex, RwLock};
 
 use self::config::config_state::ConfigState;
@@ -104,7 +105,7 @@ pub fn get_ui_layout_config(key: Key) -> Value {
     CONFIG.ui_layout.blocking_read().get_value(key)
 }
 
-pub fn set_ui_layout_config(config: UILayout) -> anyhow::Result<()> {
-    *CONFIG.ui_layout.blocking_write() = config.clone();
-    config.save()
+pub fn set_ui_layout_config(value: Value) -> anyhow::Result<()> {
+    CONFIG.ui_layout.blocking_write().set_value(value);
+    CONFIG.ui_layout.blocking_read().save()
 }

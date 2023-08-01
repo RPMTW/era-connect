@@ -37,8 +37,8 @@ pub extern "C" fn wire_get_ui_layout_config(port_: i64, key: i32) {
 }
 
 #[no_mangle]
-pub extern "C" fn wire_set_ui_layout_config(port_: i64, config: *mut wire_UILayout) {
-    wire_set_ui_layout_config_impl(port_, config)
+pub extern "C" fn wire_set_ui_layout_config(port_: i64, value: *mut wire_Value) {
+    wire_set_ui_layout_config_impl(port_, value)
 }
 
 // Section: allocate functions
@@ -63,8 +63,8 @@ pub extern "C" fn new_box_autoadd_prepare_game_args_0() -> *mut wire_PrepareGame
 }
 
 #[no_mangle]
-pub extern "C" fn new_box_autoadd_ui_layout_0() -> *mut wire_UILayout {
-    support::new_leak_box_ptr(wire_UILayout::new_with_null_ptr())
+pub extern "C" fn new_box_autoadd_value_0() -> *mut wire_Value {
+    support::new_leak_box_ptr(wire_Value::new_with_null_ptr())
 }
 
 #[no_mangle]
@@ -122,10 +122,10 @@ impl Wire2Api<PrepareGameArgs> for *mut wire_PrepareGameArgs {
         Wire2Api::<PrepareGameArgs>::wire2api(*wrap).into()
     }
 }
-impl Wire2Api<UILayout> for *mut wire_UILayout {
-    fn wire2api(self) -> UILayout {
+impl Wire2Api<Value> for *mut wire_Value {
+    fn wire2api(self) -> Value {
         let wrap = unsafe { support::box_from_leak_ptr(self) };
-        Wire2Api::<UILayout>::wire2api(*wrap).into()
+        Wire2Api::<Value>::wire2api(*wrap).into()
     }
 }
 
@@ -178,19 +178,28 @@ impl Wire2Api<PrepareGameArgs> for wire_PrepareGameArgs {
     }
 }
 
-impl Wire2Api<UILayout> for wire_UILayout {
-    fn wire2api(self) -> UILayout {
-        UILayout {
-            fail: self.fail.wire2api(),
-            completed_setup: self.completed_setup.wire2api(),
-        }
-    }
-}
 impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
     fn wire2api(self) -> Vec<u8> {
         unsafe {
             let wrap = support::box_from_leak_ptr(self);
             support::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        }
+    }
+}
+impl Wire2Api<Value> for wire_Value {
+    fn wire2api(self) -> Value {
+        match self.tag {
+            0 => unsafe {
+                let ans = support::box_from_leak_ptr(self.kind);
+                let ans = support::box_from_leak_ptr(ans.Fail);
+                Value::Fail(ans.field0.wire2api())
+            },
+            1 => unsafe {
+                let ans = support::box_from_leak_ptr(self.kind);
+                let ans = support::box_from_leak_ptr(ans.CompletedSetup);
+                Value::CompletedSetup(ans.field0.wire2api())
+            },
+            _ => unreachable!(),
         }
     }
 }
@@ -253,18 +262,35 @@ pub struct wire_PrepareGameArgs {
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct wire_UILayout {
-    fail: *mut wire_uint_8_list,
-    completed_setup: bool,
-}
-
-#[repr(C)]
-#[derive(Clone)]
 pub struct wire_uint_8_list {
     ptr: *mut u8,
     len: i32,
 }
 
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_Value {
+    tag: i32,
+    kind: *mut ValueKind,
+}
+
+#[repr(C)]
+pub union ValueKind {
+    Fail: *mut wire_Value_Fail,
+    CompletedSetup: *mut wire_Value_CompletedSetup,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_Value_Fail {
+    field0: *mut wire_uint_8_list,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_Value_CompletedSetup {
+    field0: bool,
+}
 // Section: impl NewWithNullPtr
 
 pub trait NewWithNullPtr {
@@ -359,19 +385,37 @@ impl Default for wire_PrepareGameArgs {
     }
 }
 
-impl NewWithNullPtr for wire_UILayout {
+impl Default for wire_Value {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+
+impl NewWithNullPtr for wire_Value {
     fn new_with_null_ptr() -> Self {
         Self {
-            fail: core::ptr::null_mut(),
-            completed_setup: Default::default(),
+            tag: -1,
+            kind: core::ptr::null_mut(),
         }
     }
 }
 
-impl Default for wire_UILayout {
-    fn default() -> Self {
-        Self::new_with_null_ptr()
-    }
+#[no_mangle]
+pub extern "C" fn inflate_Value_Fail() -> *mut ValueKind {
+    support::new_leak_box_ptr(ValueKind {
+        Fail: support::new_leak_box_ptr(wire_Value_Fail {
+            field0: core::ptr::null_mut(),
+        }),
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn inflate_Value_CompletedSetup() -> *mut ValueKind {
+    support::new_leak_box_ptr(ValueKind {
+        CompletedSetup: support::new_leak_box_ptr(wire_Value_CompletedSetup {
+            field0: Default::default(),
+        }),
+    })
 }
 
 // Section: sync execution mode utility

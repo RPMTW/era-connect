@@ -146,14 +146,14 @@ class NativeImpl implements Native {
         argNames: ["key"],
       );
 
-  Future<void> setUiLayoutConfig({required UILayout config, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_ui_layout(config);
+  Future<void> setUiLayoutConfig({required Value value, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_value(value);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
           _platform.inner.wire_set_ui_layout_config(port_, arg0),
       parseSuccessData: _wire2api_unit,
       constMeta: kSetUiLayoutConfigConstMeta,
-      argValues: [config],
+      argValues: [value],
       hint: hint,
     ));
   }
@@ -161,7 +161,7 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kSetUiLayoutConfigConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "set_ui_layout_config",
-        argNames: ["config"],
+        argNames: ["value"],
       );
 
   DropFnType get dropOpaquePathBuf => _platform.inner.drop_opaque_PathBuf;
@@ -404,9 +404,9 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
-  ffi.Pointer<wire_UILayout> api2wire_box_autoadd_ui_layout(UILayout raw) {
-    final ptr = inner.new_box_autoadd_ui_layout_0();
-    _api_fill_to_wire_ui_layout(raw, ptr.ref);
+  ffi.Pointer<wire_Value> api2wire_box_autoadd_value(Value raw) {
+    final ptr = inner.new_box_autoadd_value_0();
+    _api_fill_to_wire_value(raw, ptr.ref);
     return ptr;
   }
 
@@ -416,6 +416,7 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
     return ans;
   }
+
 // Section: finalizer
 
   late final OpaqueTypeFinalizer _PathBufFinalizer =
@@ -432,9 +433,9 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     _api_fill_to_wire_prepare_game_args(apiObj, wireObj.ref);
   }
 
-  void _api_fill_to_wire_box_autoadd_ui_layout(
-      UILayout apiObj, ffi.Pointer<wire_UILayout> wireObj) {
-    _api_fill_to_wire_ui_layout(apiObj, wireObj.ref);
+  void _api_fill_to_wire_box_autoadd_value(
+      Value apiObj, ffi.Pointer<wire_Value> wireObj) {
+    _api_fill_to_wire_value(apiObj, wireObj.ref);
   }
 
   void _api_fill_to_wire_game_options(
@@ -475,9 +476,21 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     _api_fill_to_wire_game_options(apiObj.gameArgs, wireObj.game_args);
   }
 
-  void _api_fill_to_wire_ui_layout(UILayout apiObj, wire_UILayout wireObj) {
-    wireObj.fail = api2wire_String(apiObj.fail);
-    wireObj.completed_setup = api2wire_bool(apiObj.completedSetup);
+  void _api_fill_to_wire_value(Value apiObj, wire_Value wireObj) {
+    if (apiObj is Value_Fail) {
+      var pre_field0 = api2wire_String(apiObj.field0);
+      wireObj.tag = 0;
+      wireObj.kind = inner.inflate_Value_Fail();
+      wireObj.kind.ref.Fail.ref.field0 = pre_field0;
+      return;
+    }
+    if (apiObj is Value_CompletedSetup) {
+      var pre_field0 = api2wire_bool(apiObj.field0);
+      wireObj.tag = 1;
+      wireObj.kind = inner.inflate_Value_CompletedSetup();
+      wireObj.kind.ref.CompletedSetup.ref.field0 = pre_field0;
+      return;
+    }
   }
 }
 
@@ -687,20 +700,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
 
   void wire_set_ui_layout_config(
     int port_,
-    ffi.Pointer<wire_UILayout> config,
+    ffi.Pointer<wire_Value> value,
   ) {
     return _wire_set_ui_layout_config(
       port_,
-      config,
+      value,
     );
   }
 
   late final _wire_set_ui_layout_configPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_UILayout>)>>('wire_set_ui_layout_config');
+              ffi.Pointer<wire_Value>)>>('wire_set_ui_layout_config');
   late final _wire_set_ui_layout_config = _wire_set_ui_layout_configPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_UILayout>)>();
+      .asFunction<void Function(int, ffi.Pointer<wire_Value>)>();
 
   wire_PathBuf new_PathBuf() {
     return _new_PathBuf();
@@ -736,15 +749,15 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _new_box_autoadd_prepare_game_args_0Ptr
           .asFunction<ffi.Pointer<wire_PrepareGameArgs> Function()>();
 
-  ffi.Pointer<wire_UILayout> new_box_autoadd_ui_layout_0() {
-    return _new_box_autoadd_ui_layout_0();
+  ffi.Pointer<wire_Value> new_box_autoadd_value_0() {
+    return _new_box_autoadd_value_0();
   }
 
-  late final _new_box_autoadd_ui_layout_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_UILayout> Function()>>(
-          'new_box_autoadd_ui_layout_0');
-  late final _new_box_autoadd_ui_layout_0 = _new_box_autoadd_ui_layout_0Ptr
-      .asFunction<ffi.Pointer<wire_UILayout> Function()>();
+  late final _new_box_autoadd_value_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_Value> Function()>>(
+          'new_box_autoadd_value_0');
+  late final _new_box_autoadd_value_0 = _new_box_autoadd_value_0Ptr
+      .asFunction<ffi.Pointer<wire_Value> Function()>();
 
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,
@@ -789,6 +802,26 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<ffi.Void>)>>('share_opaque_PathBuf');
   late final _share_opaque_PathBuf = _share_opaque_PathBufPtr
       .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<ValueKind> inflate_Value_Fail() {
+    return _inflate_Value_Fail();
+  }
+
+  late final _inflate_Value_FailPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ValueKind> Function()>>(
+          'inflate_Value_Fail');
+  late final _inflate_Value_Fail =
+      _inflate_Value_FailPtr.asFunction<ffi.Pointer<ValueKind> Function()>();
+
+  ffi.Pointer<ValueKind> inflate_Value_CompletedSetup() {
+    return _inflate_Value_CompletedSetup();
+  }
+
+  late final _inflate_Value_CompletedSetupPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ValueKind> Function()>>(
+          'inflate_Value_CompletedSetup');
+  late final _inflate_Value_CompletedSetup = _inflate_Value_CompletedSetupPtr
+      .asFunction<ffi.Pointer<ValueKind> Function()>();
 
   void free_WireSyncReturn(
     WireSyncReturn ptr,
@@ -877,11 +910,26 @@ final class wire_PrepareGameArgs extends ffi.Struct {
   external wire_GameOptions game_args;
 }
 
-final class wire_UILayout extends ffi.Struct {
-  external ffi.Pointer<wire_uint_8_list> fail;
+final class wire_Value_Fail extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> field0;
+}
 
+final class wire_Value_CompletedSetup extends ffi.Struct {
   @ffi.Bool()
-  external bool completed_setup;
+  external bool field0;
+}
+
+final class ValueKind extends ffi.Union {
+  external ffi.Pointer<wire_Value_Fail> Fail;
+
+  external ffi.Pointer<wire_Value_CompletedSetup> CompletedSetup;
+}
+
+final class wire_Value extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external ffi.Pointer<ValueKind> kind;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<

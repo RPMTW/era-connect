@@ -57,10 +57,23 @@ typedef struct wire_PrepareGameArgs {
   struct wire_GameOptions game_args;
 } wire_PrepareGameArgs;
 
-typedef struct wire_UILayout {
-  struct wire_uint_8_list *fail;
-  bool completed_setup;
-} wire_UILayout;
+typedef struct wire_Value_Fail {
+  struct wire_uint_8_list *field0;
+} wire_Value_Fail;
+
+typedef struct wire_Value_CompletedSetup {
+  bool field0;
+} wire_Value_CompletedSetup;
+
+typedef union ValueKind {
+  struct wire_Value_Fail *Fail;
+  struct wire_Value_CompletedSetup *CompletedSetup;
+} ValueKind;
+
+typedef struct wire_Value {
+  int32_t tag;
+  union ValueKind *kind;
+} wire_Value;
 
 typedef struct DartCObject *WireSyncReturn;
 
@@ -88,7 +101,7 @@ void wire_write_state(int64_t port_, int32_t s);
 
 void wire_get_ui_layout_config(int64_t port_, int32_t key);
 
-void wire_set_ui_layout_config(int64_t port_, struct wire_UILayout *config);
+void wire_set_ui_layout_config(int64_t port_, struct wire_Value *value);
 
 struct wire_PathBuf new_PathBuf(void);
 
@@ -96,13 +109,17 @@ struct wire_StringList *new_StringList_0(int32_t len);
 
 struct wire_PrepareGameArgs *new_box_autoadd_prepare_game_args_0(void);
 
-struct wire_UILayout *new_box_autoadd_ui_layout_0(void);
+struct wire_Value *new_box_autoadd_value_0(void);
 
 struct wire_uint_8_list *new_uint_8_list_0(int32_t len);
 
 void drop_opaque_PathBuf(const void *ptr);
 
 const void *share_opaque_PathBuf(const void *ptr);
+
+union ValueKind *inflate_Value_Fail(void);
+
+union ValueKind *inflate_Value_CompletedSetup(void);
 
 void free_WireSyncReturn(WireSyncReturn ptr);
 
@@ -119,10 +136,12 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_PathBuf);
     dummy_var ^= ((int64_t) (void*) new_StringList_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_prepare_game_args_0);
-    dummy_var ^= ((int64_t) (void*) new_box_autoadd_ui_layout_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_value_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
     dummy_var ^= ((int64_t) (void*) drop_opaque_PathBuf);
     dummy_var ^= ((int64_t) (void*) share_opaque_PathBuf);
+    dummy_var ^= ((int64_t) (void*) inflate_Value_Fail);
+    dummy_var ^= ((int64_t) (void*) inflate_Value_CompletedSetup);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     dummy_var ^= ((int64_t) (void*) get_dart_object);
