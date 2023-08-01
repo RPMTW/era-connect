@@ -116,8 +116,8 @@ class JvmOptions {
 }
 
 enum Key {
-  fail,
-  completed_setup,
+  Fail,
+  CompletedSetup,
 }
 
 class LaunchArgs {
@@ -200,8 +200,8 @@ class UILayout with _$UILayout {
 sealed class Value with _$Value {
   const factory Value.fail(
     String field0,
-  ) = Value_fail;
+  ) = Value_Fail;
   const factory Value.completedSetup(
     bool field0,
-  ) = Value_completed_setup;
+  ) = Value_CompletedSetup;
 }

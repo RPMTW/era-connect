@@ -13,23 +13,19 @@ pub struct UILayout {
     pub completed_setup: bool,
 }
 pub enum Key {
-    #[allow(non_camel_case_types)]
-    fail,
-    #[allow(non_camel_case_types)]
-    completed_setup,
+    Fail,
+    CompletedSetup,
 }
 pub enum Value {
-    #[allow(non_camel_case_types)]
-    fail(String),
-    #[allow(non_camel_case_types)]
-    completed_setup(bool),
+    Fail(String),
+    CompletedSetup(bool),
 }
 
 impl UILayout {
     pub fn get_value(&self, key: Key) -> Value {
         match key {
-            Key::fail => Value::fail(self.fail.clone()),
-            Key::completed_setup => Value::completed_setup(self.completed_setup),
+            Key::Fail => Value::Fail(self.fail.clone()),
+            Key::CompletedSetup => Value::CompletedSetup(self.completed_setup),
         }
     }
     pub fn load() -> anyhow::Result<Self> {

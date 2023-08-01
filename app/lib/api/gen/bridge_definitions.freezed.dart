@@ -172,20 +172,20 @@ mixin _$Value {
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value_fail value) fail,
-    required TResult Function(Value_completed_setup value) completedSetup,
+    required TResult Function(Value_Fail value) fail,
+    required TResult Function(Value_CompletedSetup value) completedSetup,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value_fail value)? fail,
-    TResult? Function(Value_completed_setup value)? completedSetup,
+    TResult? Function(Value_Fail value)? fail,
+    TResult? Function(Value_CompletedSetup value)? completedSetup,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value_fail value)? fail,
-    TResult Function(Value_completed_setup value)? completedSetup,
+    TResult Function(Value_Fail value)? fail,
+    TResult Function(Value_CompletedSetup value)? completedSetup,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -209,20 +209,20 @@ class _$ValueCopyWithImpl<$Res, $Val extends Value>
 }
 
 /// @nodoc
-abstract class _$$Value_failCopyWith<$Res> {
-  factory _$$Value_failCopyWith(
-          _$Value_fail value, $Res Function(_$Value_fail) then) =
-      __$$Value_failCopyWithImpl<$Res>;
+abstract class _$$Value_FailCopyWith<$Res> {
+  factory _$$Value_FailCopyWith(
+          _$Value_Fail value, $Res Function(_$Value_Fail) then) =
+      __$$Value_FailCopyWithImpl<$Res>;
   @useResult
   $Res call({String field0});
 }
 
 /// @nodoc
-class __$$Value_failCopyWithImpl<$Res>
-    extends _$ValueCopyWithImpl<$Res, _$Value_fail>
-    implements _$$Value_failCopyWith<$Res> {
-  __$$Value_failCopyWithImpl(
-      _$Value_fail _value, $Res Function(_$Value_fail) _then)
+class __$$Value_FailCopyWithImpl<$Res>
+    extends _$ValueCopyWithImpl<$Res, _$Value_Fail>
+    implements _$$Value_FailCopyWith<$Res> {
+  __$$Value_FailCopyWithImpl(
+      _$Value_Fail _value, $Res Function(_$Value_Fail) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -230,7 +230,7 @@ class __$$Value_failCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$Value_fail(
+    return _then(_$Value_Fail(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -241,8 +241,8 @@ class __$$Value_failCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$Value_fail implements Value_fail {
-  const _$Value_fail(this.field0);
+class _$Value_Fail implements Value_Fail {
+  const _$Value_Fail(this.field0);
 
   @override
   final String field0;
@@ -256,7 +256,7 @@ class _$Value_fail implements Value_fail {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$Value_fail &&
+            other is _$Value_Fail &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -266,8 +266,8 @@ class _$Value_fail implements Value_fail {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$Value_failCopyWith<_$Value_fail> get copyWith =>
-      __$$Value_failCopyWithImpl<_$Value_fail>(this, _$identity);
+  _$$Value_FailCopyWith<_$Value_Fail> get copyWith =>
+      __$$Value_FailCopyWithImpl<_$Value_Fail>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -303,8 +303,8 @@ class _$Value_fail implements Value_fail {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value_fail value) fail,
-    required TResult Function(Value_completed_setup value) completedSetup,
+    required TResult Function(Value_Fail value) fail,
+    required TResult Function(Value_CompletedSetup value) completedSetup,
   }) {
     return fail(this);
   }
@@ -312,8 +312,8 @@ class _$Value_fail implements Value_fail {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value_fail value)? fail,
-    TResult? Function(Value_completed_setup value)? completedSetup,
+    TResult? Function(Value_Fail value)? fail,
+    TResult? Function(Value_CompletedSetup value)? completedSetup,
   }) {
     return fail?.call(this);
   }
@@ -321,8 +321,8 @@ class _$Value_fail implements Value_fail {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value_fail value)? fail,
-    TResult Function(Value_completed_setup value)? completedSetup,
+    TResult Function(Value_Fail value)? fail,
+    TResult Function(Value_CompletedSetup value)? completedSetup,
     required TResult orElse(),
   }) {
     if (fail != null) {
@@ -332,31 +332,31 @@ class _$Value_fail implements Value_fail {
   }
 }
 
-abstract class Value_fail implements Value {
-  const factory Value_fail(final String field0) = _$Value_fail;
+abstract class Value_Fail implements Value {
+  const factory Value_Fail(final String field0) = _$Value_Fail;
 
   @override
   String get field0;
   @JsonKey(ignore: true)
-  _$$Value_failCopyWith<_$Value_fail> get copyWith =>
+  _$$Value_FailCopyWith<_$Value_Fail> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$Value_completed_setupCopyWith<$Res> {
-  factory _$$Value_completed_setupCopyWith(_$Value_completed_setup value,
-          $Res Function(_$Value_completed_setup) then) =
-      __$$Value_completed_setupCopyWithImpl<$Res>;
+abstract class _$$Value_CompletedSetupCopyWith<$Res> {
+  factory _$$Value_CompletedSetupCopyWith(_$Value_CompletedSetup value,
+          $Res Function(_$Value_CompletedSetup) then) =
+      __$$Value_CompletedSetupCopyWithImpl<$Res>;
   @useResult
   $Res call({bool field0});
 }
 
 /// @nodoc
-class __$$Value_completed_setupCopyWithImpl<$Res>
-    extends _$ValueCopyWithImpl<$Res, _$Value_completed_setup>
-    implements _$$Value_completed_setupCopyWith<$Res> {
-  __$$Value_completed_setupCopyWithImpl(_$Value_completed_setup _value,
-      $Res Function(_$Value_completed_setup) _then)
+class __$$Value_CompletedSetupCopyWithImpl<$Res>
+    extends _$ValueCopyWithImpl<$Res, _$Value_CompletedSetup>
+    implements _$$Value_CompletedSetupCopyWith<$Res> {
+  __$$Value_CompletedSetupCopyWithImpl(_$Value_CompletedSetup _value,
+      $Res Function(_$Value_CompletedSetup) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -364,7 +364,7 @@ class __$$Value_completed_setupCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$Value_completed_setup(
+    return _then(_$Value_CompletedSetup(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -375,8 +375,8 @@ class __$$Value_completed_setupCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$Value_completed_setup implements Value_completed_setup {
-  const _$Value_completed_setup(this.field0);
+class _$Value_CompletedSetup implements Value_CompletedSetup {
+  const _$Value_CompletedSetup(this.field0);
 
   @override
   final bool field0;
@@ -390,7 +390,7 @@ class _$Value_completed_setup implements Value_completed_setup {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$Value_completed_setup &&
+            other is _$Value_CompletedSetup &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -400,8 +400,8 @@ class _$Value_completed_setup implements Value_completed_setup {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$Value_completed_setupCopyWith<_$Value_completed_setup> get copyWith =>
-      __$$Value_completed_setupCopyWithImpl<_$Value_completed_setup>(
+  _$$Value_CompletedSetupCopyWith<_$Value_CompletedSetup> get copyWith =>
+      __$$Value_CompletedSetupCopyWithImpl<_$Value_CompletedSetup>(
           this, _$identity);
 
   @override
@@ -438,8 +438,8 @@ class _$Value_completed_setup implements Value_completed_setup {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value_fail value) fail,
-    required TResult Function(Value_completed_setup value) completedSetup,
+    required TResult Function(Value_Fail value) fail,
+    required TResult Function(Value_CompletedSetup value) completedSetup,
   }) {
     return completedSetup(this);
   }
@@ -447,8 +447,8 @@ class _$Value_completed_setup implements Value_completed_setup {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value_fail value)? fail,
-    TResult? Function(Value_completed_setup value)? completedSetup,
+    TResult? Function(Value_Fail value)? fail,
+    TResult? Function(Value_CompletedSetup value)? completedSetup,
   }) {
     return completedSetup?.call(this);
   }
@@ -456,8 +456,8 @@ class _$Value_completed_setup implements Value_completed_setup {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value_fail value)? fail,
-    TResult Function(Value_completed_setup value)? completedSetup,
+    TResult Function(Value_Fail value)? fail,
+    TResult Function(Value_CompletedSetup value)? completedSetup,
     required TResult orElse(),
   }) {
     if (completedSetup != null) {
@@ -467,13 +467,13 @@ class _$Value_completed_setup implements Value_completed_setup {
   }
 }
 
-abstract class Value_completed_setup implements Value {
-  const factory Value_completed_setup(final bool field0) =
-      _$Value_completed_setup;
+abstract class Value_CompletedSetup implements Value {
+  const factory Value_CompletedSetup(final bool field0) =
+      _$Value_CompletedSetup;
 
   @override
   bool get field0;
   @JsonKey(ignore: true)
-  _$$Value_completed_setupCopyWith<_$Value_completed_setup> get copyWith =>
+  _$$Value_CompletedSetupCopyWith<_$Value_CompletedSetup> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -22,14 +22,14 @@ use std::sync::Arc;
 
 // Section: wire functions
 
-fn wire_get_logger_impl(port_: MessagePort) {
+fn wire_setup_logger_impl(port_: MessagePort) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
             debug_name: "setup_logger",
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
-        move || move |task_callback| get_logger(task_callback.stream_sink::<_, LogEntry>()),
+        move || move |task_callback| setup_logger(task_callback.stream_sink::<_, LogEntry>()),
     )
 }
 fn wire_download_vanilla_impl(port_: MessagePort) {
@@ -180,8 +180,8 @@ impl Wire2Api<i32> for i32 {
 impl Wire2Api<Key> for i32 {
     fn wire2api(self) -> Key {
         match self {
-            0 => Key::fail,
-            1 => Key::completed_setup,
+            0 => Key::Fail,
+            1 => Key::CompletedSetup,
             _ => unreachable!("Invalid variant for Key: {}", self),
         }
     }
@@ -278,7 +278,7 @@ impl support::IntoDart for LogEntry {
         vec![
             self.level.into_into_dart().into_dart(),
             self.message.into_into_dart().into_dart(),
-            self.time_millis.into_into_dart().into_dart(),
+            self.timestamp.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -363,8 +363,8 @@ impl rust2dart::IntoIntoDart<ReturnType> for ReturnType {
 impl support::IntoDart for Value {
     fn into_dart(self) -> support::DartAbi {
         match self {
-            Self::fail(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
-            Self::completed_setup(field0) => {
+            Self::Fail(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
+            Self::CompletedSetup(field0) => {
                 vec![1.into_dart(), field0.into_into_dart().into_dart()]
             }
         }

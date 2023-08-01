@@ -327,11 +327,11 @@ class NativeImpl implements Native {
   Value _wire2api_value(dynamic raw) {
     switch (raw[0]) {
       case 0:
-        return Value_fail(
+        return Value_Fail(
           _wire2api_String(raw[1]),
         );
       case 1:
-        return Value_completed_setup(
+        return Value_CompletedSetup(
           _wire2api_bool(raw[1]),
         );
       default:
