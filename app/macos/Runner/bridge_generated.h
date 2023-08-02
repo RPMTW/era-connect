@@ -57,16 +57,13 @@ typedef struct wire_PrepareGameArgs {
   struct wire_GameOptions game_args;
 } wire_PrepareGameArgs;
 
-typedef struct wire_Value_Fail {
-  struct wire_uint_8_list *field0;
-} wire_Value_Fail;
+typedef struct DartCObject *WireSyncReturn;
 
 typedef struct wire_Value_CompletedSetup {
   bool field0;
 } wire_Value_CompletedSetup;
 
 typedef union ValueKind {
-  struct wire_Value_Fail *Fail;
   struct wire_Value_CompletedSetup *CompletedSetup;
 } ValueKind;
 
@@ -74,8 +71,6 @@ typedef struct wire_Value {
   int32_t tag;
   union ValueKind *kind;
 } wire_Value;
-
-typedef struct DartCObject *WireSyncReturn;
 
 void store_dart_post_cobject(DartPostCObjectFnType ptr);
 
@@ -99,7 +94,7 @@ void wire_fetch_state(int64_t port_);
 
 void wire_write_state(int64_t port_, int32_t s);
 
-void wire_get_ui_layout_config(int64_t port_, int32_t key);
+WireSyncReturn wire_get_ui_layout_config(int32_t key);
 
 void wire_set_ui_layout_config(int64_t port_, struct wire_Value *value);
 
@@ -116,8 +111,6 @@ struct wire_uint_8_list *new_uint_8_list_0(int32_t len);
 void drop_opaque_PathBuf(const void *ptr);
 
 const void *share_opaque_PathBuf(const void *ptr);
-
-union ValueKind *inflate_Value_Fail(void);
 
 union ValueKind *inflate_Value_CompletedSetup(void);
 
@@ -140,7 +133,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
     dummy_var ^= ((int64_t) (void*) drop_opaque_PathBuf);
     dummy_var ^= ((int64_t) (void*) share_opaque_PathBuf);
-    dummy_var ^= ((int64_t) (void*) inflate_Value_Fail);
     dummy_var ^= ((int64_t) (void*) inflate_Value_CompletedSetup);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);

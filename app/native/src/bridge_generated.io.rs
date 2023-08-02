@@ -32,8 +32,8 @@ pub extern "C" fn wire_write_state(port_: i64, s: i32) {
 }
 
 #[no_mangle]
-pub extern "C" fn wire_get_ui_layout_config(port_: i64, key: i32) {
-    wire_get_ui_layout_config_impl(port_, key)
+pub extern "C" fn wire_get_ui_layout_config(key: i32) -> support::WireSyncReturn {
+    wire_get_ui_layout_config_impl(key)
 }
 
 #[no_mangle]
@@ -191,11 +191,6 @@ impl Wire2Api<Value> for wire_Value {
         match self.tag {
             0 => unsafe {
                 let ans = support::box_from_leak_ptr(self.kind);
-                let ans = support::box_from_leak_ptr(ans.Fail);
-                Value::Fail(ans.field0.wire2api())
-            },
-            1 => unsafe {
-                let ans = support::box_from_leak_ptr(self.kind);
                 let ans = support::box_from_leak_ptr(ans.CompletedSetup);
                 Value::CompletedSetup(ans.field0.wire2api())
             },
@@ -276,14 +271,7 @@ pub struct wire_Value {
 
 #[repr(C)]
 pub union ValueKind {
-    Fail: *mut wire_Value_Fail,
     CompletedSetup: *mut wire_Value_CompletedSetup,
-}
-
-#[repr(C)]
-#[derive(Clone)]
-pub struct wire_Value_Fail {
-    field0: *mut wire_uint_8_list,
 }
 
 #[repr(C)]
@@ -398,15 +386,6 @@ impl NewWithNullPtr for wire_Value {
             kind: core::ptr::null_mut(),
         }
     }
-}
-
-#[no_mangle]
-pub extern "C" fn inflate_Value_Fail() -> *mut ValueKind {
-    support::new_leak_box_ptr(ValueKind {
-        Fail: support::new_leak_box_ptr(wire_Value_Fail {
-            field0: core::ptr::null_mut(),
-        }),
-    })
 }
 
 #[no_mangle]

@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 
 import 'ffi.dart' show api;
 
-export 'gen/bridge_definitions.dart' show UILayout;
 export 'config_api.dart';
 
 void initializeAPIs() async {

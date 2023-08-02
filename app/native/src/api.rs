@@ -101,11 +101,13 @@ pub fn write_state(s: DownloadState) {
     *STATE.blocking_write() = s;
 }
 
-pub fn get_ui_layout_config(key: Key) -> Value {
-    CONFIG.ui_layout.blocking_read().get_value(key)
+pub fn get_ui_layout_config(key: Key) -> SyncReturn<Value> {
+    let value = CONFIG.ui_layout.blocking_read().get_value(key);
+    SyncReturn(value)
 }
 
 pub fn set_ui_layout_config(value: Value) -> anyhow::Result<()> {
-    CONFIG.ui_layout.blocking_write().set_value(value);
-    CONFIG.ui_layout.blocking_read().save()
+    let mut config = CONFIG.ui_layout.blocking_write();
+    config.set_value(value);
+    config.save()
 }

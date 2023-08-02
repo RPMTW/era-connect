@@ -17,8 +17,7 @@ class _MainPageState extends State<MainPage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final uiLayout = await configAPI.uiLayout;
-      if (mounted && !uiLayout.completedSetup) {
+      if (mounted && !configAPI.uiLayout.completedSetup) {
         showEraDialog(
           context: context,
           barrierDismissible: true,

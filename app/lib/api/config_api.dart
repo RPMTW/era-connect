@@ -4,11 +4,17 @@ import 'gen/bridge_definitions.dart' as bridge;
 final ConfigAPI configAPI = ConfigAPI();
 
 class ConfigAPI {
-  // Future<bridge.UILayout> get uiLayout => api.getUiLayoutConfig();
+  final UILayoutConfig uiLayout = UILayoutConfig();
 
   ConfigAPI();
 }
 
-extension UILayoutExtension on bridge.UILayout {
-  Future<void> save() => api.setUiLayoutConfig(config: this);
+class UILayoutConfig {
+  bool get completedSetup =>
+      _get<bool>(api.getUiLayoutConfig, bridge.Key.CompletedSetup);
+}
+
+T _get<T>(
+    bridge.Value Function({required bridge.Key key}) function, bridge.Key key) {
+  return function(key: key).field0 as T;
 }
