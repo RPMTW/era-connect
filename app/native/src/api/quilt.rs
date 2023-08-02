@@ -153,7 +153,7 @@ pub async fn prepare_quilt_download(
         game_args: game_options,
     })
 }
-fn convert_maven_to_path(input: &str) -> String {
+pub fn convert_maven_to_path(input: &str) -> String {
     let parts: Vec<&str> = input.split(':').collect();
     let org = parts[0].replace('.', "/");
     let package = parts[1];

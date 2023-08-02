@@ -61,6 +61,24 @@ class NativeImpl implements Native {
         argNames: ["preLaunchArguments"],
       );
 
+  Stream<ReturnType> downloadForge(
+      {required PrepareGameArgs forgePrepare, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_prepare_game_args(forgePrepare);
+    return _platform.executeStream(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_download_forge(port_, arg0),
+      parseSuccessData: _wire2api_return_type,
+      constMeta: kDownloadForgeConstMeta,
+      argValues: [forgePrepare],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kDownloadForgeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "download_forge",
+        argNames: ["forgePrepare"],
+      );
+
   Stream<ReturnType> downloadQuilt(
       {required PrepareGameArgs quiltPrepare, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_prepare_game_args(quiltPrepare);
@@ -518,6 +536,23 @@ class NativeWire implements FlutterRustBridgeWireBase {
           ffi.Void Function(ffi.Int64,
               ffi.Pointer<wire_PrepareGameArgs>)>>('wire_launch_game');
   late final _wire_launch_game = _wire_launch_gamePtr
+      .asFunction<void Function(int, ffi.Pointer<wire_PrepareGameArgs>)>();
+
+  void wire_download_forge(
+    int port_,
+    ffi.Pointer<wire_PrepareGameArgs> forge_prepare,
+  ) {
+    return _wire_download_forge(
+      port_,
+      forge_prepare,
+    );
+  }
+
+  late final _wire_download_forgePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_PrepareGameArgs>)>>('wire_download_forge');
+  late final _wire_download_forge = _wire_download_forgePtr
       .asFunction<void Function(int, ffi.Pointer<wire_PrepareGameArgs>)>();
 
   void wire_download_quilt(

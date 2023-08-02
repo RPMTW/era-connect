@@ -12,6 +12,11 @@ pub extern "C" fn wire_launch_game(port_: i64, pre_launch_arguments: *mut wire_P
 }
 
 #[no_mangle]
+pub extern "C" fn wire_download_forge(port_: i64, forge_prepare: *mut wire_PrepareGameArgs) {
+    wire_download_forge_impl(port_, forge_prepare)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_download_quilt(port_: i64, quilt_prepare: *mut wire_PrepareGameArgs) {
     wire_download_quilt_impl(port_, quilt_prepare)
 }

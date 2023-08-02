@@ -73,6 +73,8 @@ void wire_download_vanilla(int64_t port_);
 
 void wire_launch_game(int64_t port_, struct wire_PrepareGameArgs *pre_launch_arguments);
 
+void wire_download_forge(int64_t port_, struct wire_PrepareGameArgs *forge_prepare);
+
 void wire_download_quilt(int64_t port_, struct wire_PrepareGameArgs *quilt_prepare);
 
 void wire_fetch_state(int64_t port_);
@@ -99,6 +101,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
     dummy_var ^= ((int64_t) (void*) wire_download_vanilla);
     dummy_var ^= ((int64_t) (void*) wire_launch_game);
+    dummy_var ^= ((int64_t) (void*) wire_download_forge);
     dummy_var ^= ((int64_t) (void*) wire_download_quilt);
     dummy_var ^= ((int64_t) (void*) wire_fetch_state);
     dummy_var ^= ((int64_t) (void*) wire_write_state);

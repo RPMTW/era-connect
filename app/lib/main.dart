@@ -23,7 +23,6 @@ void main() async {
     await windowManager.focus();
     await windowManager.setMinimumSize(const Size(1350, 820));
     runApp(const EraConnectApp());
-
     // testRust();
   });
 }
@@ -38,13 +37,6 @@ void testRust() async {
     print("speed: ${event.progress?.speed}");
     print("total size: ${event.progress?.totalSize}");
     print("percent: ${event.progress?.percentages}");
-    if (chan == bridge.State.Downloading) {
-      api.writeState(s: bridge.State.Paused);
-      await Future.delayed(const Duration(seconds: 5));
-      chan = bridge.State.Stopped;
-      api.writeState(s: bridge.State.Downloading);
-    }
-    api.writeState(s: bridge.State.Downloading);
     if (event.prepareNameArgs != null) {
       final quilt = api.downloadQuilt(quiltPrepare: event.prepareNameArgs!);
       quilt.listen((event) {

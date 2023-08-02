@@ -48,6 +48,27 @@ fn wire_launch_game_impl(
         },
     )
 }
+fn wire_download_forge_impl(
+    port_: MessagePort,
+    forge_prepare: impl Wire2Api<PrepareGameArgs> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "download_forge",
+            port: Some(port_),
+            mode: FfiCallMode::Stream,
+        },
+        move || {
+            let api_forge_prepare = forge_prepare.wire2api();
+            move |task_callback| {
+                download_forge(
+                    task_callback.stream_sink::<_, ReturnType>(),
+                    api_forge_prepare,
+                )
+            }
+        },
+    )
+}
 fn wire_download_quilt_impl(
     port_: MessagePort,
     quilt_prepare: impl Wire2Api<PrepareGameArgs> + UnwindSafe,

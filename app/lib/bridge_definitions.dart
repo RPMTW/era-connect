@@ -18,6 +18,11 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kLaunchGameConstMeta;
 
+  Stream<ReturnType> downloadForge(
+      {required PrepareGameArgs forgePrepare, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kDownloadForgeConstMeta;
+
   Stream<ReturnType> downloadQuilt(
       {required PrepareGameArgs quiltPrepare, dynamic hint});
 

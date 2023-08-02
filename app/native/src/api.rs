@@ -1,5 +1,6 @@
 mod config;
 mod download;
+pub mod forge;
 pub mod quilt;
 pub mod vanilla;
 
@@ -11,6 +12,7 @@ pub use tokio::sync::{Mutex, RwLock};
 
 pub use self::config::ui_layout::UILayout;
 
+pub use self::forge::{prepare_forge_download, process_forge};
 pub use self::quilt::prepare_quilt_download;
 pub use self::vanilla::prepare_vanilla_download;
 pub use self::vanilla::PathBuf;
@@ -41,8 +43,37 @@ pub async fn download_vanilla(stream: StreamSink<ReturnType>) -> anyhow::Result<
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn launch_game(pre_launch_arguments: PrepareGameArgs) -> anyhow::Result<()> {
-    vanilla::launch_game(pre_launch_arguments.launch_args)?;
-    Ok(())
+    vanilla::launch_game(pre_launch_arguments.launch_args)
+}
+
+#[tokio::main(flavor = "current_thread")]
+pub async fn download_forge(
+    stream: StreamSink<ReturnType>,
+    forge_prepare: PrepareGameArgs,
+) -> anyhow::Result<()> {
+    let (quilt_download_args, manifest) = prepare_forge_download(
+        forge_prepare.launch_args,
+        forge_prepare.jvm_args,
+        forge_prepare.game_args,
+    )
+    .await?;
+    let a = quilt_download_args.game_args.clone();
+    let b = quilt_download_args.jvm_args.clone();
+    let c = quilt_download_args.launch_args.clone();
+    let t = DownloadArgs {
+        game_args: a,
+        jvm_args: b,
+        launch_args: c,
+        ..quilt_download_args
+    };
+    run_download(stream, t).await?;
+    process_forge(
+        quilt_download_args.launch_args,
+        quilt_download_args.jvm_args,
+        quilt_download_args.game_args,
+        manifest,
+    )
+    .await
 }
 
 #[tokio::main(flavor = "current_thread")]

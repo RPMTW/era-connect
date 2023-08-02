@@ -28,6 +28,7 @@ use super::download::rules::{get_rules, ActionType, Rule};
 use super::download::util::{download_file, extract_filename, validate_sha1};
 use super::{ReturnType, State, STATE};
 
+#[derive(Debug)]
 pub struct Progress {
     pub speed: f64,
     pub percentages: f64,
