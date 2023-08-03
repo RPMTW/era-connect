@@ -1,5 +1,6 @@
-import 'ffi.dart';
-import 'gen/bridge_definitions.dart' as bridge;
+import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
+
+import 'ui_layout.dart';
 
 final ConfigAPI configAPI = ConfigAPI();
 
@@ -9,12 +10,7 @@ class ConfigAPI {
   ConfigAPI();
 }
 
-class UILayoutConfig {
-  bool get completedSetup =>
-      _get<bool>(api.getUiLayoutConfig, bridge.Key.CompletedSetup);
-}
-
-T _get<T>(
+T get<T>(
     bridge.Value Function({required bridge.Key key}) function, bridge.Key key) {
   return function(key: key).field0 as T;
 }
