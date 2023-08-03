@@ -12,7 +12,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'bridge_definitions.freezed.dart';
 
 abstract class Native {
-  Stream<LogEntry> setupLogger({dynamic hint});
+  Future<void> setupLogger({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kSetupLoggerConstMeta;
 
@@ -129,26 +129,6 @@ class LaunchArgs {
     required this.mainClass,
     required this.gameArgs,
   });
-}
-
-class LogEntry {
-  final LogLevel level;
-  final String message;
-  final int timestamp;
-
-  const LogEntry({
-    required this.level,
-    required this.message,
-    required this.timestamp,
-  });
-}
-
-enum LogLevel {
-  Error,
-  Warn,
-  Info,
-  Debug,
-  Trace,
 }
 
 class PrepareGameArgs {

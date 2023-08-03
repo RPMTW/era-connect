@@ -21,7 +21,7 @@ pub enum Value {
 }
 
 impl UILayout {
-    pub fn get_value(&self, key: Key) -> Value {
+    pub fn get_value(&self, key: &Key) -> Value {
         match key {
             Key::CompletedSetup => Value::CompletedSetup(self.completed_setup),
         }

@@ -27,9 +27,9 @@ fn wire_setup_logger_impl(port_: MessagePort) {
         WrapInfo {
             debug_name: "setup_logger",
             port: Some(port_),
-            mode: FfiCallMode::Stream,
+            mode: FfiCallMode::Normal,
         },
-        move || move |task_callback| setup_logger(task_callback.stream_sink::<_, LogEntry>()),
+        move || move |task_callback| setup_logger(),
     )
 }
 fn wire_download_vanilla_impl(port_: MessagePort) {
@@ -264,42 +264,6 @@ impl support::IntoDart for LaunchArgs {
 }
 impl support::IntoDartExceptPrimitive for LaunchArgs {}
 impl rust2dart::IntoIntoDart<LaunchArgs> for LaunchArgs {
-    fn into_into_dart(self) -> Self {
-        self
-    }
-}
-
-impl support::IntoDart for LogEntry {
-    fn into_dart(self) -> support::DartAbi {
-        vec![
-            self.level.into_into_dart().into_dart(),
-            self.message.into_into_dart().into_dart(),
-            self.timestamp.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for LogEntry {}
-impl rust2dart::IntoIntoDart<LogEntry> for LogEntry {
-    fn into_into_dart(self) -> Self {
-        self
-    }
-}
-
-impl support::IntoDart for LogLevel {
-    fn into_dart(self) -> support::DartAbi {
-        match self {
-            Self::Error => 0,
-            Self::Warn => 1,
-            Self::Info => 2,
-            Self::Debug => 3,
-            Self::Trace => 4,
-        }
-        .into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for LogLevel {}
-impl rust2dart::IntoIntoDart<LogLevel> for LogLevel {
     fn into_into_dart(self) -> Self {
         self
     }

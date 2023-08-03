@@ -26,10 +26,10 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  Stream<LogEntry> setupLogger({dynamic hint}) {
-    return _platform.executeStream(FlutterRustBridgeTask(
+  Future<void> setupLogger({dynamic hint}) {
+    return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_setup_logger(port_),
-      parseSuccessData: _wire2api_log_entry,
+      parseSuccessData: _wire2api_unit,
       constMeta: kSetupLoggerConstMeta,
       argValues: [],
       hint: hint,
@@ -224,10 +224,6 @@ class NativeImpl implements Native {
     return raw as int;
   }
 
-  int _wire2api_i64(dynamic raw) {
-    return castInt(raw);
-  }
-
   JvmOptions _wire2api_jvm_options(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 8)
@@ -253,21 +249,6 @@ class NativeImpl implements Native {
       mainClass: _wire2api_String(arr[1]),
       gameArgs: _wire2api_StringList(arr[2]),
     );
-  }
-
-  LogEntry _wire2api_log_entry(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return LogEntry(
-      level: _wire2api_log_level(arr[0]),
-      message: _wire2api_String(arr[1]),
-      timestamp: _wire2api_i64(arr[2]),
-    );
-  }
-
-  LogLevel _wire2api_log_level(dynamic raw) {
-    return LogLevel.values[raw as int];
   }
 
   PrepareGameArgs? _wire2api_opt_box_autoadd_prepare_game_args(dynamic raw) {

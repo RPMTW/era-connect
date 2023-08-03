@@ -21,7 +21,7 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
     await windowManager.setMinimumSize(const Size(1350, 820));
-    initializeAPIs();
+    await initializeAPIs();
     runApp(const EraConnectApp());
 
     // testRust();
