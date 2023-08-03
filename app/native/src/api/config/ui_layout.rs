@@ -8,7 +8,6 @@ const UI_LAYOUT_FILE_NAME: &str = "ui_layout.json";
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 #[serde(default)]
 pub struct UILayout {
-    pub fail: String,
     pub completed_setup: bool,
 }
 
