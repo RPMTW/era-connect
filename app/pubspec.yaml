@@ -36,6 +36,7 @@ dependencies:
   flutter_svg: ^2.0.7
   window_manager: ^0.3.5
   provider: ^6.0.5
+  freezed_annotation: ^2.4.1
   era_connect_ui:
     path: ../packages/era_connect_ui
   era_connect_i18n:
@@ -47,6 +48,8 @@ dev_dependencies:
 
   flutter_lints: ^2.0.2
   ffigen: ^8.0.2
+  build_runner: ^2.4.6
+  freezed: ^2.4.1
 
 flutter:
   uses-material-design: true

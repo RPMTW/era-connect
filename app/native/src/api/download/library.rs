@@ -20,22 +20,23 @@ use super::{
 };
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct LibraryMetadata {
+pub struct Library {
+    pub downloads: LibraryArtifact,
+    pub name: String,
+    pub rules: Option<Vec<Rule>>,
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Metadata {
     pub path: String,
     pub sha1: String,
     pub size: usize,
     pub url: String,
 }
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct LibraryArtifact {
-    pub artifact: LibraryMetadata,
-}
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Library {
-    pub downloads: LibraryArtifact,
-    pub name: String,
-    pub rules: Option<Vec<Rule>>,
+pub struct LibraryArtifact {
+    pub artifact: Metadata,
 }
 
 pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bool, &'a str) {

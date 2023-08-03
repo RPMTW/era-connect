@@ -26,7 +26,7 @@ use super::download::assets::{extract_assets, parallel_assets, AssetIndex};
 use super::download::library::{parallel_library, Library};
 use super::download::rules::{get_rules, ActionType, Rule};
 use super::download::util::{download_file, extract_filename, validate_sha1};
-use super::{ReturnType, State, STATE};
+use super::{DownloadState, ReturnType, STATE};
 
 pub struct Progress {
     pub speed: f64,
@@ -497,13 +497,13 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
             });
             let state = *STATE.read().await;
             match state {
-                State::Downloading => {}
-                State::Paused => {
-                    while *STATE.read().await != State::Downloading {
+                DownloadState::Downloading => {}
+                DownloadState::Paused => {
+                    while *STATE.read().await != DownloadState::Downloading {
                         time::sleep(Duration::from_millis(100)).await;
                     }
                 }
-                State::Stopped => break,
+                DownloadState::Stopped => break,
             }
         }
         sink.add(ReturnType {
@@ -532,11 +532,11 @@ pub async fn join_futures(
     while let Some(x) = download_stream.next().await {
         let state = *STATE.read().await;
         match state {
-            State::Downloading => x?,
-            State::Paused => {
+            DownloadState::Downloading => x?,
+            DownloadState::Paused => {
                 dbg!("pausing!");
             }
-            State::Stopped => break,
+            DownloadState::Stopped => break,
         }
         time::sleep(Duration::from_millis(100)).await;
     }

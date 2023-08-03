@@ -1,11 +1,10 @@
-import 'package:era_connect/bridge_definitions.dart' as bridge;
 import 'dart:io';
+import 'package:era_connect/api/lib.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'ffi.dart' show api;
 import 'pages/main_page.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -22,42 +21,44 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
     await windowManager.setMinimumSize(const Size(1350, 820));
+    await initializeAPIs();
     runApp(const EraConnectApp());
 
     // testRust();
   });
 }
 
-void testRust() async {
-  var chan = bridge.State.Downloading;
-  // final currentState = await api.fetchState();
-  await api.writeState(s: chan);
-  final vanilla = api.downloadVanilla();
+// void testRust() async {
+//   var chan = DownloadState.Downloading;
+//   final currentState = await api.fetchState();
+//   await api.writeState(s: chan);
+//   final vanilla = api.downloadVanilla();
 
-  vanilla.listen((event) async {
-    print("speed: ${event.progress?.speed}");
-    print("total size: ${event.progress?.totalSize}");
-    print("percent: ${event.progress?.percentages}");
-    if (chan == bridge.State.Downloading) {
-      api.writeState(s: bridge.State.Paused);
-      await Future.delayed(const Duration(seconds: 5));
-      chan = bridge.State.Stopped;
-      api.writeState(s: bridge.State.Downloading);
-    }
-    api.writeState(s: bridge.State.Downloading);
-    if (event.prepareNameArgs != null) {
-      final quilt = api.downloadQuilt(quiltPrepare: event.prepareNameArgs!);
-      quilt.listen((event) {
-        print("speed: ${event.progress?.speed}");
-        print("total size: ${event.progress?.totalSize}");
-        print("percent: ${event.progress?.percentages}");
-        if (event.prepareNameArgs != null) {
-          api.launchGame(preLaunchArguments: event.prepareNameArgs!);
-        }
-      });
-    }
-  });
-}
+//   vanilla.listen((event) async {
+//     print("speed: ${event.progress?.speed}");
+//     print("total size: ${event.progress?.totalSize}");
+//     print("percent: ${event.progress?.percentages}");
+
+//     if (chan == DownloadState.Downloading) {
+//       api.writeState(s: DownloadState.Paused);
+//       await Future.delayed(const Duration(seconds: 5));
+//       chan = DownloadState.Stopped;
+//       api.writeState(s: DownloadState.Downloading);
+//     }
+//     api.writeState(s: DownloadState.Downloading);
+//     if (event.prepareNameArgs != null) {
+//       final quilt = api.downloadQuilt(quiltPrepare: event.prepareNameArgs!);
+//       quilt.listen((event) {
+//         print("speed: ${event.progress?.speed}");
+//         print("total size: ${event.progress?.totalSize}");
+//         print("percent: ${event.progress?.percentages}");
+//         if (event.prepareNameArgs != null) {
+//           api.launchGame(preLaunchArguments: event.prepareNameArgs!);
+//         }
+//       });
+//     }
+//   });
+// }
 
 class EraConnectApp extends StatefulWidget {
   const EraConnectApp({Key? key}) : super(key: key);

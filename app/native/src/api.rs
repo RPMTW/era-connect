@@ -1,25 +1,33 @@
-mod config;
+pub mod config;
 mod download;
 pub mod quilt;
 pub mod vanilla;
 
+use std::fs::create_dir_all;
 pub use std::sync::mpsc;
 pub use std::sync::mpsc::{Receiver, Sender};
 
-use flutter_rust_bridge::StreamSink;
+use anyhow::{Context, Ok};
+use chrono::Local;
+pub use flutter_rust_bridge::StreamSink;
+pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
+use log::info;
 pub use tokio::sync::{Mutex, RwLock};
 
-pub use self::config::ui_layout::UILayout;
-
+use self::config::config_state::ConfigState;
+pub use self::config::ui_layout::{Key, UILayout, Value};
 pub use self::quilt::prepare_quilt_download;
 pub use self::vanilla::prepare_vanilla_download;
 pub use self::vanilla::PathBuf;
 pub use self::vanilla::{run_download, Progress};
 
-pub use self::vanilla::DownloadArgs;
-pub use self::vanilla::GameOptions;
-pub use self::vanilla::JvmOptions;
-pub use self::vanilla::LaunchArgs;
+pub use self::vanilla::{DownloadArgs, GameOptions, JvmOptions, LaunchArgs};
+
+lazy_static::lazy_static! {
+    static ref DATA_DIR : PathBuf = dirs::data_dir().unwrap().join("era-connect");
+    static ref STATE: RwLock<DownloadState> = RwLock::new(DownloadState::default());
+    static ref CONFIG: ConfigState = ConfigState::new();
+}
 
 pub struct ReturnType {
     pub progress: Option<Progress>,
@@ -33,14 +41,40 @@ pub struct PrepareGameArgs {
     pub game_args: GameOptions,
 }
 
+pub fn setup_logger() -> anyhow::Result<()> {
+    let file_name = format!("{}.log", Local::now().format("%Y-%m-%d-%H-%M-%S"));
+    let file_path = DATA_DIR.join("logs").join(file_name);
+    let parent = file_path
+        .parent()
+        .context("Failed to get the parent directory of logs directory")?;
+    create_dir_all(parent)?;
+
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "[{}] {} | {}:{} | {}",
+                Local::now().format("%Y-%m-%d %H:%M:%S"),
+                record.level(),
+                record.file().unwrap_or_else(|| record.target()),
+                record.line().unwrap_or(0),
+                message
+            ));
+        })
+        .chain(std::io::stdout())
+        .chain(fern::log_file(file_path)?)
+        .apply()?;
+
+    info!("Successfully setup logger");
+    Ok(())
+}
+
 #[tokio::main(flavor = "current_thread")]
 pub async fn download_vanilla(stream: StreamSink<ReturnType>) -> anyhow::Result<()> {
     let c = prepare_vanilla_download().await?;
     run_download(stream, c).await
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn launch_game(pre_launch_arguments: PrepareGameArgs) -> anyhow::Result<()> {
+pub fn launch_game(pre_launch_arguments: PrepareGameArgs) -> anyhow::Result<()> {
     vanilla::launch_game(pre_launch_arguments.launch_args)?;
     Ok(())
 }
@@ -62,34 +96,33 @@ pub async fn download_quilt(
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum State {
+pub enum DownloadState {
     Downloading,
     Paused,
     Stopped,
 }
 
-impl Default for State {
+impl Default for DownloadState {
     fn default() -> Self {
         Self::Stopped
     }
 }
 
-lazy_static::lazy_static! {
-    static ref STATE: RwLock<State> = RwLock::new(State::default());
-    static ref UI_LAYOUT: RwLock<UILayout> = RwLock::new(UILayout::new());
+pub fn fetch_state() -> DownloadState {
+    *STATE.blocking_read()
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn fetch_state() -> State {
-    *STATE.read().await
+pub fn write_state(s: DownloadState) {
+    *STATE.blocking_write() = s;
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn write_state(s: State) {
-    *STATE.write().await = s;
+pub fn get_ui_layout_config(key: Key) -> SyncReturn<Value> {
+    let value = CONFIG.ui_layout.blocking_read().get_value(key);
+    SyncReturn(value)
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn fetch_ui_layout() -> UILayout {
-    *UI_LAYOUT.read().await
+pub fn set_ui_layout_config(value: Value) -> anyhow::Result<()> {
+    let mut config = CONFIG.ui_layout.blocking_write();
+    config.set_value(value);
+    config.save()
 }
