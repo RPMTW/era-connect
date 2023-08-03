@@ -12,16 +12,18 @@ pub struct UILayout {
     pub completed_setup: bool,
 }
 
+#[derive(Clone, Copy)]
 pub enum Key {
     CompletedSetup,
 }
 
+#[derive(Clone, Copy)]
 pub enum Value {
     CompletedSetup(bool),
 }
 
 impl UILayout {
-    pub fn get_value(&self, key: &Key) -> Value {
+    pub const fn get_value(&self, key: Key) -> Value {
         match key {
             Key::CompletedSetup => Value::CompletedSetup(self.completed_setup),
         }

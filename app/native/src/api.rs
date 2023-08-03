@@ -52,10 +52,11 @@ pub fn setup_logger() -> anyhow::Result<()> {
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
-                "[{}] {} | {} | {}",
+                "[{}] {} | {}:{} | {}",
                 Local::now().format("%Y-%m-%d %H:%M:%S"),
                 record.level(),
-                record.target(),
+                record.file().unwrap_or_else(|| record.target()),
+                record.line().unwrap_or(0),
                 message
             ));
         })
@@ -116,7 +117,7 @@ pub fn write_state(s: DownloadState) {
 }
 
 pub fn get_ui_layout_config(key: Key) -> SyncReturn<Value> {
-    let value = CONFIG.ui_layout.blocking_read().get_value(&key);
+    let value = CONFIG.ui_layout.blocking_read().get_value(key);
     SyncReturn(value)
 }
 
