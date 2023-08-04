@@ -1,14 +1,15 @@
-import 'package:era_connect_ui/components/button/era_text_button.dart';
+import 'package:era_connect_ui/components/button/era_dialog_button.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../test_util.dart';
 
 void main() {
-  group('EraTextButton', () {
+  group('EraDialogButton (text)', () {
     testWidgets('renders with correct text', (tester) async {
       // Arrange & Act
       await tester.pumpWidget(baseWidget(
-        child: EraTextButton.primary(
+        child: EraDialogButton.textPrimary(
           text: 'Click me!',
           onPressed: () {},
         ),
@@ -23,7 +24,7 @@ void main() {
       var tapped = false;
       await tester.pumpWidget(
         baseWidget(
-          child: EraTextButton.primary(
+          child: EraDialogButton.textPrimary(
             text: 'Click me!',
             onPressed: () => tapped = true,
           ),
@@ -42,7 +43,7 @@ void main() {
       // Arrange
       await tester.pumpWidget(
         baseWidget(
-          child: EraTextButton.primary(
+          child: EraDialogButton.textPrimary(
             text: 'Click me!',
             onPressed: () {},
           ),
@@ -63,7 +64,7 @@ void main() {
       // Arrange & Act
       await tester.pumpWidget(
         baseWidget(
-          child: EraTextButton.primary(
+          child: EraDialogButton.textPrimary(
             text: 'Click me!',
             onPressed: () {},
           ),
@@ -80,7 +81,7 @@ void main() {
       // Arrange
       await tester.pumpWidget(
         baseWidget(
-          child: EraTextButton.primary(
+          child: EraDialogButton.textPrimary(
             text: 'Click me!',
             onPressed: () {},
           ),
@@ -100,7 +101,7 @@ void main() {
       // Arrange & Act
       await tester.pumpWidget(
         baseWidget(
-          child: EraTextButton.secondary(
+          child: EraDialogButton.textSecondary(
             text: 'Click me!',
             onPressed: () {},
           ),
@@ -118,7 +119,7 @@ void main() {
       // Arrange
       await tester.pumpWidget(
         baseWidget(
-          child: EraTextButton.secondary(
+          child: EraDialogButton.textSecondary(
             text: 'Click me!',
             onPressed: () {},
           ),
@@ -133,5 +134,32 @@ void main() {
       expect(hoverColor, equals(getDefaultTheme().surfaceColor));
     });
   });
-}
 
+  group('EraDialogButton (icon)', () {
+    testWidgets('renders with correct icon (primary)', (tester) async {
+      // Arrange & Act
+      await tester.pumpWidget(baseWidget(
+        child: EraDialogButton.iconPrimary(
+          icon: const Icon(Icons.check_rounded),
+          onPressed: () {},
+        ),
+      ));
+
+      // Assert
+      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+    });
+
+    testWidgets('renders with correct icon (secondary)', (tester) async {
+      // Arrange & Act
+      await tester.pumpWidget(baseWidget(
+        child: EraDialogButton.iconSecondary(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () {},
+        ),
+      ));
+
+      // Assert
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+    });
+  });
+}

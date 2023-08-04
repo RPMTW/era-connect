@@ -1,4 +1,3 @@
-import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/components/lib.dart';
 import 'package:era_connect_ui/theme/lib.dart';
 import 'package:flutter/material.dart';
@@ -163,19 +162,19 @@ class _StepDialogState extends State<StepDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  EraTextButton.secondary(
-                    text: step.skippable
-                        ? context.i18n['dialog.ui.skip']
-                        : context.i18n['dialog.ui.back'],
+                  EraDialogButton.iconSecondary(
+                    icon: step.skippable
+                        ? const Icon(Icons.close_rounded, size: 30)
+                        : const Icon(Icons.skip_previous_rounded, size: 30),
                     onPressed: () {
                       _previousStep();
                     },
                   ),
                   const SizedBox(width: 10),
-                  EraTextButton.primary(
-                    text: _isLastStep()
-                        ? context.i18n['dialog.ui.done']
-                        : context.i18n['dialog.ui.next'],
+                  EraDialogButton.iconPrimary(
+                    icon: _isLastStep()
+                        ? const Icon(Icons.check_rounded, size: 30)
+                        : const Icon(Icons.skip_next_rounded, size: 30),
                     onPressed: () {
                       _nextStep();
                     },

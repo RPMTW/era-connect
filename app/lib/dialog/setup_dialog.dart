@@ -1,4 +1,4 @@
-import 'package:era_connect/components/step_dialog.dart';
+import 'package:era_connect_ui/components/dialog/step_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
