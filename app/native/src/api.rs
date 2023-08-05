@@ -67,13 +67,20 @@ pub async fn download_forge(
         ..quilt_download_args
     };
     run_download(stream, t).await?;
-    process_forge(
+    println!("i'm a failure");
+    let t = process_forge(
         quilt_download_args.launch_args,
         quilt_download_args.jvm_args,
         quilt_download_args.game_args,
         manifest,
     )
-    .await
+    .await?;
+
+    dbg!(&t);
+
+    vanilla::launch_game(t)?;
+    // *STATE.write().await = State::Stopped;
+    Ok(())
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -88,8 +95,7 @@ pub async fn download_quilt(
         quilt_prepare.game_args,
     )
     .await?;
-    run_download(stream, quilt_download_args).await?;
-    Ok(())
+    run_download(stream, quilt_download_args).await
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

@@ -475,6 +475,7 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
     let current_size_clone = Arc::clone(&download_args.current_size);
     let total_size_clone = Arc::clone(&download_args.total_size);
 
+    *STATE.write().await = State::Downloading;
     let task = tokio::spawn(async move {
         let mut instant = Instant::now();
         let mut prev_bytes = 0.0;
@@ -515,7 +516,8 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
                 game_args: download_args.game_args,
             }),
         });
-        sink.close();
+        // sink.close();
+        // *STATE.write().await = State::Stopped;
     });
     // Create a semaphore with a limit on the number of concurrent downloads
     join_futures(handles, 128).await?;
@@ -535,11 +537,13 @@ pub async fn join_futures(
         match state {
             State::Downloading => x?,
             State::Paused => {
-                dbg!("pausing!");
+                while *STATE.read().await != State::Downloading {
+                    time::sleep(Duration::from_millis(100)).await;
+                    dbg!("pausing!");
+                }
             }
             State::Stopped => break,
         }
-        time::sleep(Duration::from_millis(100)).await;
     }
     Ok(())
 }

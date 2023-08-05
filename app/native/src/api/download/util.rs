@@ -24,7 +24,7 @@ pub async fn download_file(
         Ok(x) => Ok(x),
         Err(err) => {
             let mut temp = Err(err);
-            for i in 0..retry_amount {
+            for i in 1..=retry_amount {
                 match client.get(&url).send().await {
                     Ok(x) => {
                         temp = Ok(x);
