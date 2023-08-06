@@ -7,23 +7,22 @@ use std::{
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+use crate::api::DATA_DIR;
+
 pub struct ConfigLoader {
     file_name: String,
-    config_directory: PathBuf,
 }
 
 impl ConfigLoader {
-    pub fn new(file_name: String) -> Self {
+    pub fn new(file_name: &str) -> Self {
         Self {
-            file_name,
-            config_directory: dirs::data_dir().unwrap().join("era-connect/config"),
+            file_name: file_name.to_string(),
         }
     }
 
     pub fn load<T: Default + DeserializeOwned + Serialize>(&self) -> anyhow::Result<T> {
-        let path = &self.get_path();
+        let path = self.get_path_buf();
         if !path.exists() {
-            create_dir_all(&self.config_directory)?;
             let config = T::default();
             self.save(&config)?;
             return Ok(config);
@@ -36,13 +35,19 @@ impl ConfigLoader {
     }
 
     pub fn save<T: Serialize>(&self, config: &T) -> anyhow::Result<()> {
-        let file = File::create(&self.get_path())?;
+        create_dir_all(Self::get_config_directory())?;
+
+        let file = File::create(self.get_path_buf())?;
         let writer = BufWriter::new(file);
-        serde_json::to_writer_pretty(writer, config)?;
+        serde_json::to_writer(writer, config)?;
         Ok(())
     }
 
-    fn get_path(&self) -> PathBuf {
-        self.config_directory.join(&self.file_name)
+    fn get_path_buf(&self) -> PathBuf {
+        Self::get_config_directory().join(&self.file_name)
+    }
+
+    fn get_config_directory() -> PathBuf {
+        DATA_DIR.join("config")
     }
 }

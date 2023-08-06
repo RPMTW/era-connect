@@ -1,11 +1,12 @@
-import 'package:era_connect/bridge_definitions.dart' as bridge;
 import 'dart:io';
+import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
+import 'package:era_connect/api/ffi.dart';
+import 'package:era_connect/api/lib.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'ffi.dart' show api;
 import 'pages/main_page.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -22,8 +23,9 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
     await windowManager.setMinimumSize(const Size(1350, 820));
+    await initializeAPIs();
     runApp(const EraConnectApp());
-    testRust();
+    // testRust();
   });
 }
 
@@ -41,7 +43,7 @@ void testRust() async {
         print("total size: ${event.progress?.totalSize}");
         print("percent: ${event.progress?.percentages}");
         if (event.prepareNameArgs != null) {
-          if (await api.fetchState() == bridge.State.Stopped) {
+          if (await api.fetchState() == bridge.DownloadState.Stopped) {
             api.launchGame(preLaunchArguments: event.prepareNameArgs!);
           }
         }

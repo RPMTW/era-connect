@@ -23,7 +23,7 @@ cargo install just # https://crates.io/crates/just
 
 ### Generate binding for Rust <-> Dart
 ```bash
-just gen
+just gen lint
 ```
 
 If you are using an Arch Linux machine, please execute the following command before generating the bindings:

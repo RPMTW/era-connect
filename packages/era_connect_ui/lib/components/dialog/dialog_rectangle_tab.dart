@@ -47,8 +47,10 @@ class _DialogRectangleTabState extends State<DialogRectangleTab> {
           transitionBuilder: (child, animation) {
             return FadeTransition(
               opacity: animation,
-              child: SizeTransition(
-                sizeFactor: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                        begin: const Offset(0, -0.1), end: Offset.zero)
+                    .animate(animation),
                 child: child,
               ),
             );
