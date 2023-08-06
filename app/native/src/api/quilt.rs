@@ -3,7 +3,7 @@ use std::sync::{
     Arc,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::{
@@ -41,11 +41,11 @@ pub async fn prepare_quilt_download(
     for loader_type in quilt_loader_types {
         let maven = quilt_loader_list
             .get(loader_type)
-            .ok_or_else(|| anyhow!("fail to get quilt_maven"))?
+            .context("fail to get quilt_maven")?
             .get("maven")
-            .ok_or_else(|| anyhow!("fail to get quilt maven"))?
+            .context("fail to get quilt maven")?
             .as_str()
-            .ok_or_else(|| anyhow!("quilt maven is not a string!"))?;
+            .context("quilt maven is not a string!")?;
 
         download_list.push(QuiltLibrary {
             name: maven.to_string(),
@@ -89,7 +89,7 @@ pub async fn prepare_quilt_download(
     }
     launch_args.main_class = version_manifest[0]["launcherMeta"]["mainClass"]["client"]
         .as_str()
-        .ok_or_else(|| anyhow!("fail to get quilt mainclass"))?
+        .context("fail to get quilt mainclass")?
         .to_string();
 
     // NOTE: rust can't dedcue the type here(cause dyn trait)

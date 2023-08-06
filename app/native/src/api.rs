@@ -33,12 +33,6 @@ lazy_static::lazy_static! {
     static ref CONFIG: ConfigState = ConfigState::new();
 }
 
-#[derive(Clone)]
-pub struct ReturnType {
-    pub progress: Option<Progress>,
-    pub prepare_name_args: Option<PrepareGameArgs>,
-}
-
 #[derive(Debug, Clone)]
 pub struct PrepareGameArgs {
     pub launch_args: LaunchArgs,
@@ -88,20 +82,22 @@ pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> 
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let forge_prepare = prepare_vanilla_download().await?;
-    let (forge_download_args, prepare_arguments, manifest) = prepare_forge_download(
-        forge_prepare.1.launch_args,
-        forge_prepare.1.jvm_args,
-        forge_prepare.1.game_args,
+    let (vanilla_download_args, vanilla_arguments) = prepare_vanilla_download().await?;
+    info!("Starts Vanilla Downloading");
+    let stream = run_download(stream, vanilla_download_args).await?;
+    let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
+        vanilla_arguments.launch_args,
+        vanilla_arguments.jvm_args,
+        vanilla_arguments.game_args,
     )
     .await?;
     info!("Starts Forge Downloading");
-    run_download(stream, forge_prepare.0).await?;
+    run_download(stream, forge_download_args).await?;
     info!("Starts Forge Processing");
     let processed_arguments = process_forge(
-        prepare_arguments.launch_args,
-        prepare_arguments.jvm_args,
-        prepare_arguments.game_args,
+        forge_arguments.launch_args,
+        forge_arguments.jvm_args,
+        forge_arguments.game_args,
         manifest,
     )
     .await?;
@@ -111,15 +107,15 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let quilt_prepare = prepare_vanilla_download().await?;
+    let (download_args, vanilla_arguments) = prepare_vanilla_download().await?;
     let quilt_download_args = prepare_quilt_download(
         "1.20.1".to_string(),
-        quilt_prepare.1.launch_args,
-        quilt_prepare.1.jvm_args,
-        quilt_prepare.1.game_args,
+        vanilla_arguments.launch_args,
+        vanilla_arguments.jvm_args,
+        vanilla_arguments.game_args,
     )
     .await?;
-    run_download(stream, quilt_download_args.0).await?;
+    run_download(stream, download_args).await?;
     launch_game(quilt_download_args.1.launch_args)
 }
 

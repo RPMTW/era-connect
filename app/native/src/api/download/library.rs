@@ -163,10 +163,11 @@ async fn native_download(
         archive.extract(native_temp_dir.as_path())?;
         for x in archive.file_names() {
             if (x.contains(library_extension) || x.contains(".sha1")) && !x.contains(".git") {
-                std::fs::rename(
+                tokio::fs::rename(
                     native_temp_dir.join(x),
                     native_folder_clone.join(PathBuf::from(x).file_name().unwrap()),
                 )
+                .await
                 .context("Fail to move from native_temp_dir -> native_folder_clone")?;
             }
         }

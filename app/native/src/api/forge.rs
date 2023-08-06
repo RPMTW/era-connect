@@ -1,14 +1,14 @@
 use std::{
     io::{BufRead, BufReader},
     path::PathBuf,
-    process::{Command, Stdio},
+    process::Command,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
     },
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::fs;
@@ -16,7 +16,7 @@ use tokio::fs;
 use super::{
     download::util::{download_file, extract_filename, validate_sha1},
     vanilla::{get_game_manifest, HandlesType, ProcessedArguments},
-    write_state, DownloadArgs, DownloadState, GameOptions, JvmOptions, LaunchArgs, STATE,
+    DownloadArgs, GameOptions, JvmOptions, LaunchArgs,
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Processors {
@@ -47,6 +47,13 @@ struct ProcessorData {
 struct ProcessorsDataType {
     client: String,
     server: String,
+}
+
+impl ProcessorsDataType {
+    fn convert_maven_to_path(&mut self, folder: &str) {
+        self.client = convert_maven_to_path(&self.client, Some(folder));
+        self.server = convert_maven_to_path(&self.server, Some(folder));
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -89,7 +96,7 @@ pub async fn prepare_forge_download(
     // NOTE: rust can't dedcue the type here(cause dyn trait)
     let mut handles: HandlesType = Vec::new();
     let mut classpath = Vec::new();
-    let library_directory = jvm_options.library_directory.clone();
+    let library_directory = &jvm_options.library_directory;
 
     for library in libraries {
         if let Some(download) = library.downloads {
@@ -122,7 +129,7 @@ pub async fn prepare_forge_download(
             }));
         } else {
             let name = convert_maven_to_path(&library.name, None);
-            let url = library.url.unwrap().clone() + &name;
+            let url = library.url.unwrap() + &name;
             let path = library_directory.join(name);
 
             if library.include_in_classpath {
@@ -130,28 +137,23 @@ pub async fn prepare_forge_download(
             }
 
             handles.push(Box::pin(async move {
-                if !path.exists() {
+                if path.exists() {
+                    Ok(())
+                } else {
                     fs::create_dir_all(path.parent().unwrap()).await?;
                     let bytes = download_file(url, None).await?;
                     fs::write(path, bytes).await.map_err(|err| anyhow!(err))
-                } else {
-                    Ok(())
                 }
             }));
         }
     }
 
-    let mut t = launch_args.jvm_args.iter_mut();
-    while let Some(x) = t.next() {
-        if *x == "-cp" {
-            let classpaths = t.next().unwrap();
-            classpaths.push(':');
-            classpaths.push_str(&classpath.join(":"));
-            break;
-        }
+    let pos = launch_args.jvm_args.iter().position(|x| x == "-cp");
+    if let Some(pos) = pos {
+        let classpaths = launch_args.jvm_args.get_mut(pos + 1).unwrap();
+        classpaths.push(':');
+        classpaths.push_str(classpath.join(":").as_str());
     }
-
-    write_state(DownloadState::Downloading);
 
     Ok((
         DownloadArgs {
@@ -171,39 +173,33 @@ pub async fn prepare_forge_download(
 pub async fn process_forge(
     mut launch_args: LaunchArgs,
     jvm_options: JvmOptions,
-    game_options: GameOptions,
+    _game_options: GameOptions,
     manifest: Value,
 ) -> Result<LaunchArgs> {
     let mut data = ProcessorData::deserialize(&manifest["data"])?;
     let processors = Vec::<Processors>::deserialize(&manifest["processors"])?;
     let folder = jvm_options.library_directory.to_string_lossy().to_string();
-    let forge_installer = Vec::<ForgeLibrary>::deserialize(&manifest["libraries"])?
+    let library_manifest = Vec::<ForgeLibrary>::deserialize(&manifest["libraries"])?;
+    let forge_installer = library_manifest
         .iter()
         .filter(|x| x.downloads.is_none())
         .nth(1)
         .unwrap()
         .name
-        .clone();
+        .as_str();
+    data.merged_mappings.convert_maven_to_path(&folder);
+    data.mappings.convert_maven_to_path(&folder);
+    data.mc_extra.convert_maven_to_path(&folder);
     data.merged_mappings.client =
         convert_maven_to_path(&data.merged_mappings.client, Some(&folder));
     data.mappings.client = convert_maven_to_path(&data.mappings.client, Some(&folder));
-    data.mc_extra.client = convert_maven_to_path(&data.mc_extra.client, Some(&folder));
-    data.mc_slim.client = convert_maven_to_path(&data.mc_slim.client, Some(&folder));
-    data.mc_srg.client = convert_maven_to_path(&data.mc_srg.client, Some(&folder));
-    data.mc_unpacked.client = convert_maven_to_path(&data.mc_unpacked.client, Some(&folder));
-    data.mojmaps.client = convert_maven_to_path(&data.mojmaps.client, Some(&folder));
-    data.patched.client = convert_maven_to_path(&data.patched.client, Some(&folder));
-    data.binpatch.client = convert_maven_to_path(&data.binpatch.client, Some(&folder));
-    data.merged_mappings.server =
-        convert_maven_to_path(&data.merged_mappings.server, Some(&folder));
-    data.mappings.server = convert_maven_to_path(&data.mappings.server, Some(&folder));
-    data.mc_extra.server = convert_maven_to_path(&data.mc_extra.server, Some(&folder));
-    data.mc_slim.server = convert_maven_to_path(&data.mc_slim.server, Some(&folder));
-    data.mc_srg.server = convert_maven_to_path(&data.mc_srg.server, Some(&folder));
-    data.mc_unpacked.server = convert_maven_to_path(&data.mc_unpacked.server, Some(&folder));
-    data.mojmaps.server = convert_maven_to_path(&data.mojmaps.server, Some(&folder));
-    data.patched.server = convert_maven_to_path(&data.patched.server, Some(&folder));
-    data.binpatch.server = convert_maven_to_path(&data.binpatch.server, Some(&folder));
+    data.mc_extra.convert_maven_to_path(&folder);
+    data.mc_slim.convert_maven_to_path(&folder);
+    data.mc_srg.convert_maven_to_path(&folder);
+    data.mc_unpacked.convert_maven_to_path(&folder);
+    data.mojmaps.convert_maven_to_path(&folder);
+    data.patched.convert_maven_to_path(&folder);
+    data.binpatch.convert_maven_to_path(&folder);
     let (game_manifest, _) = get_game_manifest(
         "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_string(),
         None,
@@ -211,7 +207,7 @@ pub async fn process_forge(
     .await?;
     for processor in processors {
         let jar = convert_maven_to_path(&processor.jar, Some(&folder));
-        let processor_main_class = get_processor_main_class(jar.clone()).await?.unwrap();
+        let processor_main_class = get_processor_main_class(jar.clone())?.unwrap();
         let mut processor_classpath = processor
             .classpath
             .iter()
@@ -219,7 +215,8 @@ pub async fn process_forge(
             .collect::<Vec<_>>();
         processor_classpath.push(jar.to_string());
         let mut minecraft_jar = String::new();
-        if let Some(sides) = processor.sides.clone() {
+        let side;
+        if let Some(sides) = processor.sides {
             minecraft_jar = match sides.get(0) {
                 Some(x) if x == "server" => {
                     let url = game_manifest["downloads"]["server"]["url"]
@@ -231,44 +228,50 @@ pub async fn process_forge(
                         let bytes = download_file(url.to_string(), None).await?;
                         fs::write(&path, bytes).await.map_err(|err| anyhow!(err))?;
                     }
+                    side = x.to_string();
                     path.to_string_lossy().to_string()
                 }
-                Some(x) if x == "client" => jvm_options.primary_jar.clone(),
-                None | Some(_) => unreachable!(),
-            };
-        }
-        let sides = processor.sides.unwrap_or(vec![String::from("client")]);
-        for side in sides {
-            let args = process_client(
-                &processor.args,
-                &data,
-                &minecraft_jar,
-                &jvm_options.game_directory.to_string_lossy(),
-                &convert_maven_to_path(&forge_installer, Some(&folder)),
-                &side,
-            )
-            .into_iter()
-            .map(|x| {
-                if x.starts_with('[') {
-                    convert_maven_to_path(&x, Some(&folder))
-                } else {
-                    x
+                Some(x) if x == "client" => {
+                    side = x.to_string();
+                    jvm_options.primary_jar.clone()
                 }
-            })
-            .collect::<Vec<_>>();
-            let mut all = Vec::new();
-            all.push("-cp".to_string());
-            all.push(processor_classpath.join(":"));
-            all.push(processor_main_class.clone());
-            all.extend(args);
-
-            Command::new("java").args(all).spawn()?.wait()?;
+                None | Some(_) => bail!("Somehow the sides existing but its empty????"),
+            };
+        } else {
+            side = String::from("client");
         }
+        let args = process_client(
+            &processor.args,
+            &data,
+            &minecraft_jar,
+            &jvm_options.game_directory.to_string_lossy(),
+            &convert_maven_to_path(forge_installer, Some(&folder)),
+            &side,
+        )
+        .into_iter()
+        .map(|x| {
+            if x.starts_with('[') {
+                convert_maven_to_path(&x, Some(&folder))
+            } else {
+                x
+            }
+        })
+        .collect::<Vec<_>>();
+        let mut all = Vec::new();
+        all.push("-cp".to_string());
+        all.push(processor_classpath.join(":"));
+        all.push(processor_main_class.clone());
+        all.extend(args);
+
+        Command::new("java").args(all).spawn()?.wait()?;
     }
     let jvm = Vec::<String>::deserialize(&manifest["arguments"]["jvm"])?;
     let game = Vec::<String>::deserialize(&manifest["arguments"]["game"])?;
     let jvm = jvm_args_parse(&jvm, &jvm_options);
-    launch_args.main_class = manifest["mainClass"].as_str().unwrap().to_string();
+    launch_args.main_class = manifest["mainClass"]
+        .as_str()
+        .context("forge mainClass doesn't existing")?
+        .to_string();
     launch_args.jvm_args.extend(jvm);
     launch_args.game_args.extend(game);
     Ok(launch_args)
@@ -292,9 +295,10 @@ fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmOptions) -> Vec<String>
 
             let library = jvm_options.library_directory.to_string_lossy().to_string();
 
-            let primary_jar_path = PathBuf::from(jvm_options.primary_jar.clone());
+            let primary_jar_path = PathBuf::from(&jvm_options.primary_jar);
             let primary_jar = primary_jar_path
                 .file_stem()
+                .context("f")
                 .unwrap()
                 .to_string_lossy()
                 .to_string();
@@ -403,12 +407,10 @@ pub fn pre_convert_maven_to_path(input: &str, extension: Option<&str>) -> String
 
 fn convert_maven_to_path(str: &str, folder: Option<&str>) -> String {
     let pos = str.chars().position(|x| x == '@');
-    let mut pre_maven = if let Some(position) = pos {
-        pre_convert_maven_to_path(&str[..position], Some(&str[position + 1..]))
-    } else {
-        pre_convert_maven_to_path(str, None)
-    };
-    // HACK: hell why
+    let mut pre_maven = pos.map_or_else(
+        || pre_convert_maven_to_path(str, None),
+        |position| pre_convert_maven_to_path(&str[..position], Some(&str[position + 1..])),
+    ); // HACK: hell why
     if let Some(folder) = folder {
         if pre_maven.starts_with('[') {
             pre_maven.insert_str(1, format!("{folder}/").as_str());
@@ -416,39 +418,32 @@ fn convert_maven_to_path(str: &str, folder: Option<&str>) -> String {
         } else {
             pre_maven.insert_str(0, format!("{folder}/").as_str());
         }
-    } else {
-        if pre_maven.starts_with('[') {
-            pre_maven.remove(0);
-        }
+    } else if pre_maven.starts_with('[') {
+        pre_maven.remove(0);
     }
-    if let Some(t) = pre_maven.chars().position(|x| x == ']') {
-        pre_maven.remove(t);
+    if let Some(pos) = pre_maven.chars().position(|x| x == ']') {
+        pre_maven.remove(pos);
     }
     pre_maven
 }
 
-pub async fn get_processor_main_class(path: String) -> Result<Option<String>> {
-    let main_class = tokio::task::spawn_blocking(move || -> Result<Option<String>> {
-        let zipfile = std::fs::File::open(&path).context(path)?;
-        let mut archive = zip::ZipArchive::new(zipfile)?;
+pub fn get_processor_main_class(path: String) -> Result<Option<String>> {
+    let zipfile = std::fs::File::open(&path).context(path)?;
+    let mut archive = zip::ZipArchive::new(zipfile)?;
 
-        let file = archive.by_name("META-INF/MANIFEST.MF")?;
+    let file = archive.by_name("META-INF/MANIFEST.MF")?;
 
-        let reader = BufReader::new(file);
+    let reader = BufReader::new(file);
 
-        for line in reader.lines() {
-            let mut line = line?;
-            line.retain(|c| !c.is_whitespace());
+    for line in reader.lines() {
+        let mut line = line?;
+        line.retain(|c| !c.is_whitespace());
 
-            if line.starts_with("Main-Class:") {
-                if let Some(class) = line.split(':').nth(1) {
-                    return Ok(Some(class.to_string()));
-                }
+        if line.starts_with("Main-Class:") {
+            if let Some(class) = line.split(':').nth(1) {
+                return Ok(Some(class.to_string()));
             }
         }
-        Ok(None)
-    })
-    .await??;
-
-    Ok(main_class)
+    }
+    Ok(None)
 }

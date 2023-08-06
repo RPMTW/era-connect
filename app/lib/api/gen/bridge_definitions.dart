@@ -75,3 +75,4 @@ sealed class Value with _$Value {
   const factory Value.completedSetup(
     bool field0,
   ) = Value_CompletedSetup;
+}

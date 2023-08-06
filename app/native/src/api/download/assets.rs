@@ -44,9 +44,9 @@ pub async fn extract_assets(asset_index: AssetIndex, folder: PathBuf) -> Result<
     };
     let asset_objects = asset_index_content
         .get("objects")
-        .ok_or_else(|| anyhow!("fail to get content[objects]"))?
+        .context("fail to get content[objects]")?
         .as_object()
-        .ok_or_else(|| anyhow!("Failure to parse asset_index_content[\"objects\"]"))?;
+        .context("Failure to parse asset_index_content[objects]")?;
     let mut asset_download_list = Vec::new();
     let mut asset_download_hash = Vec::new();
     let mut asset_download_path = Vec::new();
@@ -54,14 +54,14 @@ pub async fn extract_assets(asset_index: AssetIndex, folder: PathBuf) -> Result<
     for (_, val) in asset_objects.iter() {
         let size = val["size"]
             .as_u64()
-            .ok_or_else(|| anyhow!("size don't exist!"))?
+            .context("size don't exist!")?
             .try_into()
             .context("val[size] u64 to usize fail!")?;
         let hash = val
             .get("hash")
-            .ok_or_else(|| anyhow!("hash don't exist!"))?
+            .context("hash don't exist!")?
             .as_str()
-            .ok_or_else(|| anyhow!("asset hash is not a string"))?;
+            .context("asset hash is not a string")?;
         asset_download_list.push(format!(
             "https://resources.download.minecraft.net/{hash:.2}/{hash}",
         ));
@@ -94,7 +94,7 @@ pub async fn parallel_assets(
         fs::create_dir_all(
             asset_download_path_clone[index]
                 .parent()
-                .ok_or_else(|| anyhow!("can't find asset_download's parent dir"))?,
+                .context("can't find asset_download's parent dir")?,
         )
         .await?;
         let okto_download = if asset_download_path_clone[index].exists() {

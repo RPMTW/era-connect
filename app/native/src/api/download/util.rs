@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use bytes::Bytes;
 use reqwest::Url;
 use std::{
@@ -54,12 +54,8 @@ pub async fn download_file(
 
 pub fn extract_filename(url: &str) -> Result<String> {
     let parsed_url = Url::parse(url)?;
-    let path_segments = parsed_url
-        .path_segments()
-        .ok_or_else(|| anyhow!("Invalid URL"))?;
-    let filename = path_segments
-        .last()
-        .ok_or_else(|| anyhow!("No filename found in URL"))?;
+    let path_segments = parsed_url.path_segments().context("Invalid URL")?;
+    let filename = path_segments.last().context("No filename found in URL")?;
     Ok(filename.to_owned())
 }
 

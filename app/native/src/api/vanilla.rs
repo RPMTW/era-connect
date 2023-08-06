@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail};
+use anyhow::bail;
 use anyhow::{Context, Result};
 use flutter_rust_bridge::{RustOpaque, StreamSink};
 use futures::{Future, StreamExt};
@@ -15,7 +15,7 @@ use std::{
     },
     time::Duration,
 };
-use tokio::fs::{create_dir_all, File};
+use tokio::fs::{self, create_dir_all, File};
 use tokio::io::AsyncWriteExt;
 use tokio::time::{self, Instant};
 
@@ -27,7 +27,7 @@ use super::download::assets::{extract_assets, parallel_assets, AssetIndex};
 use super::download::library::{parallel_library, Library};
 use super::download::rules::{get_rules, ActionType, Rule};
 use super::download::util::{download_file, extract_filename, validate_sha1};
-use super::{DownloadState, PrepareGameArgs, ReturnType, STATE};
+use super::{DownloadState, STATE};
 
 #[derive(Debug, Clone)]
 pub struct Progress {
@@ -175,7 +175,7 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
 
     let game_argument = game_manifest["arguments"]["game"]
         .as_array()
-        .ok_or_else(|| anyhow!("Failure to parse contents[\"arguments\"][\"game\"]"))?;
+        .context("Failure to parse contents[\"arguments\"][\"game\"]")?;
 
     let mut game_flags = GameFlags {
         rules: get_rules(game_argument)?,
@@ -256,7 +256,7 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
 
     let jvm_argument = game_manifest["arguments"]["jvm"]
         .as_array()
-        .ok_or_else(|| anyhow!("Failure to parse contents[\"arguments\"][\"jvm\"]"))?;
+        .context("Failure to parse contents[\"arguments\"][\"jvm\"]")?;
     let mut jvm_flags = JvmFlags {
         rules: get_rules(jvm_argument)?,
         arguments: jvm_argument
@@ -341,10 +341,9 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
         if x.action == ActionType::Allow
             && x.os.map_or(false, |os| os.name == Some(current_os_type))
         {
-            jvm_flags.arguments.extend(
-                x.value
-                    .ok_or_else(|| anyhow!("rules value doesn't exist"))?,
-            );
+            jvm_flags
+                .arguments
+                .extend(x.value.context("rules value doesn't exist")?);
         }
     }
 
@@ -358,8 +357,7 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
             Some(Arc::clone(&current_size)),
         )
         .await?;
-        let mut f = File::create(client_jar_filename).await?;
-        f.write_all(&bytes).await?;
+        fs::write(client_jar_filename, &bytes).await?;
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     } else if let Err(x) = validate_sha1(
         &PathBuf::from(&extract_filename(&downloads_list.client.url)?),
@@ -522,7 +520,6 @@ pub async fn run_download(
     join_futures(handles, 128).await?;
     download_complete.store(true, Ordering::Release);
     task.await?;
-    println!("Complete!");
     Ok(sink_clone)
 }
 
