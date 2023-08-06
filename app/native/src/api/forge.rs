@@ -15,8 +15,8 @@ use tokio::fs;
 
 use super::{
     download::util::{download_file, extract_filename, validate_sha1},
-    vanilla::{get_game_manifest, HandlesType},
-    DownloadArgs, GameOptions, JvmOptions, LaunchArgs, State, STATE,
+    vanilla::{get_game_manifest, HandlesType, ProcessedArguments},
+    write_state, DownloadArgs, DownloadState, GameOptions, JvmOptions, LaunchArgs, STATE,
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Processors {
@@ -74,7 +74,7 @@ pub async fn prepare_forge_download(
     mut launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
-) -> Result<(DownloadArgs, Value)> {
+) -> Result<(DownloadArgs, ProcessedArguments, Value)> {
     // refactor
     let bytes = download_file(
         "https://meta.modrinth.com/forge/v0/versions/1.20.1-forge-47.1.43.json".to_string(),
@@ -151,13 +151,15 @@ pub async fn prepare_forge_download(
         }
     }
 
-    *STATE.write().await = State::Downloading;
+    write_state(DownloadState::Downloading);
 
     Ok((
         DownloadArgs {
             current_size: Arc::clone(&current_size),
             total_size: Arc::clone(&total_size),
             handles,
+        },
+        ProcessedArguments {
             launch_args,
             jvm_args: jvm_options,
             game_args: game_options,

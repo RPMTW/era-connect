@@ -13,7 +13,7 @@ use tokio::{
 
 use super::{
     download::util::{download_file, validate_sha1},
-    vanilla::HandlesType,
+    vanilla::{HandlesType, ProcessedArguments},
     DownloadArgs, GameOptions, JvmOptions, LaunchArgs,
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -27,7 +27,7 @@ pub async fn prepare_quilt_download(
     launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
-) -> Result<DownloadArgs> {
+) -> Result<(DownloadArgs, ProcessedArguments)> {
     let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
     let bytes = download_file(meta_url, None).await?;
     let version_manifest: Value = serde_json::from_slice(&bytes)?;
@@ -144,14 +144,18 @@ pub async fn prepare_quilt_download(
             }
         }));
     }
-    Ok(DownloadArgs {
-        current_size: Arc::clone(&current_size),
-        total_size: Arc::clone(&total_size),
-        handles,
-        launch_args,
-        jvm_args: jvm_options,
-        game_args: game_options,
-    })
+    Ok((
+        DownloadArgs {
+            current_size: Arc::clone(&current_size),
+            total_size: Arc::clone(&total_size),
+            handles,
+        },
+        ProcessedArguments {
+            launch_args,
+            jvm_args: jvm_options,
+            game_args: game_options,
+        },
+    ))
 }
 pub fn convert_maven_to_path(input: &str) -> String {
     let parts: Vec<&str> = input.split(':').collect();

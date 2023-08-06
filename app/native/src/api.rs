@@ -15,9 +15,12 @@ pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
 use log::info;
 pub use tokio::sync::{Mutex, RwLock};
 
+use crate::api::forge::{prepare_forge_download, process_forge};
+
 use self::config::config_state::ConfigState;
 pub use self::config::ui_layout::{Key, UILayout, Value};
 pub use self::quilt::prepare_quilt_download;
+use self::vanilla::launch_game;
 pub use self::vanilla::prepare_vanilla_download;
 pub use self::vanilla::PathBuf;
 pub use self::vanilla::{run_download, Progress};
@@ -30,12 +33,13 @@ lazy_static::lazy_static! {
     static ref CONFIG: ConfigState = ConfigState::new();
 }
 
+#[derive(Clone)]
 pub struct ReturnType {
     pub progress: Option<Progress>,
     pub prepare_name_args: Option<PrepareGameArgs>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PrepareGameArgs {
     pub launch_args: LaunchArgs,
     pub jvm_args: JvmOptions,
@@ -70,66 +74,53 @@ pub fn setup_logger() -> anyhow::Result<()> {
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn download_vanilla(stream: StreamSink<ReturnType>) -> anyhow::Result<()> {
+pub async fn download_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     let c = prepare_vanilla_download().await?;
-    run_download(stream, c).await
+    run_download(stream, c.0).await.map(|_| {})
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn launch_game(pre_launch_arguments: PrepareGameArgs) -> anyhow::Result<()> {
-    vanilla::launch_game(pre_launch_arguments.launch_args)
+pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> {
+    let c = prepare_vanilla_download().await?;
+    run_download(stream, c.0).await?;
+    launch_game(c.1.launch_args)
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn download_forge(
-    stream: StreamSink<ReturnType>,
-    forge_prepare: PrepareGameArgs,
-) -> anyhow::Result<()> {
-    let (quilt_download_args, manifest) = prepare_forge_download(
-        forge_prepare.launch_args,
-        forge_prepare.jvm_args,
-        forge_prepare.game_args,
+pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
+    let forge_prepare = prepare_vanilla_download().await?;
+    let (forge_download_args, prepare_arguments, manifest) = prepare_forge_download(
+        forge_prepare.1.launch_args,
+        forge_prepare.1.jvm_args,
+        forge_prepare.1.game_args,
     )
     .await?;
-    let a = quilt_download_args.game_args.clone();
-    let b = quilt_download_args.jvm_args.clone();
-    let c = quilt_download_args.launch_args.clone();
-    let t = DownloadArgs {
-        game_args: a,
-        jvm_args: b,
-        launch_args: c,
-        ..quilt_download_args
-    };
-    run_download(stream, t).await?;
-    println!("i'm a failure");
-    let t = process_forge(
-        quilt_download_args.launch_args,
-        quilt_download_args.jvm_args,
-        quilt_download_args.game_args,
+    info!("Starts Forge Downloading");
+    run_download(stream, forge_prepare.0).await?;
+    info!("Starts Forge Processing");
+    let processed_arguments = process_forge(
+        prepare_arguments.launch_args,
+        prepare_arguments.jvm_args,
+        prepare_arguments.game_args,
         manifest,
     )
     .await?;
 
-    dbg!(&t);
-
-    vanilla::launch_game(t)?;
-    // *STATE.write().await = State::Stopped;
-    Ok(())
+    launch_game(processed_arguments)
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn download_quilt(
-    stream: StreamSink<ReturnType>,
-    quilt_prepare: PrepareGameArgs,
-) -> anyhow::Result<()> {
+pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
+    let quilt_prepare = prepare_vanilla_download().await?;
     let quilt_download_args = prepare_quilt_download(
         "1.20.1".to_string(),
-        quilt_prepare.launch_args,
-        quilt_prepare.jvm_args,
-        quilt_prepare.game_args,
+        quilt_prepare.1.launch_args,
+        quilt_prepare.1.jvm_args,
+        quilt_prepare.1.game_args,
     )
     .await?;
-    run_download(stream, quilt_download_args).await
+    run_download(stream, quilt_download_args.0).await?;
+    launch_game(quilt_download_args.1.launch_args)
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

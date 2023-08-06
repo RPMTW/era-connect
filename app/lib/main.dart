@@ -25,30 +25,15 @@ void main() async {
     await windowManager.setMinimumSize(const Size(1350, 820));
     await initializeAPIs();
     runApp(const EraConnectApp());
-    // testRust();
+    testRust();
   });
 }
 
 void testRust() async {
-  final vanilla = api.downloadVanilla();
-
-  vanilla.listen((event) async {
-    print("speed: ${event.progress?.speed}");
-    print("total size: ${event.progress?.totalSize}");
-    print("percent: ${event.progress?.percentages}");
-    if (event.prepareNameArgs != null) {
-      final forge = api.downloadForge(forgePrepare: event.prepareNameArgs!);
-      forge.listen((event) async {
-        print("speed: ${event.progress?.speed}");
-        print("total size: ${event.progress?.totalSize}");
-        print("percent: ${event.progress?.percentages}");
-        if (event.prepareNameArgs != null) {
-          if (await api.fetchState() == bridge.DownloadState.Stopped) {
-            api.launchGame(preLaunchArguments: event.prepareNameArgs!);
-          }
-        }
-      });
-    }
+  final forge = api.launchForge();
+  forge.listen((event) {
+    print("speed: ${event.speed}");
+    print("percentages: ${event.percentages}");
   });
 }
 

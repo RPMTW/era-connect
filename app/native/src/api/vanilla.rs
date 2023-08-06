@@ -21,14 +21,15 @@ use tokio::time::{self, Instant};
 
 use crate::api::download::library::os_match;
 use crate::api::download::rules::OsName;
+use crate::api::write_state;
 
 use super::download::assets::{extract_assets, parallel_assets, AssetIndex};
 use super::download::library::{parallel_library, Library};
 use super::download::rules::{get_rules, ActionType, Rule};
 use super::download::util::{download_file, extract_filename, validate_sha1};
-use super::{DownloadState, ReturnType, STATE};
+use super::{DownloadState, PrepareGameArgs, ReturnType, STATE};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Progress {
     pub speed: f64,
     pub percentages: f64,
@@ -131,6 +132,12 @@ pub struct QuiltLibrary {
     url: String,
 }
 
+pub struct ProcessedArguments {
+    pub launch_args: LaunchArgs,
+    pub jvm_args: JvmOptions,
+    pub game_args: GameOptions,
+}
+
 pub type HandlesType = Vec<Pin<Box<dyn Future<Output = Result<()>> + Send>>>;
 
 pub async fn get_game_manifest(
@@ -159,7 +166,7 @@ pub async fn get_game_manifest(
     Ok((contents, version.unwrap()))
 }
 
-pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
+pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArguments)> {
     let (game_manifest, current_version) = get_game_manifest(
         "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_string(),
         None,
@@ -380,14 +387,18 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
         game_args: game_flags.arguments,
     };
 
-    Ok(DownloadArgs {
-        current_size: Arc::clone(&current_size),
-        total_size: Arc::clone(&total_size),
-        handles,
-        launch_args,
-        jvm_args: jvm_options,
-        game_args: game_options,
-    })
+    Ok((
+        DownloadArgs {
+            current_size: Arc::clone(&current_size),
+            total_size: Arc::clone(&total_size),
+            handles,
+        },
+        ProcessedArguments {
+            launch_args,
+            jvm_args: jvm_options,
+            game_args: game_options,
+        },
+    ))
 }
 
 fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmOptions) -> Vec<String> {
@@ -461,13 +472,13 @@ pub struct DownloadArgs {
     pub current_size: Arc<AtomicUsize>,
     pub total_size: Arc<AtomicUsize>,
     pub handles: HandlesType,
-    pub launch_args: LaunchArgs,
-    pub jvm_args: JvmOptions,
-    pub game_args: GameOptions,
 }
 
 // get progress and and launch download
-pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadArgs) -> Result<()> {
+pub async fn run_download(
+    sink: StreamSink<Progress>,
+    download_args: DownloadArgs,
+) -> Result<StreamSink<Progress>> {
     let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
 
@@ -475,7 +486,8 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
     let current_size_clone = Arc::clone(&download_args.current_size);
     let total_size_clone = Arc::clone(&download_args.total_size);
 
-    *STATE.write().await = State::Downloading;
+    write_state(DownloadState::Downloading);
+    let sink_clone = sink.clone();
     let task = tokio::spawn(async move {
         let mut instant = Instant::now();
         let mut prev_bytes = 0.0;
@@ -493,10 +505,7 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
             };
             prev_bytes = current_size_clone.load(Ordering::Relaxed) as f64;
             instant = Instant::now();
-            sink.add(ReturnType {
-                progress: Some(progress),
-                prepare_name_args: None,
-            });
+            sink.add(progress);
             let state = *STATE.read().await;
             match state {
                 DownloadState::Downloading => {}
@@ -508,23 +517,13 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
                 DownloadState::Stopped => break,
             }
         }
-        sink.add(ReturnType {
-            progress: None,
-            prepare_name_args: Some(crate::api::PrepareGameArgs {
-                launch_args: download_args.launch_args,
-                jvm_args: download_args.jvm_args,
-                game_args: download_args.game_args,
-            }),
-        });
-        // sink.close();
-        // *STATE.write().await = State::Stopped;
     });
     // Create a semaphore with a limit on the number of concurrent downloads
     join_futures(handles, 128).await?;
     download_complete.store(true, Ordering::Release);
     task.await?;
     println!("Complete!");
-    Ok(())
+    Ok(sink_clone)
 }
 
 pub async fn join_futures(
@@ -535,9 +534,9 @@ pub async fn join_futures(
     while let Some(x) = download_stream.next().await {
         let state = *STATE.read().await;
         match state {
-            State::Downloading => x?,
-            State::Paused => {
-                while *STATE.read().await != State::Downloading {
+            DownloadState::Downloading => x?,
+            DownloadState::Paused => {
+                while *STATE.read().await != DownloadState::Downloading {
                     time::sleep(Duration::from_millis(100)).await;
                     dbg!("pausing!");
                 }
