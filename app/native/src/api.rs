@@ -77,7 +77,7 @@ pub async fn download_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()
 pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     let c = prepare_vanilla_download().await?;
     run_download(stream, c.0).await?;
-    launch_game(c.1.launch_args)
+    launch_game(c.1.launch_args).await
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -102,7 +102,7 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     )
     .await?;
 
-    launch_game(processed_arguments)
+    launch_game(processed_arguments).await
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -116,7 +116,7 @@ pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     )
     .await?;
     run_download(stream, download_args).await?;
-    launch_game(quilt_download_args.1.launch_args)
+    launch_game(quilt_download_args.1.launch_args).await
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -132,12 +132,14 @@ impl Default for DownloadState {
     }
 }
 
-pub fn fetch_state() -> DownloadState {
-    *STATE.blocking_read()
+#[tokio::main(flavor = "current_thread")]
+pub async fn fetch_state() -> DownloadState {
+    *STATE.read().await
 }
 
-pub fn write_state(s: DownloadState) {
-    *STATE.blocking_write() = s;
+#[tokio::main(flavor = "current_thread")]
+pub async fn write_state(s: DownloadState) {
+    *STATE.write().await = s;
 }
 
 pub fn get_ui_layout_config(key: Key) -> SyncReturn<Value> {

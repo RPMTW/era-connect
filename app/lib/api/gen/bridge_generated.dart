@@ -306,7 +306,7 @@ class NativeWire implements FlutterRustBridgeWireBase {
       : _lookup = lookup;
 
   void store_dart_post_cobject(
-    int ptr,
+    DartPostCObjectFnType ptr,
   ) {
     return _store_dart_post_cobject(
       ptr,
@@ -314,10 +314,10 @@ class NativeWire implements FlutterRustBridgeWireBase {
   }
 
   late final _store_dart_post_cobjectPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(DartPostCObjectFnType)>>(
           'store_dart_post_cobject');
-  late final _store_dart_post_cobject =
-      _store_dart_post_cobjectPtr.asFunction<void Function(int)>();
+  late final _store_dart_post_cobject = _store_dart_post_cobjectPtr
+      .asFunction<void Function(DartPostCObjectFnType)>();
 
   Object get_dart_object(
     int ptr,
@@ -544,10 +544,9 @@ class NativeWire implements FlutterRustBridgeWireBase {
 final class _Dart_Handle extends ffi.Opaque {}
 
 final class wire_Value_CompletedSetup extends ffi.Struct {
+  @ffi.Bool()
   external bool field0;
 }
-
-typedef bool = ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Int>)>;
 
 final class ValueKind extends ffi.Union {
   external ffi.Pointer<wire_Value_CompletedSetup> CompletedSetup;
@@ -559,3 +558,8 @@ final class wire_Value extends ffi.Struct {
 
   external ffi.Pointer<ValueKind> kind;
 }
+
+typedef DartPostCObjectFnType = ffi.Pointer<
+    ffi.NativeFunction<
+        ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message)>>;
+typedef DartPort = ffi.Int64;

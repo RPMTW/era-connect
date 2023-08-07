@@ -116,13 +116,15 @@ pub struct LaunchArgs {
     pub game_args: Vec<String>,
 }
 
-pub fn launch_game(launch_args: LaunchArgs) -> Result<()> {
+pub async fn launch_game(launch_args: LaunchArgs) -> Result<()> {
     let mut launch_vec = Vec::new();
     launch_vec.extend(launch_args.jvm_args);
     launch_vec.push(launch_args.main_class);
     launch_vec.extend(launch_args.game_args);
-    let b = Command::new("java").args(launch_vec).spawn();
-    b?.wait()?;
+    let b = tokio::process::Command::new("java")
+        .args(launch_vec)
+        .spawn();
+    b?.wait().await?;
     Ok(())
 }
 
@@ -484,7 +486,7 @@ pub async fn run_download(
     let current_size_clone = Arc::clone(&download_args.current_size);
     let total_size_clone = Arc::clone(&download_args.total_size);
 
-    write_state(DownloadState::Downloading);
+    *STATE.write().await = DownloadState::Downloading;
     let sink_clone = sink.clone();
     let task = tokio::spawn(async move {
         let mut instant = Instant::now();

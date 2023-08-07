@@ -7,6 +7,9 @@ import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
+import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+
+part 'bridge_definitions.freezed.dart';
 
 abstract class Native {
   Future<void> setupLogger({dynamic hint});

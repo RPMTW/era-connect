@@ -1,7 +1,7 @@
 use std::{
     io::{BufRead, BufReader},
     path::PathBuf,
-    process::Command,
+    process::{Command, Stdio},
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -9,9 +9,10 @@ use std::{
 };
 
 use anyhow::{anyhow, bail, Context, Result};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tokio::fs;
+use tokio::{fs, io::AsyncBufReadExt};
 
 use super::{
     download::util::{download_file, extract_filename, validate_sha1},
@@ -123,7 +124,7 @@ pub async fn prepare_forge_download(
                     let bytes = download_file(url, Some(current_size_clone)).await?;
                     fs::write(path, bytes).await.map_err(|err| anyhow!(err))
                 } else {
-                    println!("hash verified");
+                    debug!("hash verified");
                     Ok(())
                 }
             }));
@@ -190,10 +191,6 @@ pub async fn process_forge(
     data.merged_mappings.convert_maven_to_path(&folder);
     data.mappings.convert_maven_to_path(&folder);
     data.mc_extra.convert_maven_to_path(&folder);
-    data.merged_mappings.client =
-        convert_maven_to_path(&data.merged_mappings.client, Some(&folder));
-    data.mappings.client = convert_maven_to_path(&data.mappings.client, Some(&folder));
-    data.mc_extra.convert_maven_to_path(&folder);
     data.mc_slim.convert_maven_to_path(&folder);
     data.mc_srg.convert_maven_to_path(&folder);
     data.mc_unpacked.convert_maven_to_path(&folder);
@@ -207,7 +204,7 @@ pub async fn process_forge(
     .await?;
     for processor in processors {
         let jar = convert_maven_to_path(&processor.jar, Some(&folder));
-        let processor_main_class = get_processor_main_class(jar.clone())?.unwrap();
+        let processor_main_class = get_processor_main_class(jar.clone()).await?.unwrap();
         let mut processor_classpath = processor
             .classpath
             .iter()
@@ -263,7 +260,18 @@ pub async fn process_forge(
         all.push(processor_main_class.clone());
         all.extend(args);
 
-        Command::new("java").args(all).spawn()?.wait()?;
+        let process = tokio::process::Command::new("java")
+            .args(all)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()?
+            .stdout
+            .unwrap();
+        let read = tokio::io::BufReader::new(process);
+        let mut a = read.lines();
+        while let Some(x) = a.next_line().await? {
+            debug!("{x}");
+        }
     }
     let jvm = Vec::<String>::deserialize(&manifest["arguments"]["jvm"])?;
     let game = Vec::<String>::deserialize(&manifest["arguments"]["game"])?;
@@ -410,7 +418,8 @@ fn convert_maven_to_path(str: &str, folder: Option<&str>) -> String {
     let mut pre_maven = pos.map_or_else(
         || pre_convert_maven_to_path(str, None),
         |position| pre_convert_maven_to_path(&str[..position], Some(&str[position + 1..])),
-    ); // HACK: hell why
+    );
+    // HACK: hell why
     if let Some(folder) = folder {
         if pre_maven.starts_with('[') {
             pre_maven.insert_str(1, format!("{folder}/").as_str());
@@ -427,8 +436,12 @@ fn convert_maven_to_path(str: &str, folder: Option<&str>) -> String {
     pre_maven
 }
 
-pub fn get_processor_main_class(path: String) -> Result<Option<String>> {
-    let zipfile = std::fs::File::open(&path).context(path)?;
+pub async fn get_processor_main_class(path: String) -> Result<Option<String>> {
+    let zipfile = tokio::fs::File::open(&path)
+        .await
+        .context(path)?
+        .into_std()
+        .await;
     let mut archive = zip::ZipArchive::new(zipfile)?;
 
     let file = archive.by_name("META-INF/MANIFEST.MF")?;
