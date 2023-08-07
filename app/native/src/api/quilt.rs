@@ -36,25 +36,24 @@ pub async fn prepare_quilt_download(
         &version_manifest[0]["launcherMeta"]["libraries"]["common"],
     )?;
 
-    let quilt_loader_list = version_manifest[0].as_object().unwrap();
+    let quilt_loader_list = version_manifest[0]
+        .as_object()
+        .context("quilt loader list is not object")?;
     let quilt_loader_types = vec!["loader", "hashed", "intermediary"];
     for loader_type in quilt_loader_types {
         let maven = quilt_loader_list
             .get(loader_type)
-            .context("fail to get quilt_maven")?
-            .get("maven")
-            .context("fail to get quilt maven")?
-            .as_str()
+            .and_then(|x| x.get("maven").and_then(Value::as_str))
             .context("quilt maven is not a string!")?;
 
         download_list.push(QuiltLibrary {
-            name: maven.to_string(),
+            name: maven.to_owned(),
             url: if maven.contains("quiltmc") {
                 "https://maven.quiltmc.org/repository/release/"
             } else {
                 "https://maven.fabricmc.net/"
             }
-            .to_string(),
+            .to_owned(),
         });
     }
 
@@ -69,7 +68,11 @@ pub async fn prepare_quilt_download(
         .map(|x| convert_maven_to_path(&x.name))
         .collect::<Vec<_>>();
     for x in &path_vec {
-        fs::create_dir_all(x.parent().unwrap()).await?;
+        fs::create_dir_all(
+            x.parent()
+                .context("can't find download_list parent's dir")?,
+        )
+        .await?;
     }
 
     let mut jvm_options = jvm_options;
@@ -90,7 +93,7 @@ pub async fn prepare_quilt_download(
     launch_args.main_class = version_manifest[0]["launcherMeta"]["mainClass"]["client"]
         .as_str()
         .context("fail to get quilt mainclass")?
-        .to_string();
+        .to_owned();
 
     // NOTE: rust can't dedcue the type here(cause dyn trait)
     let mut handles: HandlesType = Vec::new();

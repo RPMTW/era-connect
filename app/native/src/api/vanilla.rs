@@ -2,11 +2,11 @@ use anyhow::bail;
 use anyhow::{Context, Result};
 use flutter_rust_bridge::{RustOpaque, StreamSink};
 use futures::{Future, StreamExt};
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 pub use std::path::PathBuf;
 use std::pin::Pin;
-use std::process::Command;
 use std::{
     sync::{
         atomic::Ordering,
@@ -21,7 +21,6 @@ use tokio::time::{self, Instant};
 
 use crate::api::download::library::os_match;
 use crate::api::download::rules::OsName;
-use crate::api::write_state;
 
 use super::download::assets::{extract_assets, parallel_assets, AssetIndex};
 use super::download::library::{parallel_library, Library};
@@ -148,29 +147,30 @@ pub async fn get_game_manifest(
 ) -> Result<(Value, String)> {
     let bytes = download_file(download_target, None).await?;
     let version_manifest: Value = serde_json::from_slice(&bytes)?;
-    let version = if version.is_some() {
-        version
-    } else {
-        version_manifest["latest"]["release"]
-            .as_str()
-            .map(ToString::to_string)
-    };
+    let version = version.map_or_else(
+        || {
+            version_manifest["latest"]["release"]
+                .as_str()
+                .expect("latest release doesn't exist")
+                .to_owned()
+        },
+        |x| x,
+    );
     let release_url = version_manifest["versions"]
         .as_array()
-        .unwrap()
+        .context("minecraft version is not array")?
         .iter()
-        .find(|x| x["id"].as_str().map(ToString::to_string) == version)
-        .unwrap()["url"]
-        .as_str()
-        .unwrap();
-    let bytes = download_file(release_url.to_string(), None).await?;
+        .find(|x| x["id"].as_str().expect("failed to parse game id to str") == version)
+        .and_then(|x| x["url"].as_str())
+        .context("version url doesn't exist")?;
+    let bytes = download_file(release_url.to_owned(), None).await?;
     let contents: Value = serde_json::from_slice(&bytes)?;
-    Ok((contents, version.unwrap()))
+    Ok((contents, version))
 }
 
 pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArguments)> {
     let (game_manifest, current_version) = get_game_manifest(
-        "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_string(),
+        String::from("https://launchermeta.mojang.com/mc/game/version_manifest.json"),
         None,
     )
     .await?;
@@ -210,7 +210,7 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
         .context("fail to create native_directory(vanilla)")?;
 
     let game_options = GameOptions {
-        auth_player_name: "Kyle".to_string(),
+        auth_player_name: String::from("Kyle"),
         game_version_name: current_version,
         game_directory: RustOpaque::new(
             game_directory
@@ -224,19 +224,17 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
         ),
         assets_index_name: game_manifest["assetIndex"]["id"]
             .as_str()
-            .unwrap()
-            .to_string(),
+            .context("assetindex id doesn't exist")?
+            .to_owned(),
         auth_uuid: String::new(),
-        user_type: "mojang".to_string(),
-        version_type: "release".to_string(),
+        user_type: String::from("mojang"),
+        version_type: String::from("release"),
     };
 
     game_flags.arguments = game_args_parse(&game_flags, &game_options);
 
-    if game_flags.additional_arguments.is_some() {
-        game_flags
-            .arguments
-            .extend(game_flags.additional_arguments.unwrap());
+    if let Some(x) = game_flags.additional_arguments {
+        game_flags.arguments.extend(x);
     }
 
     let asset_index = AssetIndex::deserialize(&game_manifest["assetIndex"])
@@ -245,8 +243,9 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
     let downloads_list: Downloads = Downloads::deserialize(&game_manifest["downloads"])
         .context("Failed to Serialize Downloads")?;
 
-    let library_list: Vec<Library> = Vec::<Library>::deserialize(&game_manifest["libraries"])
-        .context("Failed to Serialize contents[\"libraries\"]")?;
+    let library_list: Arc<[Library]> = Vec::<Library>::deserialize(&game_manifest["libraries"])
+        .context("Failed to Serialize contents[\"libraries\"]")?
+        .into();
 
     let _logging: LoggingConfig = LoggingConfig::deserialize(&game_manifest["logging"])
         .context("Failed to Serialize logging")?;
@@ -270,10 +269,10 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
     };
 
     let mut jvm_options = JvmOptions {
-        launcher_name: "era-connect".to_string(),
-        launcher_version: "0.0.1".to_string(),
+        launcher_name: String::from("era-connect"),
+        launcher_version: String::from("0.0.1"),
         classpath: String::new(),
-        classpath_separator: ":".to_string(),
+        classpath_separator: String::from(":"),
         primary_jar: client_jar.to_string_lossy().to_string(),
         library_directory: RustOpaque::new(
             library_directory
@@ -300,9 +299,8 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
         Arc::new(jvm_options.native_directory.clone()),
     );
 
-    let library_list_arc = Arc::new(library_list);
     let total_size = parallel_library(
-        Arc::clone(&library_list_arc),
+        Arc::clone(&library_list),
         Arc::clone(&library_path),
         Arc::clone(&native_library_path),
         Arc::clone(&current_size),
@@ -319,7 +317,7 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
     };
 
     let mut parsed_library_list = Vec::new();
-    for library in library_list_arc.iter() {
+    for library in library_list.iter() {
         let (process_native, is_native_library, _) = os_match(library, &current_os_type);
         if !process_native && !is_native_library {
             parsed_library_list.push(library);
@@ -367,7 +365,7 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
     )
     .await
     {
-        eprintln!("{x}");
+        error!("{x}\n redownloading.");
         let bytes = download_file(
             downloads_list.client.url.clone(),
             Some(Arc::clone(&current_size)),
@@ -537,7 +535,7 @@ pub async fn join_futures(
             DownloadState::Paused => {
                 while *STATE.read().await != DownloadState::Downloading {
                     time::sleep(Duration::from_millis(100)).await;
-                    dbg!("pausing!");
+                    info!("pausing!");
                 }
             }
             DownloadState::Stopped => break,

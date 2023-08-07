@@ -28,7 +28,7 @@ pub use self::vanilla::{run_download, Progress};
 pub use self::vanilla::{DownloadArgs, GameOptions, JvmOptions, LaunchArgs};
 
 lazy_static::lazy_static! {
-    static ref DATA_DIR : PathBuf = dirs::data_dir().unwrap().join("era-connect");
+    static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
     static ref STATE: RwLock<DownloadState> = RwLock::new(DownloadState::default());
     static ref CONFIG: ConfigState = ConfigState::new();
 }
@@ -108,15 +108,16 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
 #[tokio::main(flavor = "current_thread")]
 pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     let (download_args, vanilla_arguments) = prepare_vanilla_download().await?;
-    let quilt_download_args = prepare_quilt_download(
-        "1.20.1".to_string(),
+    let stream = run_download(stream, download_args).await?;
+    let (download_args, quilt_processed) = prepare_quilt_download(
+        String::from("1.20.1"),
         vanilla_arguments.launch_args,
         vanilla_arguments.jvm_args,
         vanilla_arguments.game_args,
     )
     .await?;
     run_download(stream, download_args).await?;
-    launch_game(quilt_download_args.1.launch_args).await
+    launch_game(quilt_processed.launch_args).await
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -132,14 +133,12 @@ impl Default for DownloadState {
     }
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn fetch_state() -> DownloadState {
-    *STATE.read().await
+pub fn fetch_state() -> DownloadState {
+    *STATE.blocking_read()
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn write_state(s: DownloadState) {
-    *STATE.write().await = s;
+pub fn write_state(s: DownloadState) {
+    *STATE.blocking_write() = s;
 }
 
 pub fn get_ui_layout_config(key: Key) -> SyncReturn<Value> {

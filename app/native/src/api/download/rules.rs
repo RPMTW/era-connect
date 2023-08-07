@@ -51,7 +51,14 @@ pub fn get_rules(argument: &[Value]) -> Result<Vec<Rule>> {
     let rules: Result<Vec<Rule>, _> = argument
         .iter()
         .filter(|x| x["rules"][0].is_object())
-        .map(|x| Rule::deserialize(&x["rules"][0]))
+        .map(|x| {
+            Rule::deserialize(
+                x.get("rules")
+                    .expect("rules doen't exists")
+                    .get(0)
+                    .expect("somehow rules exist but its empty"),
+            )
+        })
         .collect();
     rules.context("Failed to collect/serialize rules")
 }

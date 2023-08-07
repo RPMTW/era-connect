@@ -1,5 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use bytes::Bytes;
+use log::error;
 use reqwest::Url;
 use std::{
     path::PathBuf,
@@ -31,7 +32,7 @@ pub async fn download_file(
                         break;
                     }
                     Err(x) => {
-                        eprintln!("{x}, retry count: {i}");
+                        error!("{x}, retry count: {i}");
                     }
                 }
             }

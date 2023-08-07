@@ -2,6 +2,7 @@ use crate::api::vanilla::HandlesType;
 
 use super::util::{download_file, validate_sha1};
 use anyhow::{anyhow, Context, Result};
+use log::error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
@@ -38,7 +39,12 @@ pub async fn extract_assets(asset_index: AssetIndex, folder: PathBuf) -> Result<
         serde_json::from_slice(b)?
     } else {
         let asset_response_bytes = download_file(asset_index.url, None).await?;
-        fs::create_dir_all(asset_index_path.parent().unwrap()).await?;
+        fs::create_dir_all(
+            asset_index_path
+                .parent()
+                .context("Failed to create asset dir(impossible)")?,
+        )
+        .await?;
         fs::write(&asset_index_path, &asset_response_bytes).await?;
         serde_json::from_slice(&asset_response_bytes)?
     };
@@ -52,20 +58,22 @@ pub async fn extract_assets(asset_index: AssetIndex, folder: PathBuf) -> Result<
     let mut asset_download_path = Vec::new();
     let mut asset_download_size = Vec::new();
     for (_, val) in asset_objects.iter() {
-        let size = val["size"]
+        let size = val
+            .get("size")
+            .context("size doesn't exist!")?
             .as_u64()
-            .context("size don't exist!")?
+            .context("size is not u64")?
             .try_into()
             .context("val[size] u64 to usize fail!")?;
         let hash = val
             .get("hash")
-            .context("hash don't exist!")?
+            .context("hash doesn't exist!")?
             .as_str()
             .context("asset hash is not a string")?;
         asset_download_list.push(format!(
             "https://resources.download.minecraft.net/{hash:.2}/{hash}",
         ));
-        asset_download_hash.push(hash.to_string());
+        asset_download_hash.push(hash.to_owned());
         asset_download_path.push(folder.join(PathBuf::from(format!("objects/{hash:.2}/{hash}"))));
         asset_download_size.push(size);
     }
@@ -90,21 +98,26 @@ pub async fn parallel_assets(
     for index in 0..asset_download_list_arc.len() {
         let asset_download_list_clone = Arc::clone(&asset_download_list_arc);
         let asset_download_path_clone = Arc::clone(&asset_download_path_arc);
+        let asset_download_path = asset_download_path_clone
+            .get(index)
+            .context("can't get asset_download_path index")?;
         let current_size_clone = Arc::clone(current_size);
         fs::create_dir_all(
-            asset_download_path_clone[index]
+            asset_download_path
                 .parent()
                 .context("can't find asset_download's parent dir")?,
         )
         .await?;
-        let okto_download = if asset_download_path_clone[index].exists() {
+        let okto_download = if asset_download_path.exists() {
             if let Err(x) = validate_sha1(
-                &asset_download_path_clone[index],
-                &asset_download_hash_arc[index],
+                asset_download_path,
+                asset_download_hash_arc
+                    .get(index)
+                    .context("Can't get asset download hash")?,
             )
             .await
             {
-                eprintln!("{x}, \nredownloading.");
+                error!("{x}, \nredownloading.");
                 true
             } else {
                 false
@@ -113,16 +126,29 @@ pub async fn parallel_assets(
             true
         };
         if okto_download {
-            total_size.fetch_add(asset_download_size_arc[index], Ordering::Relaxed);
+            total_size.fetch_add(
+                *asset_download_size_arc
+                    .get(index)
+                    .context("Can't get asset download size")?,
+                Ordering::Relaxed,
+            );
             handles.push(Box::pin(async move {
                 let bytes = download_file(
-                    asset_download_list_clone[index].clone(),
+                    asset_download_list_clone
+                        .get(index)
+                        .context("Can't get asset download list")?
+                        .clone(),
                     Some(current_size_clone),
                 )
                 .await?;
-                fs::write(&asset_download_path_clone[index], bytes)
-                    .await
-                    .map_err(|err| anyhow!(err))
+                fs::write(
+                    asset_download_path_clone
+                        .get(index)
+                        .context("Can't get asset download path at index: {index}")?,
+                    bytes,
+                )
+                .await
+                .map_err(|err| anyhow!(err))
             }));
         }
     }
