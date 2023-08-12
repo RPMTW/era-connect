@@ -12,6 +12,9 @@ class InteractiveDialog extends StatelessWidget {
   /// Whether to show the brand text (Era Connect) in the logo box.
   final bool hasBrandText;
 
+  /// Whether to adjust the left and right side ratio to 16:3 (default is 3:7).
+  final bool isWide;
+
   /// The content of the dialog (right side).
   final Widget body;
 
@@ -22,7 +25,8 @@ class InteractiveDialog extends StatelessWidget {
       required this.title,
       required this.description,
       required this.logoBoxText,
-      this.hasBrandText = true,
+      this.hasBrandText = false,
+      this.isWide = false,
       required this.body,
       this.statusBox});
 
@@ -39,8 +43,8 @@ class InteractiveDialog extends StatelessWidget {
           color: context.theme.backgroundColor,
           child: Row(
             children: [
-              Expanded(flex: 3, child: _buildLeftArea(context)),
-              Expanded(flex: 7, child: _buildRightArea(context)),
+              Expanded(flex: isWide ? 16 : 3, child: _buildLeftArea(context)),
+              Expanded(flex: isWide ? 3 : 7, child: _buildRightArea(context)),
             ],
           ),
         ),
@@ -48,7 +52,7 @@ class InteractiveDialog extends StatelessWidget {
     );
   }
 
-  Container _buildLeftArea(BuildContext context) {
+  Widget _buildLeftArea(BuildContext context) {
     return Container(
         padding: const EdgeInsets.all(40),
         child: Column(
@@ -80,13 +84,12 @@ class InteractiveDialog extends StatelessWidget {
         ));
   }
 
-  Container _buildRightArea(BuildContext context) {
+  Widget _buildRightArea(BuildContext context) {
     return Container(color: context.theme.deepBackgroundColor, child: body);
   }
 
-  Container _buildLogoBox(BuildContext context) {
+  Widget _buildLogoBox(BuildContext context) {
     return Container(
-      width: hasBrandText ? 220 : 102,
       height: 50,
       clipBehavior: Clip.antiAlias,
       decoration: ShapeDecoration(
@@ -99,21 +102,20 @@ class InteractiveDialog extends StatelessWidget {
         ),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Container(
-              color: context.theme.secondarySurfaceColor,
-              height: 50,
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              child: Row(
-                children: [
-                  const EraLogo(size: 20),
-                  if (hasBrandText) ...const [
-                    SizedBox(width: 10),
-                    EraBrandText(fontSize: 25, height: 0)
-                  ]
-                ],
-              ),
+          Container(
+            color: context.theme.secondarySurfaceColor,
+            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+            child: Row(
+              children: [
+                const EraLogo(size: 20),
+                if (hasBrandText) ...const [
+                  SizedBox(width: 10),
+                  EraBrandText(fontSize: 25, height: 0)
+                ]
+              ],
             ),
           ),
           Padding(

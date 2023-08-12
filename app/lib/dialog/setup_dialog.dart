@@ -1,3 +1,4 @@
+import 'package:era_connect/api/config/config_api.dart';
 import 'package:era_connect_ui/components/dialog/step_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
@@ -14,22 +15,19 @@ class SetupDialog extends StatelessWidget {
           stepDescription: '匯入或新建設定',
           title: context.i18n['dialog.setup.welcome'],
           description: context.i18n['dialog.setup.01.description'],
-          logoBoxText: '01',
-          skippable: true,
-          contents: [Builder(builder: (context) => _step1(context))],
+          hasBrandText: true,
+          contentPages: [Builder(builder: (context) => _step1(context))],
         ),
         StepData(
             stepDescription: '登入帳號',
             title: context.i18n['dialog.setup.welcome'],
             description: 'Test Description',
-            logoBoxText: '02',
-            contents: [const Text('Test 2')]),
+            contentPages: [const Text('Test 2')]),
         StepData(
             stepDescription: '建立第一個收藏',
             title: context.i18n['dialog.setup.welcome'],
             description: 'Test Description',
-            logoBoxText: '03',
-            contents: [
+            contentPages: [
               const Text('Test 3 PAGE 1'),
               const Text('Test 3 PAGE 2'),
               const Text('Test 3 PAGE 3')
@@ -38,14 +36,20 @@ class SetupDialog extends StatelessWidget {
             stepDescription: '為您的收藏加入內容',
             title: context.i18n['dialog.setup.welcome'],
             description: 'Test Description',
-            logoBoxText: '04',
-            contents: [const Text('Test 4')]),
+            contentPages: [const Text('Test 4')]),
         StepData(
-            stepDescription: '大功告成！',
-            title: '大功告成！',
-            description: 'Test Description',
-            logoBoxText: '05',
-            contents: [const SizedBox.shrink()])
+          stepDescription: '大功告成！',
+          title: '大功告成！',
+          description: 'Test Description',
+          contentPages: [const SizedBox.shrink()],
+          onEvent: (event) {
+            if (event == StepEvent.done) {
+              configAPI.uiLayout.completedSetup = true;
+            }
+
+            return true;
+          },
+        )
       ],
     );
   }
