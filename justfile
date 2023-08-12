@@ -2,7 +2,7 @@ default: gen lint
 
 gen:
     cd app && flutter pub get
-    cd app && cargo run --manifest-path ../../flutter_rust_bridge/frb_codegen/Cargo.toml --package flutter_rust_bridge_codegen --bin flutter_rust_bridge_codegen --features 'chrono,uuid' -- \
+    cd app && flutter_rust_bridge_codegen \
         --rust-input native/src/api.rs \
         --dart-output lib/api/gen/bridge_generated.dart \
         --c-output macos/Runner/bridge_generated.h \
