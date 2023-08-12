@@ -32,21 +32,6 @@ class EraDialogButton extends StatefulWidget {
     });
   }
 
-  static Widget iconPrimary(
-      {required Widget icon, required VoidCallback onPressed}) {
-    return Builder(builder: (context) {
-      return EraDialogButton._(
-        icon,
-        null,
-        context.theme.surfaceColor,
-        context.theme.accentColor,
-        const EdgeInsets.symmetric(horizontal: 50, vertical: 12),
-        50,
-        onPressed,
-      );
-    });
-  }
-
   static Widget textSecondary(
       {required String text, required VoidCallback onPressed}) {
     return Builder(builder: (context) {
@@ -62,15 +47,32 @@ class EraDialogButton extends StatefulWidget {
     });
   }
 
-  static Widget iconSecondary(
+  static Widget iconPrimary(
       {required Widget icon, required VoidCallback onPressed}) {
+    return Builder(builder: (context) {
+      return EraDialogButton._(
+        icon,
+        null,
+        context.theme.surfaceColor,
+        context.theme.accentColor,
+        const EdgeInsets.symmetric(horizontal: 50, vertical: 12),
+        50,
+        onPressed,
+      );
+    });
+  }
+
+  static Widget iconSecondary(
+      {required Widget icon,
+      required VoidCallback onPressed,
+      bool isWide = false}) {
     return Builder(builder: (context) {
       return EraDialogButton._(
         icon,
         null,
         context.theme.backgroundColor,
         context.theme.surfaceColor,
-        const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+        EdgeInsets.symmetric(horizontal: isWide ? 50 : 30, vertical: 12),
         50,
         onPressed,
       );
