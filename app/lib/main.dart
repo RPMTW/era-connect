@@ -23,7 +23,7 @@ void main() async {
     await windowManager.setMinimumSize(const Size(1350, 820));
     await initializeAPIs();
     runApp(const EraConnectApp());
-   // testRust();
+    // testRust();
   });
 }
 

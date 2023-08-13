@@ -121,6 +121,20 @@ fn wire_set_ui_layout_config_impl(port_: MessagePort, value: impl Wire2Api<Value
         },
     )
 }
+fn wire_minecraft_login_flow_impl(port_: MessagePort) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "minecraft_login_flow",
+            port: Some(port_),
+            mode: FfiCallMode::Stream,
+        },
+        move || {
+            move |task_callback| {
+                minecraft_login_flow(task_callback.stream_sink::<_, LoginFlowEvent>())
+            }
+        },
+    )
+}
 // Section: wrapper structs
 
 // Section: static checks
@@ -192,6 +206,149 @@ impl rust2dart::IntoIntoDart<DownloadState> for DownloadState {
     }
 }
 
+impl support::IntoDart for LoginFlowDeviceCode {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.verification_uri.into_into_dart().into_dart(),
+            self.user_code.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for LoginFlowDeviceCode {}
+impl rust2dart::IntoIntoDart<LoginFlowDeviceCode> for LoginFlowDeviceCode {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for LoginFlowEvent {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::Progress(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
+            Self::DeviceCode(field0) => vec![1.into_dart(), field0.into_into_dart().into_dart()],
+            Self::Error(field0) => vec![2.into_dart(), field0.into_into_dart().into_dart()],
+            Self::Success(field0) => vec![3.into_dart(), field0.into_into_dart().into_dart()],
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for LoginFlowEvent {}
+impl rust2dart::IntoIntoDart<LoginFlowEvent> for LoginFlowEvent {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for LoginFlowProgress {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.state.into_into_dart().into_dart(),
+            self.progress.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for LoginFlowProgress {}
+impl rust2dart::IntoIntoDart<LoginFlowProgress> for LoginFlowProgress {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for LoginFlowState {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::FetchingDeviceCode => 0,
+            Self::WaitingForUser => 1,
+            Self::AuthenticatingXboxLive => 2,
+            Self::FetchingXstsToken => 3,
+            Self::FetchingMinecraftToken => 4,
+            Self::Success => 5,
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for LoginFlowState {}
+impl rust2dart::IntoIntoDart<LoginFlowState> for LoginFlowState {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for MinecraftAccount {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.username.into_into_dart().into_dart(),
+            self.uuid.into_into_dart().into_dart(),
+            self.access_token.into_into_dart().into_dart(),
+            self.refresh_token.into_into_dart().into_dart(),
+            self.expires_at.into_into_dart().into_dart(),
+            self.skins.into_into_dart().into_dart(),
+            self.capes.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for MinecraftAccount {}
+impl rust2dart::IntoIntoDart<MinecraftAccount> for MinecraftAccount {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for MinecraftCape {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.id.into_into_dart().into_dart(),
+            self.state.into_into_dart().into_dart(),
+            self.url.into_into_dart().into_dart(),
+            self.alias.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for MinecraftCape {}
+impl rust2dart::IntoIntoDart<MinecraftCape> for MinecraftCape {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for MinecraftSkin {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.id.into_into_dart().into_dart(),
+            self.state.into_into_dart().into_dart(),
+            self.url.into_into_dart().into_dart(),
+            self.variant.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for MinecraftSkin {}
+impl rust2dart::IntoIntoDart<MinecraftSkin> for MinecraftSkin {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for MinecraftSkinVariant {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::Classic => 0,
+            Self::Slim => 1,
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for MinecraftSkinVariant {}
+impl rust2dart::IntoIntoDart<MinecraftSkinVariant> for MinecraftSkinVariant {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
 impl support::IntoDart for Progress {
     fn into_dart(self) -> support::DartAbi {
         vec![
@@ -222,6 +379,43 @@ impl support::IntoDart for Value {
 }
 impl support::IntoDartExceptPrimitive for Value {}
 impl rust2dart::IntoIntoDart<Value> for Value {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for XstsTokenError {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.identity.into_into_dart().into_dart(),
+            self.xerr.into_into_dart().into_dart(),
+            self.message.into_into_dart().into_dart(),
+            self.redirect.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for XstsTokenError {}
+impl rust2dart::IntoIntoDart<XstsTokenError> for XstsTokenError {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for XstsTokenErrorType {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::DoesNotHaveXboxAccount => 0,
+            Self::CountryNotAvailable => 1,
+            Self::NeedsAdultVerificationKR1 => 2,
+            Self::NeedsAdultVerificationKR2 => 3,
+            Self::ChildAccount => 4,
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for XstsTokenErrorType {}
+impl rust2dart::IntoIntoDart<XstsTokenErrorType> for XstsTokenErrorType {
     fn into_into_dart(self) -> Self {
         self
     }

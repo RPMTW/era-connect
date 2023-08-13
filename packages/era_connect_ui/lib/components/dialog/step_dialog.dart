@@ -188,7 +188,7 @@ class _StepDialogState extends State<StepDialog> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(child: step.contentPages[_contentPageIndex]),
-          const SizedBox(height: 35),
+          const SizedBox(height: 25),
           Align(
             alignment: Alignment.centerRight,
             child: Wrap(

@@ -11,21 +11,18 @@ class DialogContentBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Flexible(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            constraints: const BoxConstraints.expand(height: 50),
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(15)),
-              color: context.theme.surfaceColor,
-            ),
-            child: Text(title,
-                style: TextStyle(fontSize: 16, color: context.theme.textColor)),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          constraints: const BoxConstraints.expand(height: 50),
+          alignment: Alignment.centerLeft,
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+            color: context.theme.surfaceColor,
           ),
+          child: Text(title,
+              style: TextStyle(fontSize: 16, color: context.theme.textColor)),
         ),
-        Flexible(
+        Expanded(
           child: Container(
             padding: const EdgeInsets.all(20),
             constraints: const BoxConstraints.expand(),

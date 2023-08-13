@@ -1,3 +1,4 @@
+pub mod authentication;
 pub mod config;
 mod download;
 pub mod forge;
@@ -5,27 +6,34 @@ pub mod quilt;
 pub mod vanilla;
 
 use std::fs::create_dir_all;
+use std::path::PathBuf;
 pub use std::sync::mpsc;
 pub use std::sync::mpsc::{Receiver, Sender};
 
 use anyhow::{Context, Ok};
 use chrono::Local;
+use log::info;
+
 pub use flutter_rust_bridge::StreamSink;
 pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
-use log::info;
 pub use tokio::sync::{Mutex, RwLock};
 
-use crate::api::forge::{prepare_forge_download, process_forge};
-
-use self::config::config_state::ConfigState;
+pub use self::authentication::account::{
+    MinecraftAccount, MinecraftCape, MinecraftSkin, MinecraftSkinVariant,
+};
+pub use self::authentication::flow::{
+    LoginFlowDeviceCode, LoginFlowEvent, LoginFlowProgress, LoginFlowState, XstsTokenError,
+    XstsTokenErrorType,
+};
 pub use self::config::ui_layout::{Key, UILayout, Value};
 pub use self::quilt::prepare_quilt_download;
-use self::vanilla::launch_game;
 pub use self::vanilla::prepare_vanilla_download;
-pub use self::vanilla::PathBuf;
 pub use self::vanilla::{run_download, Progress};
-
 pub use self::vanilla::{DownloadArgs, GameOptions, JvmOptions, LaunchArgs};
+
+use self::config::config_state::ConfigState;
+use self::forge::{prepare_forge_download, process_forge};
+use self::vanilla::launch_game;
 
 lazy_static::lazy_static! {
     static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
@@ -150,4 +158,12 @@ pub fn set_ui_layout_config(value: Value) -> anyhow::Result<()> {
     let mut config = CONFIG.ui_layout.blocking_write();
     config.set_value(value);
     config.save()
+}
+
+#[tokio::main(flavor = "current_thread")]
+pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::Result<()> {
+    authentication::flow::login_flow(&skin).await?;
+    skin.close();
+
+    Ok(())
 }

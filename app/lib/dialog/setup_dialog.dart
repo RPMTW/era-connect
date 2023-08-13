@@ -1,4 +1,5 @@
-import 'package:era_connect/api/config/config_api.dart';
+import 'package:era_connect/api/gen/bridge_definitions.dart';
+import 'package:era_connect/api/lib.dart';
 import 'package:era_connect_ui/components/dialog/step_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
@@ -16,13 +17,13 @@ class SetupDialog extends StatelessWidget {
           title: context.i18n['dialog.setup.welcome'],
           description: context.i18n['dialog.setup.01.description'],
           hasBrandText: true,
-          contentPages: [Builder(builder: (context) => _step1(context))],
+          contentPages: const [_ImportProfiles()],
         ),
         StepData(
             stepDescription: '登入帳號',
             title: context.i18n['dialog.setup.welcome'],
-            description: 'Test Description',
-            contentPages: [const Text('Test 2')]),
+            description: context.i18n['dialog.setup.01.description'],
+            contentPages: const [_LoginAccount()]),
         StepData(
             stepDescription: '建立第一個收藏',
             title: context.i18n['dialog.setup.welcome'],
@@ -53,8 +54,13 @@ class SetupDialog extends StatelessWidget {
       ],
     );
   }
+}
 
-  Widget _step1(BuildContext context) {
+class _ImportProfiles extends StatelessWidget {
+  const _ImportProfiles();
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -86,6 +92,85 @@ class SetupDialog extends StatelessWidget {
                   icon: 'deployed_code_update',
                   content: const DialogContentBox(
                     title: '匯入平台',
+                    content: SizedBox.shrink(),
+                  )),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LoginAccount extends StatelessWidget {
+  const _LoginAccount();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '登入帳號',
+          style: TextStyle(
+            color: context.theme.textColor,
+            fontSize: 40,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Text(
+          '登入帳號後即可開始享受遊戲的樂趣！',
+          style:
+              TextStyle(color: context.theme.tertiaryTextColor, fontSize: 15),
+        ),
+        const SizedBox(height: 25),
+        Expanded(
+          child: DialogRectangleTab(
+            title: '選擇方式',
+            tabs: [
+              TabItem(
+                title: '只登入主要帳號',
+                icon: 'person',
+                content: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: DialogContentBox(
+                        title: '登入動作',
+                        content: Center(
+                          child: EraDialogButton.textPrimary(
+                              text: '立即登入',
+                              onPressed: () async {
+                                final stream = api.minecraftLoginFlow();
+                                stream.listen((event) {
+                                  if (event is LoginFlowEvent_DeviceCode) {
+                                    print(
+                                        'Device Code: ${event.field0.userCode}');
+                                    print(
+                                        'Verification URI: ${event.field0.verificationUri}');
+                                  } else if (event is LoginFlowEvent_Progress) {
+                                    print('Progress: ${event.field0.progress}');
+                                    print('State: ${event.field0.state}');
+                                  }
+                                });
+                              }),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Text(
+                      '此動作將僅登入一個主要帳號，稍後你可以在帳號管理頁面中新增更多帳號。',
+                      style: TextStyle(
+                          color: context.theme.tertiaryTextColor, fontSize: 13),
+                    )
+                  ],
+                ),
+              ),
+              const TabItem(
+                  title: '登入多個帳號',
+                  icon: 'group',
+                  content: DialogContentBox(
+                    title: '多個帳號',
                     content: SizedBox.shrink(),
                   )),
             ],
