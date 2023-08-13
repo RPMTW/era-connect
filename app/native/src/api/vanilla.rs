@@ -1,12 +1,12 @@
-use anyhow::{anyhow, bail};
+use anyhow::bail;
 use anyhow::{Context, Result};
 use flutter_rust_bridge::{RustOpaque, StreamSink};
 use futures::{Future, StreamExt};
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 pub use std::path::PathBuf;
 use std::pin::Pin;
-use std::process::Command;
 use std::{
     sync::{
         atomic::Ordering,
@@ -15,7 +15,7 @@ use std::{
     },
     time::Duration,
 };
-use tokio::fs::{create_dir_all, File};
+use tokio::fs::{self, create_dir_all, File};
 use tokio::io::AsyncWriteExt;
 use tokio::time::{self, Instant};
 
@@ -26,8 +26,9 @@ use super::download::assets::{extract_assets, parallel_assets, AssetIndex};
 use super::download::library::{parallel_library, Library};
 use super::download::rules::{get_rules, ActionType, Rule};
 use super::download::util::{download_file, extract_filename, validate_sha1};
-use super::{DownloadState, ReturnType, STATE};
+use super::{DownloadState, STATE};
 
+#[derive(Debug, Clone)]
 pub struct Progress {
     pub speed: f64,
     pub percentages: f64,
@@ -114,13 +115,15 @@ pub struct LaunchArgs {
     pub game_args: Vec<String>,
 }
 
-pub fn launch_game(launch_args: LaunchArgs) -> Result<()> {
+pub async fn launch_game(launch_args: LaunchArgs) -> Result<()> {
     let mut launch_vec = Vec::new();
     launch_vec.extend(launch_args.jvm_args);
     launch_vec.push(launch_args.main_class);
     launch_vec.extend(launch_args.game_args);
-    let b = Command::new("java").args(launch_vec).spawn();
-    b?.wait()?;
+    let b = tokio::process::Command::new("java")
+        .args(launch_vec)
+        .spawn();
+    b?.wait().await?;
     Ok(())
 }
 
@@ -128,6 +131,12 @@ pub fn launch_game(launch_args: LaunchArgs) -> Result<()> {
 pub struct QuiltLibrary {
     name: String,
     url: String,
+}
+
+pub struct ProcessedArguments {
+    pub launch_args: LaunchArgs,
+    pub jvm_args: JvmOptions,
+    pub game_args: GameOptions,
 }
 
 pub type HandlesType = Vec<Pin<Box<dyn Future<Output = Result<()>> + Send>>>;
@@ -138,36 +147,37 @@ pub async fn get_game_manifest(
 ) -> Result<(Value, String)> {
     let bytes = download_file(download_target, None).await?;
     let version_manifest: Value = serde_json::from_slice(&bytes)?;
-    let version = if version.is_some() {
-        version
-    } else {
-        version_manifest["latest"]["release"]
-            .as_str()
-            .map(ToString::to_string)
-    };
+    let version = version.map_or_else(
+        || {
+            version_manifest["latest"]["release"]
+                .as_str()
+                .expect("latest release doesn't exist")
+                .to_owned()
+        },
+        |x| x,
+    );
     let release_url = version_manifest["versions"]
         .as_array()
-        .unwrap()
+        .context("minecraft version is not array")?
         .iter()
-        .find(|x| x["id"].as_str().map(ToString::to_string) == version)
-        .unwrap()["url"]
-        .as_str()
-        .unwrap();
-    let bytes = download_file(release_url.to_string(), None).await?;
+        .find(|x| x["id"].as_str().expect("failed to parse game id to str") == version)
+        .and_then(|x| x["url"].as_str())
+        .context("version url doesn't exist")?;
+    let bytes = download_file(release_url.to_owned(), None).await?;
     let contents: Value = serde_json::from_slice(&bytes)?;
-    Ok((contents, version.unwrap()))
+    Ok((contents, version))
 }
 
-pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
+pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArguments)> {
     let (game_manifest, current_version) = get_game_manifest(
-        "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_string(),
+        String::from("https://launchermeta.mojang.com/mc/game/version_manifest.json"),
         None,
     )
     .await?;
 
     let game_argument = game_manifest["arguments"]["game"]
         .as_array()
-        .ok_or_else(|| anyhow!("Failure to parse contents[\"arguments\"][\"game\"]"))?;
+        .context("Failure to parse contents[\"arguments\"][\"game\"]")?;
 
     let mut game_flags = GameFlags {
         rules: get_rules(game_argument)?,
@@ -200,7 +210,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
         .context("fail to create native_directory(vanilla)")?;
 
     let game_options = GameOptions {
-        auth_player_name: "Kyle".to_string(),
+        auth_player_name: String::from("Kyle"),
         game_version_name: current_version,
         game_directory: RustOpaque::new(
             game_directory
@@ -214,19 +224,17 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
         ),
         assets_index_name: game_manifest["assetIndex"]["id"]
             .as_str()
-            .unwrap()
-            .to_string(),
+            .context("assetindex id doesn't exist")?
+            .to_owned(),
         auth_uuid: String::new(),
-        user_type: "mojang".to_string(),
-        version_type: "release".to_string(),
+        user_type: String::from("mojang"),
+        version_type: String::from("release"),
     };
 
     game_flags.arguments = game_args_parse(&game_flags, &game_options);
 
-    if game_flags.additional_arguments.is_some() {
-        game_flags
-            .arguments
-            .extend(game_flags.additional_arguments.unwrap());
+    if let Some(x) = game_flags.additional_arguments {
+        game_flags.arguments.extend(x);
     }
 
     let asset_index = AssetIndex::deserialize(&game_manifest["assetIndex"])
@@ -235,8 +243,9 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     let downloads_list: Downloads = Downloads::deserialize(&game_manifest["downloads"])
         .context("Failed to Serialize Downloads")?;
 
-    let library_list: Vec<Library> = Vec::<Library>::deserialize(&game_manifest["libraries"])
-        .context("Failed to Serialize contents[\"libraries\"]")?;
+    let library_list: Arc<[Library]> = Vec::<Library>::deserialize(&game_manifest["libraries"])
+        .context("Failed to Serialize contents[\"libraries\"]")?
+        .into();
 
     let _logging: LoggingConfig = LoggingConfig::deserialize(&game_manifest["logging"])
         .context("Failed to Serialize logging")?;
@@ -248,7 +257,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
 
     let jvm_argument = game_manifest["arguments"]["jvm"]
         .as_array()
-        .ok_or_else(|| anyhow!("Failure to parse contents[\"arguments\"][\"jvm\"]"))?;
+        .context("Failure to parse contents[\"arguments\"][\"jvm\"]")?;
     let mut jvm_flags = JvmFlags {
         rules: get_rules(jvm_argument)?,
         arguments: jvm_argument
@@ -260,10 +269,10 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     };
 
     let mut jvm_options = JvmOptions {
-        launcher_name: "era-connect".to_string(),
-        launcher_version: "0.0.1".to_string(),
+        launcher_name: String::from("era-connect"),
+        launcher_version: String::from("0.0.1"),
         classpath: String::new(),
-        classpath_separator: ":".to_string(),
+        classpath_separator: String::from(":"),
         primary_jar: client_jar.to_string_lossy().to_string(),
         library_directory: RustOpaque::new(
             library_directory
@@ -290,9 +299,8 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
         Arc::new(jvm_options.native_directory.clone()),
     );
 
-    let library_list_arc = Arc::new(library_list);
     let total_size = parallel_library(
-        Arc::clone(&library_list_arc),
+        Arc::clone(&library_list),
         Arc::clone(&library_path),
         Arc::clone(&native_library_path),
         Arc::clone(&current_size),
@@ -309,7 +317,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     };
 
     let mut parsed_library_list = Vec::new();
-    for library in library_list_arc.iter() {
+    for library in library_list.iter() {
         let (process_native, is_native_library, _) = os_match(library, &current_os_type);
         if !process_native && !is_native_library {
             parsed_library_list.push(library);
@@ -333,10 +341,9 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
         if x.action == ActionType::Allow
             && x.os.map_or(false, |os| os.name == Some(current_os_type))
         {
-            jvm_flags.arguments.extend(
-                x.value
-                    .ok_or_else(|| anyhow!("rules value doesn't exist"))?,
-            );
+            jvm_flags
+                .arguments
+                .extend(x.value.context("rules value doesn't exist")?);
         }
     }
 
@@ -350,8 +357,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
             Some(Arc::clone(&current_size)),
         )
         .await?;
-        let mut f = File::create(client_jar_filename).await?;
-        f.write_all(&bytes).await?;
+        fs::write(client_jar_filename, &bytes).await?;
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     } else if let Err(x) = validate_sha1(
         &PathBuf::from(&extract_filename(&downloads_list.client.url)?),
@@ -359,7 +365,7 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
     )
     .await
     {
-        eprintln!("{x}");
+        error!("{x}\n redownloading.");
         let bytes = download_file(
             downloads_list.client.url.clone(),
             Some(Arc::clone(&current_size)),
@@ -379,14 +385,18 @@ pub async fn prepare_vanilla_download() -> Result<DownloadArgs> {
         game_args: game_flags.arguments,
     };
 
-    Ok(DownloadArgs {
-        current_size: Arc::clone(&current_size),
-        total_size: Arc::clone(&total_size),
-        handles,
-        launch_args,
-        jvm_args: jvm_options,
-        game_args: game_options,
-    })
+    Ok((
+        DownloadArgs {
+            current_size: Arc::clone(&current_size),
+            total_size: Arc::clone(&total_size),
+            handles,
+        },
+        ProcessedArguments {
+            launch_args,
+            jvm_args: jvm_options,
+            game_args: game_options,
+        },
+    ))
 }
 
 fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmOptions) -> Vec<String> {
@@ -460,13 +470,13 @@ pub struct DownloadArgs {
     pub current_size: Arc<AtomicUsize>,
     pub total_size: Arc<AtomicUsize>,
     pub handles: HandlesType,
-    pub launch_args: LaunchArgs,
-    pub jvm_args: JvmOptions,
-    pub game_args: GameOptions,
 }
 
 // get progress and and launch download
-pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadArgs) -> Result<()> {
+pub async fn run_download(
+    sink: StreamSink<Progress>,
+    download_args: DownloadArgs,
+) -> Result<StreamSink<Progress>> {
     let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
 
@@ -474,6 +484,8 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
     let current_size_clone = Arc::clone(&download_args.current_size);
     let total_size_clone = Arc::clone(&download_args.total_size);
 
+    *STATE.write().await = DownloadState::Downloading;
+    let sink_clone = sink.clone();
     let task = tokio::spawn(async move {
         let mut instant = Instant::now();
         let mut prev_bytes = 0.0;
@@ -491,10 +503,7 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
             };
             prev_bytes = current_size_clone.load(Ordering::Relaxed) as f64;
             instant = Instant::now();
-            sink.add(ReturnType {
-                progress: Some(progress),
-                prepare_name_args: None,
-            });
+            sink.add(progress);
             let state = *STATE.read().await;
             match state {
                 DownloadState::Downloading => {}
@@ -506,22 +515,12 @@ pub async fn run_download(sink: StreamSink<ReturnType>, download_args: DownloadA
                 DownloadState::Stopped => break,
             }
         }
-        sink.add(ReturnType {
-            progress: None,
-            prepare_name_args: Some(crate::api::PrepareGameArgs {
-                launch_args: download_args.launch_args,
-                jvm_args: download_args.jvm_args,
-                game_args: download_args.game_args,
-            }),
-        });
-        sink.close();
     });
     // Create a semaphore with a limit on the number of concurrent downloads
     join_futures(handles, 128).await?;
     download_complete.store(true, Ordering::Release);
     task.await?;
-    println!("Complete!");
-    Ok(())
+    Ok(sink_clone)
 }
 
 pub async fn join_futures(
@@ -534,11 +533,13 @@ pub async fn join_futures(
         match state {
             DownloadState::Downloading => x?,
             DownloadState::Paused => {
-                dbg!("pausing!");
+                while *STATE.read().await != DownloadState::Downloading {
+                    time::sleep(Duration::from_millis(100)).await;
+                    info!("pausing!");
+                }
             }
             DownloadState::Stopped => break,
         }
-        time::sleep(Duration::from_millis(100)).await;
     }
     Ok(())
 }

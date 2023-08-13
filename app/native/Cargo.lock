@@ -493,8 +493,7 @@ dependencies = [
 [[package]]
 name = "flutter_rust_bridge"
 version = "1.80.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd0305ebc9f097d9826530a55fc2acd63222e912c663f7adce3ab641ecc0f346"
+source = "git+https://github.com/fzyzcjy/flutter_rust_bridge#f74982796e7dd317d43f80153b0250fa8ea9aa20"
 dependencies = [
  "allo-isolate",
  "anyhow",
@@ -517,9 +516,8 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge_macros"
-version = "1.79.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "237edf0d1cea56e5699ee37f906c265de99d55657df4ff2c006ada9541c04996"
+version = "1.80.1"
+source = "git+https://github.com/fzyzcjy/flutter_rust_bridge#f74982796e7dd317d43f80153b0250fa8ea9aa20"
 
 [[package]]
 name = "fnv"
@@ -1437,6 +1435,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "signal-hook-registry"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8229b473baa5980ac72ef434c4415e70c4b5e71b423043adb4ba059f89c99a1"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "slab"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1597,6 +1604,7 @@ dependencies = [
  "mio",
  "num_cpus",
  "pin-project-lite",
+ "signal-hook-registry",
  "socket2",
  "tokio-macros",
  "windows-sys",

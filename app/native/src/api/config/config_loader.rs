@@ -14,10 +14,8 @@ pub struct ConfigLoader {
 }
 
 impl ConfigLoader {
-    pub fn new(file_name: &str) -> Self {
-        Self {
-            file_name: file_name.to_string(),
-        }
+    pub const fn new(file_name: String) -> Self {
+        Self { file_name }
     }
 
     pub fn load<T: Default + DeserializeOwned + Serialize>(&self) -> anyhow::Result<T> {

@@ -3,7 +3,7 @@ use std::sync::{
     Arc,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::{
@@ -13,7 +13,7 @@ use tokio::{
 
 use super::{
     download::util::{download_file, validate_sha1},
-    vanilla::HandlesType,
+    vanilla::{HandlesType, ProcessedArguments},
     DownloadArgs, GameOptions, JvmOptions, LaunchArgs,
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -27,7 +27,7 @@ pub async fn prepare_quilt_download(
     launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
-) -> Result<DownloadArgs> {
+) -> Result<(DownloadArgs, ProcessedArguments)> {
     let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
     let bytes = download_file(meta_url, None).await?;
     let version_manifest: Value = serde_json::from_slice(&bytes)?;
@@ -36,25 +36,24 @@ pub async fn prepare_quilt_download(
         &version_manifest[0]["launcherMeta"]["libraries"]["common"],
     )?;
 
-    let quilt_loader_list = version_manifest[0].as_object().unwrap();
+    let quilt_loader_list = version_manifest[0]
+        .as_object()
+        .context("quilt loader list is not object")?;
     let quilt_loader_types = vec!["loader", "hashed", "intermediary"];
     for loader_type in quilt_loader_types {
         let maven = quilt_loader_list
             .get(loader_type)
-            .ok_or_else(|| anyhow!("fail to get quilt_maven"))?
-            .get("maven")
-            .ok_or_else(|| anyhow!("fail to get quilt maven"))?
-            .as_str()
-            .ok_or_else(|| anyhow!("quilt maven is not a string!"))?;
+            .and_then(|x| x.get("maven").and_then(Value::as_str))
+            .context("quilt maven is not a string!")?;
 
         download_list.push(QuiltLibrary {
-            name: maven.to_string(),
+            name: maven.to_owned(),
             url: if maven.contains("quiltmc") {
                 "https://maven.quiltmc.org/repository/release/"
             } else {
                 "https://maven.fabricmc.net/"
             }
-            .to_string(),
+            .to_owned(),
         });
     }
 
@@ -69,7 +68,11 @@ pub async fn prepare_quilt_download(
         .map(|x| convert_maven_to_path(&x.name))
         .collect::<Vec<_>>();
     for x in &path_vec {
-        fs::create_dir_all(x.parent().unwrap()).await?;
+        fs::create_dir_all(
+            x.parent()
+                .context("can't find download_list parent's dir")?,
+        )
+        .await?;
     }
 
     let mut jvm_options = jvm_options;
@@ -89,8 +92,8 @@ pub async fn prepare_quilt_download(
     }
     launch_args.main_class = version_manifest[0]["launcherMeta"]["mainClass"]["client"]
         .as_str()
-        .ok_or_else(|| anyhow!("fail to get quilt mainclass"))?
-        .to_string();
+        .context("fail to get quilt mainclass")?
+        .to_owned();
 
     // NOTE: rust can't dedcue the type here(cause dyn trait)
     let mut handles: HandlesType = Vec::new();
@@ -144,16 +147,20 @@ pub async fn prepare_quilt_download(
             }
         }));
     }
-    Ok(DownloadArgs {
-        current_size: Arc::clone(&current_size),
-        total_size: Arc::clone(&total_size),
-        handles,
-        launch_args,
-        jvm_args: jvm_options,
-        game_args: game_options,
-    })
+    Ok((
+        DownloadArgs {
+            current_size: Arc::clone(&current_size),
+            total_size: Arc::clone(&total_size),
+            handles,
+        },
+        ProcessedArguments {
+            launch_args,
+            jvm_args: jvm_options,
+            game_args: game_options,
+        },
+    ))
 }
-fn convert_maven_to_path(input: &str) -> String {
+pub fn convert_maven_to_path(input: &str) -> String {
     let parts: Vec<&str> = input.split(':').collect();
     let org = parts[0].replace('.', "/");
     let package = parts[1];

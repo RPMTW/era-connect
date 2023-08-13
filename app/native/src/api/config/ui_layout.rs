@@ -35,12 +35,12 @@ impl UILayout {
     }
 
     pub fn load() -> anyhow::Result<Self> {
-        let loader = ConfigLoader::new(UI_LAYOUT_FILE_NAME);
+        let loader = ConfigLoader::new(UI_LAYOUT_FILE_NAME.to_owned());
         loader.load()
     }
 
     pub fn save(&self) -> anyhow::Result<()> {
-        let loader = ConfigLoader::new(UI_LAYOUT_FILE_NAME);
+        let loader = ConfigLoader::new(UI_LAYOUT_FILE_NAME.to_owned());
         loader.save(&self)
     }
 }

@@ -39,44 +39,37 @@ fn wire_download_vanilla_impl(port_: MessagePort) {
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
-        move || move |task_callback| download_vanilla(task_callback.stream_sink::<_, ReturnType>()),
+        move || move |task_callback| download_vanilla(task_callback.stream_sink::<_, Progress>()),
     )
 }
-fn wire_launch_game_impl(
-    port_: MessagePort,
-    pre_launch_arguments: impl Wire2Api<PrepareGameArgs> + UnwindSafe,
-) {
+fn wire_launch_vanilla_impl(port_: MessagePort) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
-            debug_name: "launch_game",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_pre_launch_arguments = pre_launch_arguments.wire2api();
-            move |task_callback| launch_game(api_pre_launch_arguments)
-        },
-    )
-}
-fn wire_download_quilt_impl(
-    port_: MessagePort,
-    quilt_prepare: impl Wire2Api<PrepareGameArgs> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
-        WrapInfo {
-            debug_name: "download_quilt",
+            debug_name: "launch_vanilla",
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
-        move || {
-            let api_quilt_prepare = quilt_prepare.wire2api();
-            move |task_callback| {
-                download_quilt(
-                    task_callback.stream_sink::<_, ReturnType>(),
-                    api_quilt_prepare,
-                )
-            }
+        move || move |task_callback| launch_vanilla(task_callback.stream_sink::<_, Progress>()),
+    )
+}
+fn wire_launch_forge_impl(port_: MessagePort) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "launch_forge",
+            port: Some(port_),
+            mode: FfiCallMode::Stream,
         },
+        move || move |task_callback| launch_forge(task_callback.stream_sink::<_, Progress>()),
+    )
+}
+fn wire_launch_quilt_impl(port_: MessagePort) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "launch_quilt",
+            port: Some(port_),
+            mode: FfiCallMode::Stream,
+        },
+        move || move |task_callback| launch_quilt(task_callback.stream_sink::<_, Progress>()),
     )
 }
 fn wire_fetch_state_impl(port_: MessagePort) {
@@ -150,7 +143,6 @@ where
         (!self.is_null()).then(|| self.wire2api())
     }
 }
-
 impl Wire2Api<bool> for bool {
     fn wire2api(self) -> bool {
         self
@@ -167,25 +159,17 @@ impl Wire2Api<DownloadState> for i32 {
         }
     }
 }
-
 impl Wire2Api<i32> for i32 {
     fn wire2api(self) -> i32 {
         self
     }
 }
-
 impl Wire2Api<Key> for i32 {
     fn wire2api(self) -> Key {
         match self {
             0 => Key::CompletedSetup,
             _ => unreachable!("Invalid variant for Key: {}", self),
         }
-    }
-}
-
-impl Wire2Api<u8> for u8 {
-    fn wire2api(self) -> u8 {
-        self
     }
 }
 
@@ -208,84 +192,6 @@ impl rust2dart::IntoIntoDart<DownloadState> for DownloadState {
     }
 }
 
-impl support::IntoDart for GameOptions {
-    fn into_dart(self) -> support::DartAbi {
-        vec![
-            self.auth_player_name.into_into_dart().into_dart(),
-            self.game_version_name.into_into_dart().into_dart(),
-            self.game_directory.into_dart(),
-            self.assets_root.into_dart(),
-            self.assets_index_name.into_into_dart().into_dart(),
-            self.auth_uuid.into_into_dart().into_dart(),
-            self.user_type.into_into_dart().into_dart(),
-            self.version_type.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for GameOptions {}
-impl rust2dart::IntoIntoDart<GameOptions> for GameOptions {
-    fn into_into_dart(self) -> Self {
-        self
-    }
-}
-
-impl support::IntoDart for JvmOptions {
-    fn into_dart(self) -> support::DartAbi {
-        vec![
-            self.launcher_name.into_into_dart().into_dart(),
-            self.launcher_version.into_into_dart().into_dart(),
-            self.classpath.into_into_dart().into_dart(),
-            self.classpath_separator.into_into_dart().into_dart(),
-            self.primary_jar.into_into_dart().into_dart(),
-            self.library_directory.into_dart(),
-            self.game_directory.into_dart(),
-            self.native_directory.into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for JvmOptions {}
-impl rust2dart::IntoIntoDart<JvmOptions> for JvmOptions {
-    fn into_into_dart(self) -> Self {
-        self
-    }
-}
-
-impl support::IntoDart for LaunchArgs {
-    fn into_dart(self) -> support::DartAbi {
-        vec![
-            self.jvm_args.into_into_dart().into_dart(),
-            self.main_class.into_into_dart().into_dart(),
-            self.game_args.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for LaunchArgs {}
-impl rust2dart::IntoIntoDart<LaunchArgs> for LaunchArgs {
-    fn into_into_dart(self) -> Self {
-        self
-    }
-}
-
-impl support::IntoDart for PrepareGameArgs {
-    fn into_dart(self) -> support::DartAbi {
-        vec![
-            self.launch_args.into_into_dart().into_dart(),
-            self.jvm_args.into_into_dart().into_dart(),
-            self.game_args.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for PrepareGameArgs {}
-impl rust2dart::IntoIntoDart<PrepareGameArgs> for PrepareGameArgs {
-    fn into_into_dart(self) -> Self {
-        self
-    }
-}
-
 impl support::IntoDart for Progress {
     fn into_dart(self) -> support::DartAbi {
         vec![
@@ -299,22 +205,6 @@ impl support::IntoDart for Progress {
 }
 impl support::IntoDartExceptPrimitive for Progress {}
 impl rust2dart::IntoIntoDart<Progress> for Progress {
-    fn into_into_dart(self) -> Self {
-        self
-    }
-}
-
-impl support::IntoDart for ReturnType {
-    fn into_dart(self) -> support::DartAbi {
-        vec![
-            self.progress.into_dart(),
-            self.prepare_name_args.into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for ReturnType {}
-impl rust2dart::IntoIntoDart<ReturnType> for ReturnType {
     fn into_into_dart(self) -> Self {
         self
     }

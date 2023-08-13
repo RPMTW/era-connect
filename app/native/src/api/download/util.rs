@@ -1,5 +1,6 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use bytes::Bytes;
+use log::error;
 use reqwest::Url;
 use std::{
     path::PathBuf,
@@ -24,14 +25,14 @@ pub async fn download_file(
         Ok(x) => Ok(x),
         Err(err) => {
             let mut temp = Err(err);
-            for i in 0..retry_amount {
+            for i in 1..=retry_amount {
                 match client.get(&url).send().await {
                     Ok(x) => {
                         temp = Ok(x);
                         break;
                     }
                     Err(x) => {
-                        eprintln!("{x}, retry count: {i}");
+                        error!("{x}, retry count: {i}");
                     }
                 }
             }
@@ -54,12 +55,8 @@ pub async fn download_file(
 
 pub fn extract_filename(url: &str) -> Result<String> {
     let parsed_url = Url::parse(url)?;
-    let path_segments = parsed_url
-        .path_segments()
-        .ok_or_else(|| anyhow!("Invalid URL"))?;
-    let filename = path_segments
-        .last()
-        .ok_or_else(|| anyhow!("No filename found in URL"))?;
+    let path_segments = parsed_url.path_segments().context("Invalid URL")?;
+    let filename = path_segments.last().context("No filename found in URL")?;
     Ok(filename.to_owned())
 }
 

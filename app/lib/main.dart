@@ -23,40 +23,15 @@ void main() async {
     await windowManager.setMinimumSize(const Size(1350, 820));
     await initializeAPIs();
     runApp(const EraConnectApp());
-
-    // testRust();
+   // testRust();
   });
 }
 
 // void testRust() async {
-//   var chan = DownloadState.Downloading;
-//   final currentState = await api.fetchState();
-//   await api.writeState(s: chan);
-//   final vanilla = api.downloadVanilla();
-
-//   vanilla.listen((event) async {
-//     print("speed: ${event.progress?.speed}");
-//     print("total size: ${event.progress?.totalSize}");
-//     print("percent: ${event.progress?.percentages}");
-
-//     if (chan == DownloadState.Downloading) {
-//       api.writeState(s: DownloadState.Paused);
-//       await Future.delayed(const Duration(seconds: 5));
-//       chan = DownloadState.Stopped;
-//       api.writeState(s: DownloadState.Downloading);
-//     }
-//     api.writeState(s: DownloadState.Downloading);
-//     if (event.prepareNameArgs != null) {
-//       final quilt = api.downloadQuilt(quiltPrepare: event.prepareNameArgs!);
-//       quilt.listen((event) {
-//         print("speed: ${event.progress?.speed}");
-//         print("total size: ${event.progress?.totalSize}");
-//         print("percent: ${event.progress?.percentages}");
-//         if (event.prepareNameArgs != null) {
-//           api.launchGame(preLaunchArguments: event.prepareNameArgs!);
-//         }
-//       });
-//     }
+//   final forge = api.launchForge();
+//   forge.listen((event) {
+//     print("speed: ${event.speed}");
+//     print("percentages: ${event.percentages}");
 //   });
 // }
 

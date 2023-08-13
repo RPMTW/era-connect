@@ -8,6 +8,7 @@ use std::{
 
 use anyhow::{bail, Context, Result};
 use flutter_rust_bridge::RustOpaque;
+use log::error;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
@@ -63,7 +64,7 @@ pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bo
     (process_native, is_native_library, library_extension_type)
 }
 pub async fn parallel_library(
-    library_list_arc: Arc<Vec<Library>>,
+    library_list_arc: Arc<[Library]>,
     folder: Arc<RustOpaque<PathBuf>>,
     native_folder: Arc<RustOpaque<PathBuf>>,
     current: Arc<AtomicUsize>,
@@ -92,7 +93,9 @@ pub async fn parallel_library(
         let handle = Box::pin(async move {
             let index = counter_clone.fetch_add(1, Ordering::SeqCst);
             if index < num_libraries {
-                let library = &library_list_clone[index];
+                let library = &library_list_clone
+                    .get(index)
+                    .context("Fail to get library list at index")?;
                 let path = library.downloads.artifact.path.clone();
                 let (process_native, is_native_library, library_extension) =
                     os_match(library, &current_os_type);
@@ -104,7 +107,7 @@ pub async fn parallel_library(
                     } else {
                         Ok(())
                     } {
-                        eprintln!("{x}, \nredownloading.");
+                        error!("{x}, \nredownloading.");
                         true
                     } else {
                         false
@@ -129,7 +132,9 @@ pub async fn parallel_library(
                 } else {
                     download_total_size_clone
                         .fetch_add(library.downloads.artifact.size, Ordering::Relaxed);
-                    let parent_dir = non_native_download_path.parent().unwrap();
+                    let parent_dir = non_native_download_path
+                        .parent()
+                        .context("Can't find parent of non_native_download_path")?;
                     fs::create_dir_all(parent_dir)
                         .await
                         .context("Fail to create parent dir(library)")?;
@@ -163,10 +168,15 @@ async fn native_download(
         archive.extract(native_temp_dir.as_path())?;
         for x in archive.file_names() {
             if (x.contains(library_extension) || x.contains(".sha1")) && !x.contains(".git") {
-                std::fs::rename(
+                tokio::fs::rename(
                     native_temp_dir.join(x),
-                    native_folder_clone.join(PathBuf::from(x).file_name().unwrap()),
+                    native_folder_clone.join(
+                        PathBuf::from(x)
+                            .file_name()
+                            .context("can't find file name of native archive")?,
+                    ),
                 )
+                .await
                 .context("Fail to move from native_temp_dir -> native_folder_clone")?;
             }
         }
