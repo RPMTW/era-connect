@@ -43,7 +43,6 @@ test:
 _ignore_generated_files_coverage:
     generated_files=$(find app/lib/api/gen -name '*.dart' -type f); \
     generated_files="$generated_files app/lib/api/ffi.dart"; \
-
     for file in $generated_files; do \
       grep -q "// coverage:ignore-file" $file && continue; \
       echo "// coverage:ignore-file" | cat - $file > temp && mv temp $file; \
