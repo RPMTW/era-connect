@@ -22,9 +22,11 @@ test:
     mkdir -p coverage
 
     cd app && flutter pub get
-    cd app && dart pub global run full_coverage --ignore bridge_generated.dart,bridge_definitions.dart,bridge_generated.io.dart,ffi.dart
+    just _ignore_generated_files_coverage
+    cd app && dart pub global run full_coverage
+
     cd app && flutter test --coverage
-    cd app && sed "s/^SF:.*lib/SF:app\/lib/g" coverage/lcov.info >> ../coverage/lcov.info
+    cd app && sed "s/^SF:.*lib/SF:app\/lib/g" coverage/lcov.info >> ../coverage/lcov.info    
 
     cd packages && for d in */ ; do \
       echo "Processing $d"; \
@@ -32,10 +34,19 @@ test:
       flutter pub get; \
       dart pub global run full_coverage; \
       flutter test --coverage; \
-      escapedPath="$(echo packages/$d | sed 's/\//\\\//g')"; \
-      sed "s/^SF:.*lib/SF:${escapedPath}lib/g" coverage/lcov.info >> ../../coverage/lcov.info; \
+      escaped_path="$(echo packages/$d | sed 's/\//\\\//g')"; \
+      sed "s/^SF:.*lib/SF:${escaped_path}lib/g" coverage/lcov.info >> ../../coverage/lcov.info; \
       rm -rf coverage; \
       cd ..; \
+    done
+
+_ignore_generated_files_coverage:
+    generated_files=$(find app/lib/api/gen -name '*.dart' -type f); \
+    generated_files="$generated_files app/lib/api/ffi.dart"; \
+
+    for file in $generated_files; do \
+      grep -q "// coverage:ignore-file" $file && continue; \
+      echo "// coverage:ignore-file" | cat - $file > temp && mv temp $file; \
     done
 
 # vim:expandtab:sw=4:ts=4
