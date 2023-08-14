@@ -1,7 +1,4 @@
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
-};
+use std::sync::{atomic::AtomicUsize, Arc};
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -27,6 +24,8 @@ pub async fn prepare_quilt_download(
     launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
+    current_size: Arc<AtomicUsize>,
+    total_size: Arc<AtomicUsize>,
 ) -> Result<(DownloadArgs, ProcessedArguments)> {
     let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
     let bytes = download_file(meta_url, None).await?;
@@ -97,51 +96,37 @@ pub async fn prepare_quilt_download(
 
     // NOTE: rust can't dedcue the type here(cause dyn trait)
     let mut handles: HandlesType = Vec::new();
-    let index_counter = Arc::new(AtomicUsize::new(0));
-    let current_size = Arc::new(AtomicUsize::new(0));
-    let total_size = Arc::new(AtomicUsize::new(0));
-    let num_libraries = download_list.len();
-    let download_list_arc = Arc::new(download_list);
 
     let path_vec_arc = Arc::new(path_vec);
     let url_vec_arc = Arc::new(url_vec);
-    for _ in 0..num_libraries {
+    for (index, library) in download_list.into_iter().enumerate() {
         let url_vec_clone = Arc::clone(&url_vec_arc);
-        let index_counter_clone = Arc::clone(&index_counter);
         let current_size_clone = Arc::clone(&current_size);
-        let download_list_clone = Arc::clone(&download_list_arc);
         let path_vec_clone = Arc::clone(&path_vec_arc);
         handles.push(Box::pin(async move {
-            let index = index_counter_clone.fetch_add(1, Ordering::SeqCst);
-
-            if index < num_libraries {
-                let library = &download_list_clone[index];
-                let url = format!("{}{}", library.url, url_vec_clone[index]);
-                let path = &path_vec_clone[index];
-                let sha1_path = path.with_extension("jar.sha1");
-                let sha1_url = url.clone() + ".sha1";
-                let mut sha1 = String::new();
-                if sha1_path.exists() {
-                    File::open(&sha1_path)
+            let url = format!("{}{}", library.url, url_vec_clone[index]);
+            let path = &path_vec_clone[index];
+            let sha1_path = path.with_extension("jar.sha1");
+            let sha1_url = url.clone() + ".sha1";
+            let mut sha1 = String::new();
+            if sha1_path.exists() {
+                File::open(&sha1_path)
+                    .await?
+                    .read_to_string(&mut sha1)
+                    .await?;
+            } else {
+                sha1 = String::from_utf8(
+                    download_file(sha1_url, Some(Arc::clone(&current_size_clone)))
                         .await?
-                        .read_to_string(&mut sha1)
-                        .await?;
-                } else {
-                    sha1 = String::from_utf8(
-                        download_file(sha1_url, Some(Arc::clone(&current_size_clone)))
-                            .await?
-                            .to_vec(),
-                    )?;
-                }
-                if !path.exists() {
-                    let bytes = download_file(url, Some(current_size_clone)).await?;
-                    fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
-                } else if validate_sha1(&sha1_path, &sha1).await.is_err() {
-                    let bytes = download_file(url, Some(current_size_clone)).await?;
-                    fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
-                } else {
-                    Ok(())
-                }
+                        .to_vec(),
+                )?;
+            }
+            if !path.exists() {
+                let bytes = download_file(url, Some(current_size_clone)).await?;
+                fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
+            } else if validate_sha1(&sha1_path, &sha1).await.is_err() {
+                let bytes = download_file(url, Some(current_size_clone)).await?;
+                fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
             } else {
                 Ok(())
             }
