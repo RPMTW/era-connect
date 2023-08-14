@@ -56,7 +56,7 @@ class EraAlertDialog extends StatelessWidget {
                 TextStyle(fontSize: 17, color: context.theme.tertiaryTextColor),
           ),
           const SizedBox(height: 20),
-          content ?? const SizedBox.shrink(),
+          if (content != null) content!,
         ],
       ),
     );

@@ -3,9 +3,8 @@ import 'package:era_connect_ui/components/dialog/step_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+
+import 'login_account_dialog.dart';
 
 class SetupDialog extends StatelessWidget {
   const SetupDialog({super.key});
@@ -156,16 +155,33 @@ class _LoginAccount extends StatelessWidget {
         Expanded(
           child: DialogContentBox(
             title: '登入動作',
-            content: Center(
-              child: EraDialogButton.textPrimary(
-                text: '立即登入',
-                onPressed: () {
-                  showEraDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      dialog: const _LoginDialog());
-                },
-              ),
+            content: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.person_add_alt_rounded),
+                    label: Text('立即登入',
+                        style: TextStyle(color: context.theme.textColor)),
+                    style: TextButton.styleFrom(
+                      backgroundColor: context.theme.deepBackgroundColor,
+                      iconColor: context.theme.textColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 20),
+                    ),
+                    onPressed: () {
+                      showEraDialog(
+                        context: context,
+                        barrierDismissible: true,
+                        dialog: const LoginAccountDialog(),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -177,65 +193,5 @@ class _LoginAccount extends StatelessWidget {
         )
       ],
     );
-  }
-}
-
-class _LoginDialog extends StatelessWidget {
-  const _LoginDialog();
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: authenticationApi.loginMinecraft(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final (deviceCode, accountFuture) = snapshot.data!;
-            final userCode = deviceCode.userCode;
-
-            return EraAlertDialog(
-              title: '完成登入',
-              description:
-                  '請點擊右下角的按鈕複製代碼後前往 Microsoft 登入頁面並貼上代碼以完成登入，倘若未自動複製代碼請手動輸入至 Microsoft 的登入頁面',
-              content: Wrap(
-                spacing: 10,
-                children: userCode.characters
-                    .map((e) => Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                              color: context.theme.deepBackgroundColor,
-                              borderRadius: BorderRadius.circular(10)),
-                          child: Text(
-                            e,
-                            style: const TextStyle(fontSize: 22),
-                          ),
-                        ))
-                    .toList(),
-              ),
-              actions: [
-                EraDialogButton.iconSecondary(
-                  icon: const Icon(Icons.content_copy_rounded),
-                  onPressed: () {
-                    copyCode(userCode);
-                  },
-                ),
-                EraDialogButton.iconPrimary(
-                    icon: const EraIcon(name: 'open_jam'),
-                    onPressed: () {
-                      copyCode(userCode);
-                      launchUrlString(deviceCode.verificationUri);
-                    })
-              ],
-            );
-          }
-
-          return const EraAlertDialog(
-            title: '處理中......',
-            description: '正在向 Microsoft 請求資料中，請稍等約 1 ~ 3 秒鐘',
-          );
-        });
-  }
-
-  void copyCode(String code) {
-    Clipboard.setData(ClipboardData(text: code));
   }
 }
