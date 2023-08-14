@@ -68,31 +68,44 @@ pub fn setup_logger() -> anyhow::Result<()> {
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn download_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let c = prepare_vanilla_download().await?;
-    run_download(stream, c.0).await.map(|_| {})
-}
-
-#[tokio::main(flavor = "current_thread")]
 pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     let c = prepare_vanilla_download().await?;
-    run_download(stream, c.0).await?;
+
+    let vanilla_bias = DownloadBias {
+        start: 0.0,
+        end: 100.0,
+    };
+    run_download(stream, c.0, vanilla_bias).await?;
     launch_game(c.1.launch_args).await
+}
+
+pub struct DownloadBias {
+    start: f64,
+    end: f64,
 }
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     let (vanilla_download_args, vanilla_arguments) = prepare_vanilla_download().await?;
     info!("Starts Vanilla Downloading");
-    let stream = run_download(stream, vanilla_download_args).await?;
+    let vanilla_bias = DownloadBias {
+        start: 0.0,
+        end: 70.0,
+    };
+    let stream = run_download(stream, vanilla_download_args, vanilla_bias).await?;
     let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
         vanilla_arguments.launch_args,
         vanilla_arguments.jvm_args,
         vanilla_arguments.game_args,
     )
     .await?;
+
+    let forge_bias = DownloadBias {
+        start: 70.0,
+        end: 100.0,
+    };
     info!("Starts Forge Downloading");
-    run_download(stream, forge_download_args).await?;
+    run_download(stream, forge_download_args, forge_bias).await?;
     info!("Starts Forge Processing");
     let processed_arguments = process_forge(
         forge_arguments.launch_args,
@@ -108,7 +121,11 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
 #[tokio::main(flavor = "current_thread")]
 pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     let (download_args, vanilla_arguments) = prepare_vanilla_download().await?;
-    let stream = run_download(stream, download_args).await?;
+    let vanilla_bias = DownloadBias {
+        start: 0.0,
+        end: 70.0,
+    };
+    let stream = run_download(stream, download_args, vanilla_bias).await?;
     let (download_args, quilt_processed) = prepare_quilt_download(
         String::from("1.20.1"),
         vanilla_arguments.launch_args,
@@ -116,7 +133,11 @@ pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
         vanilla_arguments.game_args,
     )
     .await?;
-    run_download(stream, download_args).await?;
+    let quilt_bias = DownloadBias {
+        start: 30.0,
+        end: 100.0,
+    };
+    run_download(stream, download_args, quilt_bias).await?;
     launch_game(quilt_processed.launch_args).await
 }
 
