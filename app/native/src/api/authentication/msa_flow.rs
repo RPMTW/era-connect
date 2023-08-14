@@ -254,7 +254,7 @@ async fn fetch_microsoft_token(
     ))
 }
 
-async fn authenticate_xbox_live(ms_access_token: &String) -> anyhow::Result<(String, String)> {
+async fn authenticate_xbox_live(ms_access_token: &str) -> anyhow::Result<(String, String)> {
     let client = reqwest::Client::new();
 
     let payload = json!({
@@ -288,7 +288,7 @@ async fn authenticate_xbox_live(ms_access_token: &String) -> anyhow::Result<(Str
     Ok((xbl_token, user_hash))
 }
 
-async fn fetch_xsts_token(xbl_token: &String) -> anyhow::Result<XstsResponse> {
+async fn fetch_xsts_token(xbl_token: &str) -> anyhow::Result<XstsResponse> {
     let client = reqwest::Client::new();
 
     let payload = json!({
@@ -320,8 +320,8 @@ async fn fetch_xsts_token(xbl_token: &String) -> anyhow::Result<XstsResponse> {
 }
 
 pub async fn fetch_minecraft_token(
-    xsts_token: &String,
-    user_hash: &String,
+    xsts_token: &str,
+    user_hash: &str,
 ) -> anyhow::Result<(String, i64)> {
     let client = reqwest::Client::new();
 
@@ -341,7 +341,7 @@ pub async fn fetch_minecraft_token(
     Ok((response.access_token, response.expires_in))
 }
 
-async fn check_game_ownership(mc_access_token: &String) -> anyhow::Result<bool> {
+async fn check_game_ownership(mc_access_token: &str) -> anyhow::Result<bool> {
     fn validate_signature(
         signature: &str,
     ) -> Result<SignatureDecodeResult, jsonwebtoken::errors::Error> {
@@ -378,7 +378,7 @@ async fn check_game_ownership(mc_access_token: &String) -> anyhow::Result<bool> 
     Ok(own_game)
 }
 
-pub async fn get_user_profile(mc_access_token: &String) -> anyhow::Result<MinecraftUserProfile> {
+pub async fn get_user_profile(mc_access_token: &str) -> anyhow::Result<MinecraftUserProfile> {
     let client = reqwest::Client::new();
 
     let response = client
