@@ -24,6 +24,7 @@ pub use self::authentication::account::{
 pub use self::authentication::msa_flow::{
     LoginFlowDeviceCode, LoginFlowErrors, LoginFlowEvent, LoginFlowStage, XstsTokenErrorType,
 };
+use self::config::config_loader::ConfigInstance;
 pub use self::config::ui_layout::{Key, UILayout, Value};
 pub use self::quilt::prepare_quilt_download;
 pub use self::vanilla::prepare_vanilla_download;
@@ -68,6 +69,13 @@ pub fn setup_logger() -> anyhow::Result<()> {
         })
         .chain(std::io::stdout())
         .chain(fern::log_file(file_path)?)
+        .filter(|metadata| {
+            if cfg!(debug_assertions) {
+                metadata.level() <= log::LevelFilter::Debug
+            } else {
+                metadata.level() <= log::LevelFilter::Info
+            }
+        })
         .apply()?;
 
     info!("Successfully setup logger");
@@ -164,7 +172,10 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
     let result = authentication::msa_flow::login_flow(&skin).await;
     match result {
         Ok(account) => {
-            info!("Account: {:#?}", account);
+            let mut storage = CONFIG.account_storage.write().await;
+            storage.add_account(&account, Some(true));
+            storage.save()?;
+
             skin.add(LoginFlowEvent::Success(account));
             info!("Successfully login minecraft account");
         }

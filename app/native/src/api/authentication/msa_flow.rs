@@ -94,20 +94,20 @@ struct XstsTokenError {
     xerr: XstsTokenErrorType,
 }
 
-/// Reference: https://wiki.vg/Microsoft_Authentication_Scheme
+/// Reference: [Unofficial Mojang Wiki](https://wiki.vg/Microsoft_Authentication_Scheme)
 #[derive(Debug, Clone, Deserialize)]
 #[repr(usize)]
 pub enum XstsTokenErrorType {
     /// The account doesn't have an Xbox account. Once they sign up for one (or login through minecraft.net to create one) then they can proceed with the login. This shouldn't happen with accounts that have purchased Minecraft with a Microsoft account, as they would've already gone through that Xbox signup process.
-    DoesNotHaveXboxAccount = 2148916233,
+    DoesNotHaveXboxAccount = 2_148_916_233,
     /// The account is from a country where Xbox Live is not available/banned.
-    CountryNotAvailable = 2148916235,
+    CountryNotAvailable = 2_148_916_235,
     /// The account needs adult verification on Xbox page. (South Korea)
-    NeedsAdultVerificationKR1 = 2148916236,
+    NeedsAdultVerificationKR1 = 2_148_916_236,
     /// The account needs adult verification on Xbox page. (South Korea)
-    NeedsAdultVerificationKR2 = 2148916237,
+    NeedsAdultVerificationKR2 = 2_148_916_237,
     /// The account is a child (under 18) and cannot proceed unless the account is added to a Family by an adult. This only seems to occur when using a custom Microsoft Azure application. When using the Minecraft launchers client id, this doesn't trigger.
-    ChildAccount = 2148916238,
+    ChildAccount = 2_148_916_238,
 }
 
 #[derive(Debug, Deserialize)]
@@ -185,12 +185,9 @@ pub async fn login_flow(skin: &StreamSink<LoginFlowEvent>) -> anyhow::Result<Min
     skin.add(LoginFlowEvent::Stage(LoginFlowStage::CheckingGameOwnership));
 
     let own_game = check_game_ownership(&mc_access_token).await?;
-    match own_game {
-        true => {}
-        false => {
-            skin.add(LoginFlowEvent::Error(LoginFlowErrors::GameNotOwned));
-            return Err(anyhow::anyhow!("Game not owned"));
-        }
+    if !own_game {
+        skin.add(LoginFlowEvent::Error(LoginFlowErrors::GameNotOwned));
+        return Err(anyhow::anyhow!("Game not owned"));
     }
     skin.add(LoginFlowEvent::Stage(LoginFlowStage::GettingProfile));
 

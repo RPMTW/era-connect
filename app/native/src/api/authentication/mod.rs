@@ -3,8 +3,7 @@
 pub mod account;
 pub mod msa_flow;
 
-/// By using the `MSA_CLIENT_ID` in your application builds, you agree to the Terms of the Microsoft Identity Platform.
-/// See also: https://docs.microsoft.com/en-us/legal/microsoft-identity-platform/terms-of-use
+/// By using the `MSA_CLIENT_ID` in your application builds, you agree to the [Microsoft identity platform for developers Terms of Use](https://docs.microsoft.com/en-us/legal/microsoft-identity-platform/terms-of-use).
 pub const MSA_CLIENT_ID: &str = "b7df55b4-300f-4409-8ea9-a172f844aa15";
 
 pub const MSA_URL: &str = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize";

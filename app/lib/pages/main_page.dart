@@ -17,7 +17,7 @@ class _MainPageState extends State<MainPage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (mounted && !configAPI.uiLayout.completedSetup) {
+      if (mounted && !configApi.uiLayout.completedSetup) {
         showEraDialog(
           context: context,
           dialog: const SetupDialog(),

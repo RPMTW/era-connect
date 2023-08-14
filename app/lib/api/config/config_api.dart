@@ -2,12 +2,12 @@ import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
 
 import 'ui_layout.dart';
 
-final ConfigAPI configAPI = ConfigAPI();
+final ConfigApi configApi = ConfigApi();
 
-class ConfigAPI {
+class ConfigApi {
   final UILayoutConfig uiLayout = UILayoutConfig();
 
-  ConfigAPI();
+  ConfigApi();
 }
 
 T get<T>(
