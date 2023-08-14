@@ -90,7 +90,7 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     info!("Starts Vanilla Downloading");
     let vanilla_bias = DownloadBias {
         start: 0.0,
-        end: 70.0,
+        end: 90.0,
     };
     let stream = run_download(stream, vanilla_download_args, vanilla_bias).await?;
     let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
@@ -101,7 +101,7 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     .await?;
 
     let forge_bias = DownloadBias {
-        start: 70.0,
+        start: 90.0,
         end: 100.0,
     };
     info!("Starts Forge Downloading");
@@ -123,7 +123,7 @@ pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     let (download_args, vanilla_arguments) = prepare_vanilla_download().await?;
     let vanilla_bias = DownloadBias {
         start: 0.0,
-        end: 70.0,
+        end: 90.0,
     };
     let stream = run_download(stream, download_args, vanilla_bias).await?;
     let (download_args, quilt_processed) = prepare_quilt_download(
@@ -134,7 +134,7 @@ pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     )
     .await?;
     let quilt_bias = DownloadBias {
-        start: 30.0,
+        start: 90.0,
         end: 100.0,
     };
     run_download(stream, download_args, quilt_bias).await?;
