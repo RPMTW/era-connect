@@ -26,7 +26,7 @@ use super::download::assets::{extract_assets, parallel_assets, AssetIndex};
 use super::download::library::{parallel_library, Library};
 use super::download::rules::{get_rules, ActionType, Rule};
 use super::download::util::{download_file, extract_filename, validate_sha1};
-use super::{DownloadState, STATE};
+use super::{DownloadBias, DownloadState, STATE};
 
 #[derive(Debug, Clone)]
 pub struct Progress {
@@ -476,6 +476,7 @@ pub struct DownloadArgs {
 pub async fn run_download(
     sink: StreamSink<Progress>,
     download_args: DownloadArgs,
+    bias: DownloadBias,
 ) -> Result<StreamSink<Progress>> {
     let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
@@ -483,6 +484,8 @@ pub async fn run_download(
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&download_args.current_size);
     let total_size_clone = Arc::clone(&download_args.total_size);
+
+    let multiplier = (bias.end - bias.start) / 100.0;
 
     *STATE.write().await = DownloadState::Downloading;
     let sink_clone = sink.clone();
@@ -495,9 +498,11 @@ pub async fn run_download(
                 speed: (current_size_clone.load(Ordering::Relaxed) as f64 - prev_bytes)
                     / instant.elapsed().as_secs_f64()
                     / 1_000_000.0,
-                percentages: current_size_clone.load(Ordering::Relaxed) as f64
-                    / total_size_clone.load(Ordering::Relaxed) as f64
-                    * 100.0,
+                percentages: bias.start
+                    + current_size_clone.load(Ordering::Relaxed) as f64
+                        / total_size_clone.load(Ordering::Relaxed) as f64
+                        * 100.0
+                        * multiplier,
                 current_size: current_size_clone.load(Ordering::Relaxed) as f64,
                 total_size: total_size_clone.load(Ordering::Relaxed) as f64,
             };
