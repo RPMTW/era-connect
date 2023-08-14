@@ -24,12 +24,12 @@ pub async fn prepare_quilt_download(
     launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
-    current_size: Arc<AtomicUsize>,
-    total_size: Arc<AtomicUsize>,
 ) -> Result<(DownloadArgs, ProcessedArguments)> {
     let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
     let bytes = download_file(meta_url, None).await?;
     let version_manifest: Value = serde_json::from_slice(&bytes)?;
+    let current_size = Arc::new(AtomicUsize::new(0));
+    let total_size = Arc::new(AtomicUsize::new(0));
 
     let mut download_list = Vec::<QuiltLibrary>::deserialize(
         &version_manifest[0]["launcherMeta"]["libraries"]["common"],
