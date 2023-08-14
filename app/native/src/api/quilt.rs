@@ -97,15 +97,14 @@ pub async fn prepare_quilt_download(
     // NOTE: rust can't dedcue the type here(cause dyn trait)
     let mut handles: HandlesType = Vec::new();
 
-    let path_vec_arc = Arc::new(path_vec);
-    let url_vec_arc = Arc::new(url_vec);
-    for (index, library) in download_list.into_iter().enumerate() {
-        let url_vec_clone = Arc::clone(&url_vec_arc);
+    for ((library, path), url) in download_list
+        .into_iter()
+        .zip(path_vec.into_iter())
+        .zip(url_vec.into_iter())
+    {
         let current_size_clone = Arc::clone(&current_size);
-        let path_vec_clone = Arc::clone(&path_vec_arc);
         handles.push(Box::pin(async move {
-            let url = format!("{}{}", library.url, url_vec_clone[index]);
-            let path = &path_vec_clone[index];
+            let url = format!("{}{}", library.url, url);
             let sha1_path = path.with_extension("jar.sha1");
             let sha1_url = url.clone() + ".sha1";
             let mut sha1 = String::new();
