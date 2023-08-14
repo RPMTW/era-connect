@@ -7,11 +7,6 @@ pub extern "C" fn wire_setup_logger(port_: i64) {
 }
 
 #[no_mangle]
-pub extern "C" fn wire_download_vanilla(port_: i64) {
-    wire_download_vanilla_impl(port_)
-}
-
-#[no_mangle]
 pub extern "C" fn wire_launch_vanilla(port_: i64) {
     wire_launch_vanilla_impl(port_)
 }

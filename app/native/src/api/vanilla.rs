@@ -1,40 +1,28 @@
+pub mod assets;
+pub mod library;
+pub mod rules;
+
 use anyhow::bail;
 use anyhow::{Context, Result};
-use flutter_rust_bridge::{RustOpaque, StreamSink};
-use futures::{Future, StreamExt};
-use log::{error, info};
+use flutter_rust_bridge::RustOpaque;
+use futures::Future;
+use log::error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 pub use std::path::PathBuf;
 use std::pin::Pin;
-use std::{
-    sync::{
-        atomic::Ordering,
-        atomic::{AtomicBool, AtomicUsize},
-        Arc,
-    },
-    time::Duration,
-};
+use std::sync::{atomic::AtomicUsize, atomic::Ordering, Arc};
 use tokio::fs::{self, create_dir_all, File};
 use tokio::io::AsyncWriteExt;
-use tokio::time::{self, Instant};
 
-use crate::api::download::library::os_match;
-use crate::api::download::rules::OsName;
+use crate::api::vanilla::library::os_match;
+use crate::api::vanilla::rules::OsName;
 
-use super::download::assets::{extract_assets, parallel_assets, AssetIndex};
-use super::download::library::{parallel_library, Library};
-use super::download::rules::{get_rules, ActionType, Rule};
-use super::download::util::{download_file, extract_filename, validate_sha1};
-use super::{DownloadState, STATE};
+use self::assets::{extract_assets, parallel_assets, AssetIndex};
+use self::library::{parallel_library, Library};
+use self::rules::{get_rules, ActionType, Rule};
 
-#[derive(Debug, Clone)]
-pub struct Progress {
-    pub speed: f64,
-    pub percentages: f64,
-    pub current_size: f64,
-    pub total_size: f64,
-}
+use super::download::{download_file, extract_filename, validate_sha1, DownloadArgs};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct GameFlags {
@@ -464,82 +452,4 @@ fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameOptions) -> Vec<
         modified_arguments.push(buf);
     }
     modified_arguments
-}
-
-pub struct DownloadArgs {
-    pub current_size: Arc<AtomicUsize>,
-    pub total_size: Arc<AtomicUsize>,
-    pub handles: HandlesType,
-}
-
-// get progress and and launch download
-pub async fn run_download(
-    sink: StreamSink<Progress>,
-    download_args: DownloadArgs,
-) -> Result<StreamSink<Progress>> {
-    let handles = download_args.handles;
-    let download_complete = Arc::new(AtomicBool::new(false));
-
-    let download_complete_clone = Arc::clone(&download_complete);
-    let current_size_clone = Arc::clone(&download_args.current_size);
-    let total_size_clone = Arc::clone(&download_args.total_size);
-
-    *STATE.write().await = DownloadState::Downloading;
-    let sink_clone = sink.clone();
-    let task = tokio::spawn(async move {
-        let mut instant = Instant::now();
-        let mut prev_bytes = 0.0;
-        while !download_complete_clone.load(Ordering::Acquire) {
-            time::sleep(Duration::from_millis(500)).await;
-            let progress = Progress {
-                speed: (current_size_clone.load(Ordering::Relaxed) as f64 - prev_bytes)
-                    / instant.elapsed().as_secs_f64()
-                    / 1_000_000.0,
-                percentages: current_size_clone.load(Ordering::Relaxed) as f64
-                    / total_size_clone.load(Ordering::Relaxed) as f64
-                    * 100.0,
-                current_size: current_size_clone.load(Ordering::Relaxed) as f64,
-                total_size: total_size_clone.load(Ordering::Relaxed) as f64,
-            };
-            prev_bytes = current_size_clone.load(Ordering::Relaxed) as f64;
-            instant = Instant::now();
-            sink.add(progress);
-            let state = *STATE.read().await;
-            match state {
-                DownloadState::Downloading => {}
-                DownloadState::Paused => {
-                    while *STATE.read().await != DownloadState::Downloading {
-                        time::sleep(Duration::from_millis(100)).await;
-                    }
-                }
-                DownloadState::Stopped => break,
-            }
-        }
-    });
-    // Create a semaphore with a limit on the number of concurrent downloads
-    join_futures(handles, 128).await?;
-    download_complete.store(true, Ordering::Release);
-    task.await?;
-    Ok(sink_clone)
-}
-
-pub async fn join_futures(
-    handles: HandlesType,
-    concurrency_limit: usize,
-) -> Result<(), anyhow::Error> {
-    let mut download_stream = tokio_stream::iter(handles).buffer_unordered(concurrency_limit);
-    while let Some(x) = download_stream.next().await {
-        let state = *STATE.read().await;
-        match state {
-            DownloadState::Downloading => x?,
-            DownloadState::Paused => {
-                while *STATE.read().await != DownloadState::Downloading {
-                    time::sleep(Duration::from_millis(100)).await;
-                    info!("pausing!");
-                }
-            }
-            DownloadState::Stopped => break,
-        }
-    }
-    Ok(())
 }
