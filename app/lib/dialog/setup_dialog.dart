@@ -148,9 +148,12 @@ class _LoginAccount extends StatelessWidget {
                                         'Device Code: ${event.field0.userCode}');
                                     print(
                                         'Verification URI: ${event.field0.verificationUri}');
-                                  } else if (event is LoginFlowEvent_Progress) {
-                                    print('Progress: ${event.field0.progress}');
-                                    print('State: ${event.field0.state}');
+                                  } else if (event is LoginFlowEvent_Stage) {
+                                    print('Stage: ${event.field0}');
+                                  } else if (event is LoginFlowEvent_Error) {
+                                    print('Stage: ${event.field0}');
+                                  } else if (event is LoginFlowEvent_Success) {
+                                    print('Stage: ${event.field0}');
                                   }
                                 });
                               }),

@@ -20,7 +20,6 @@ class _MainPageState extends State<MainPage> {
       if (mounted && !configAPI.uiLayout.completedSetup) {
         showEraDialog(
           context: context,
-          barrierDismissible: true,
           dialog: const SetupDialog(),
         );
       }

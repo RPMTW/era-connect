@@ -203,6 +203,16 @@ class NativeImpl implements Native {
     return UuidValue.fromByteList(_wire2api_uint_8_list(raw));
   }
 
+  AccountToken _wire2api_account_token(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return AccountToken(
+      token: _wire2api_String(arr[0]),
+      expiresAt: _wire2api_i64(arr[1]),
+    );
+  }
+
   bool _wire2api_bool(dynamic raw) {
     return raw as bool;
   }
@@ -212,16 +222,12 @@ class NativeImpl implements Native {
     return _wire2api_login_flow_device_code(raw);
   }
 
-  LoginFlowProgress _wire2api_box_autoadd_login_flow_progress(dynamic raw) {
-    return _wire2api_login_flow_progress(raw);
+  LoginFlowErrors _wire2api_box_autoadd_login_flow_errors(dynamic raw) {
+    return _wire2api_login_flow_errors(raw);
   }
 
   MinecraftAccount _wire2api_box_autoadd_minecraft_account(dynamic raw) {
     return _wire2api_minecraft_account(raw);
-  }
-
-  XstsTokenError _wire2api_box_autoadd_xsts_token_error(dynamic raw) {
-    return _wire2api_xsts_token_error(raw);
   }
 
   DownloadState _wire2api_download_state(dynamic raw) {
@@ -258,11 +264,26 @@ class NativeImpl implements Native {
     );
   }
 
+  LoginFlowErrors _wire2api_login_flow_errors(dynamic raw) {
+    switch (raw[0]) {
+      case 0:
+        return LoginFlowErrors_XstsError(
+          _wire2api_xsts_token_error_type(raw[1]),
+        );
+      case 1:
+        return LoginFlowErrors_GameNotOwned();
+      case 2:
+        return LoginFlowErrors_UnknownError();
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
   LoginFlowEvent _wire2api_login_flow_event(dynamic raw) {
     switch (raw[0]) {
       case 0:
-        return LoginFlowEvent_Progress(
-          _wire2api_box_autoadd_login_flow_progress(raw[1]),
+        return LoginFlowEvent_Stage(
+          _wire2api_login_flow_stage(raw[1]),
         );
       case 1:
         return LoginFlowEvent_DeviceCode(
@@ -270,7 +291,7 @@ class NativeImpl implements Native {
         );
       case 2:
         return LoginFlowEvent_Error(
-          _wire2api_box_autoadd_xsts_token_error(raw[1]),
+          _wire2api_box_autoadd_login_flow_errors(raw[1]),
         );
       case 3:
         return LoginFlowEvent_Success(
@@ -281,32 +302,21 @@ class NativeImpl implements Native {
     }
   }
 
-  LoginFlowProgress _wire2api_login_flow_progress(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return LoginFlowProgress(
-      state: _wire2api_login_flow_state(arr[0]),
-      progress: _wire2api_f64(arr[1]),
-    );
-  }
-
-  LoginFlowState _wire2api_login_flow_state(dynamic raw) {
-    return LoginFlowState.values[raw as int];
+  LoginFlowStage _wire2api_login_flow_stage(dynamic raw) {
+    return LoginFlowStage.values[raw as int];
   }
 
   MinecraftAccount _wire2api_minecraft_account(dynamic raw) {
     final arr = raw as List<dynamic>;
-    if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return MinecraftAccount(
       username: _wire2api_String(arr[0]),
       uuid: _wire2api_Uuid(arr[1]),
-      accessToken: _wire2api_String(arr[2]),
-      refreshToken: _wire2api_String(arr[3]),
-      expiresAt: _wire2api_i64(arr[4]),
-      skins: _wire2api_list_minecraft_skin(arr[5]),
-      capes: _wire2api_list_minecraft_cape(arr[6]),
+      accessToken: _wire2api_account_token(arr[2]),
+      refreshToken: _wire2api_account_token(arr[3]),
+      skins: _wire2api_list_minecraft_skin(arr[4]),
+      capes: _wire2api_list_minecraft_cape(arr[5]),
     );
   }
 
@@ -371,18 +381,6 @@ class NativeImpl implements Native {
       default:
         throw Exception("unreachable");
     }
-  }
-
-  XstsTokenError _wire2api_xsts_token_error(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-    return XstsTokenError(
-      identity: _wire2api_String(arr[0]),
-      xerr: _wire2api_xsts_token_error_type(arr[1]),
-      message: _wire2api_String(arr[2]),
-      redirect: _wire2api_String(arr[3]),
-    );
   }
 
   XstsTokenErrorType _wire2api_xsts_token_error_type(dynamic raw) {

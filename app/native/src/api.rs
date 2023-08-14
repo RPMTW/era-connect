@@ -10,20 +10,19 @@ use std::path::PathBuf;
 pub use std::sync::mpsc;
 pub use std::sync::mpsc::{Receiver, Sender};
 
-use anyhow::{Context, Ok};
+use anyhow::Context;
 use chrono::Local;
-use log::info;
+use log::{info, warn};
 
 pub use flutter_rust_bridge::StreamSink;
 pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
 pub use tokio::sync::{Mutex, RwLock};
 
 pub use self::authentication::account::{
-    MinecraftAccount, MinecraftCape, MinecraftSkin, MinecraftSkinVariant,
+    AccountToken, MinecraftAccount, MinecraftCape, MinecraftSkin, MinecraftSkinVariant,
 };
-pub use self::authentication::flow::{
-    LoginFlowDeviceCode, LoginFlowEvent, LoginFlowProgress, LoginFlowState, XstsTokenError,
-    XstsTokenErrorType,
+pub use self::authentication::msa_flow::{
+    LoginFlowDeviceCode, LoginFlowErrors, LoginFlowEvent, LoginFlowStage, XstsTokenErrorType,
 };
 pub use self::config::ui_layout::{Key, UILayout, Value};
 pub use self::quilt::prepare_quilt_download;
@@ -162,8 +161,19 @@ pub fn set_ui_layout_config(value: Value) -> anyhow::Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::Result<()> {
-    authentication::flow::login_flow(&skin).await?;
-    skin.close();
+    let result = authentication::msa_flow::login_flow(&skin).await;
+    match result {
+        Ok(account) => {
+            info!("Account: {:#?}", account);
+            skin.add(LoginFlowEvent::Success(account));
+            info!("Successfully login minecraft account");
+        }
+        Err(e) => {
+            skin.add(LoginFlowEvent::Error(LoginFlowErrors::UnknownError));
+            warn!("Failed to login minecraft account: {:#?}", e);
+        }
+    }
 
+    skin.close();
     Ok(())
 }

@@ -5,9 +5,8 @@ use uuid::Uuid;
 pub struct MinecraftAccount {
     pub username: String,
     pub uuid: Uuid,
-    pub access_token: String,
-    pub refresh_token: String,
-    pub expires_at: i64,
+    pub access_token: AccountToken,
+    pub refresh_token: AccountToken,
     pub skins: Vec<MinecraftSkin>,
     pub capes: Vec<MinecraftCape>,
 }
@@ -34,4 +33,10 @@ pub struct MinecraftCape {
     pub state: String,
     pub url: String,
     pub alias: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccountToken {
+    pub token: String,
+    pub expires_at: i64,
 }

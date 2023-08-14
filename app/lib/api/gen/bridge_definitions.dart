@@ -53,6 +53,16 @@ abstract class Native {
   FlutterRustBridgeTaskConstMeta get kMinecraftLoginFlowConstMeta;
 }
 
+class AccountToken {
+  final String token;
+  final int expiresAt;
+
+  const AccountToken({
+    required this.token,
+    required this.expiresAt,
+  });
+}
+
 enum DownloadState {
   Downloading,
   Paused,
@@ -74,46 +84,45 @@ class LoginFlowDeviceCode {
 }
 
 @freezed
+sealed class LoginFlowErrors with _$LoginFlowErrors {
+  const factory LoginFlowErrors.xstsError(
+    XstsTokenErrorType field0,
+  ) = LoginFlowErrors_XstsError;
+  const factory LoginFlowErrors.gameNotOwned() = LoginFlowErrors_GameNotOwned;
+  const factory LoginFlowErrors.unknownError() = LoginFlowErrors_UnknownError;
+}
+
+@freezed
 sealed class LoginFlowEvent with _$LoginFlowEvent {
-  const factory LoginFlowEvent.progress(
-    LoginFlowProgress field0,
-  ) = LoginFlowEvent_Progress;
+  const factory LoginFlowEvent.stage(
+    LoginFlowStage field0,
+  ) = LoginFlowEvent_Stage;
   const factory LoginFlowEvent.deviceCode(
     LoginFlowDeviceCode field0,
   ) = LoginFlowEvent_DeviceCode;
   const factory LoginFlowEvent.error(
-    XstsTokenError field0,
+    LoginFlowErrors field0,
   ) = LoginFlowEvent_Error;
   const factory LoginFlowEvent.success(
     MinecraftAccount field0,
   ) = LoginFlowEvent_Success;
 }
 
-class LoginFlowProgress {
-  final LoginFlowState state;
-  final double progress;
-
-  const LoginFlowProgress({
-    required this.state,
-    required this.progress,
-  });
-}
-
-enum LoginFlowState {
+enum LoginFlowStage {
   FetchingDeviceCode,
   WaitingForUser,
   AuthenticatingXboxLive,
   FetchingXstsToken,
   FetchingMinecraftToken,
-  Success,
+  CheckingGameOwnership,
+  GettingProfile,
 }
 
 class MinecraftAccount {
   final String username;
   final UuidValue uuid;
-  final String accessToken;
-  final String refreshToken;
-  final int expiresAt;
+  final AccountToken accessToken;
+  final AccountToken refreshToken;
   final List<MinecraftSkin> skins;
   final List<MinecraftCape> capes;
 
@@ -122,7 +131,6 @@ class MinecraftAccount {
     required this.uuid,
     required this.accessToken,
     required this.refreshToken,
-    required this.expiresAt,
     required this.skins,
     required this.capes,
   });
@@ -180,20 +188,6 @@ sealed class Value with _$Value {
   const factory Value.completedSetup(
     bool field0,
   ) = Value_CompletedSetup;
-}
-
-class XstsTokenError {
-  final String identity;
-  final XstsTokenErrorType xerr;
-  final String message;
-  final String redirect;
-
-  const XstsTokenError({
-    required this.identity,
-    required this.xerr,
-    required this.message,
-    required this.redirect,
-  });
 }
 
 /// Reference: https://wiki.vg/Microsoft_Authentication_Scheme
