@@ -1,6 +1,8 @@
-use crate::api::vanilla::HandlesType;
+use crate::api::{
+    download::{download_file, validate_sha1},
+    vanilla::HandlesType,
+};
 
-use super::util::{download_file, validate_sha1};
 use anyhow::{anyhow, Context, Result};
 use log::error;
 use serde::{Deserialize, Serialize};
