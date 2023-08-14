@@ -12,13 +12,13 @@ use log::error;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
-use crate::api::vanilla::HandlesType;
+use crate::api::{
+    download::{download_file, validate_sha1},
+    vanilla::HandlesType,
+};
 use anyhow::anyhow;
 
-use super::{
-    rules::{ActionType, OsName, Rule},
-    util::{download_file, validate_sha1},
-};
+use super::rules::{ActionType, OsName, Rule};
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Library {

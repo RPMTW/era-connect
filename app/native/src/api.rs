@@ -19,13 +19,14 @@ use crate::api::forge::{prepare_forge_download, process_forge};
 
 use self::config::config_state::ConfigState;
 pub use self::config::ui_layout::{Key, UILayout, Value};
+pub use self::download::Progress;
+use self::download::{run_download, DownloadBias};
 pub use self::quilt::prepare_quilt_download;
 use self::vanilla::launch_game;
 pub use self::vanilla::prepare_vanilla_download;
 pub use self::vanilla::PathBuf;
-pub use self::vanilla::{run_download, Progress};
 
-pub use self::vanilla::{DownloadArgs, GameOptions, JvmOptions, LaunchArgs};
+pub use self::vanilla::{GameOptions, JvmOptions, LaunchArgs};
 
 lazy_static::lazy_static! {
     static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
@@ -77,11 +78,6 @@ pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> 
     };
     run_download(stream, c.0, vanilla_bias).await?;
     launch_game(c.1.launch_args).await
-}
-
-pub struct DownloadBias {
-    start: f64,
-    end: f64,
 }
 
 #[tokio::main(flavor = "current_thread")]

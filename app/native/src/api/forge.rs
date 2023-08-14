@@ -15,9 +15,9 @@ use serde_json::Value;
 use tokio::{fs, io::AsyncBufReadExt};
 
 use super::{
-    download::util::{download_file, extract_filename, validate_sha1},
+    download::{download_file, extract_filename, validate_sha1, DownloadArgs},
     vanilla::{get_game_manifest, HandlesType, ProcessedArguments},
-    DownloadArgs, GameOptions, JvmOptions, LaunchArgs,
+    GameOptions, JvmOptions, LaunchArgs,
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Processors {
