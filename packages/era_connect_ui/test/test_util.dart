@@ -57,8 +57,10 @@ Color? getDecorationColor(final WidgetTester tester, {final int index = 0}) {
 // TODO: Use a better solution for overflow errors in widget tests.
 void disableOverflowError(WidgetTester tester) {
   tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = const Size(1600, 900);
   addTearDown(() {
     tester.view.resetDevicePixelRatio();
+    tester.view.resetPhysicalSize();
   });
 
   final defaultErrorHandler = FlutterError.onError;
@@ -70,6 +72,7 @@ void disableOverflowError(WidgetTester tester) {
         (node) => node.value.toString().contains(' overflowed by '),
       );
       if (isOverflowError) {
+        print('Overflow error in widget test: ${details.exception}');
         return;
       }
     }
