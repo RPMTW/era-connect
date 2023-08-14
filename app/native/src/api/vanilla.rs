@@ -498,11 +498,10 @@ pub async fn run_download(
                 speed: (current_size_clone.load(Ordering::Relaxed) as f64 - prev_bytes)
                     / instant.elapsed().as_secs_f64()
                     / 1_000_000.0,
-                percentages: bias.start
-                    + current_size_clone.load(Ordering::Relaxed) as f64
-                        / total_size_clone.load(Ordering::Relaxed) as f64
-                        * 100.0
-                        * multiplier,
+                percentages: (current_size_clone.load(Ordering::Relaxed) as f64
+                    / total_size_clone.load(Ordering::Relaxed) as f64
+                    * 100.0)
+                    .mul_add(multiplier, bias.start),
                 current_size: current_size_clone.load(Ordering::Relaxed) as f64,
                 total_size: total_size_clone.load(Ordering::Relaxed) as f64,
             };
