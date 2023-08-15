@@ -3,7 +3,6 @@ use std::ops::Add;
 use anyhow::Context;
 use chrono::{Duration, Utc};
 use flutter_rust_bridge::StreamSink;
-use jsonwebtoken::{Algorithm, DecodingKey, Validation};
 use oauth2::basic::{BasicClient, BasicErrorResponseType, BasicTokenType};
 use oauth2::reqwest::async_http_client;
 use oauth2::{
@@ -20,9 +19,8 @@ use crate::api::{MinecraftCape, MinecraftSkin};
 
 use super::account::{AccountToken, MinecraftAccount};
 use super::{
-    MINECRAFT_AUTH_URL, MINECRAFT_GAME_OWNERSHIP_URL, MINECRAFT_USER_PROFILE_URL,
-    MOJANG_PUBLIC_KEY, MSA_CLIENT_ID, MSA_DEVICE_CODE_URL, MSA_SCOPE, MSA_TOKEN_URL, MSA_URL,
-    XBOX_LIVE_AUTH_URL, XBOX_LIVE_XSTS_URL,
+    MINECRAFT_AUTH_URL, MINECRAFT_USER_PROFILE_URL, MSA_CLIENT_ID, MSA_DEVICE_CODE_URL, MSA_SCOPE,
+    MSA_TOKEN_URL, MSA_URL, XBOX_LIVE_AUTH_URL, XBOX_LIVE_XSTS_URL,
 };
 
 #[derive(Debug, Clone)]
@@ -46,7 +44,6 @@ pub enum LoginFlowStage {
     AuthenticatingXboxLive,
     FetchingXstsToken,
     FetchingMinecraftToken,
-    CheckingGameOwnership,
     GettingProfile,
 }
 
@@ -118,27 +115,11 @@ struct MinecraftTokenResponse {
 }
 
 #[derive(Debug, Deserialize)]
-struct MinecraftGameOwnershipResponse {
-    signature: String,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct MinecraftUserProfile {
     pub id: Uuid,
     pub name: String,
     pub skins: Vec<MinecraftSkin>,
     pub capes: Vec<MinecraftCape>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct SignatureDecodeResult {
-    entitlements: Vec<EntitlementsItem>,
-}
-
-#[derive(Debug, Deserialize)]
-struct EntitlementsItem {
-    name: String,
 }
 
 pub async fn login_flow(skin: &StreamSink<LoginFlowEvent>) -> anyhow::Result<MinecraftAccount> {
@@ -182,16 +163,15 @@ pub async fn login_flow(skin: &StreamSink<LoginFlowEvent>) -> anyhow::Result<Min
 
     // Minecraft Authentication Flow
     let (mc_access_token, expires_in) = fetch_minecraft_token(&xsts_token, &user_hash).await?;
-    skin.add(LoginFlowEvent::Stage(LoginFlowStage::CheckingGameOwnership));
-
-    let own_game = check_game_ownership(&mc_access_token).await?;
-    if !own_game {
-        skin.add(LoginFlowEvent::Error(LoginFlowErrors::GameNotOwned));
-        return Err(anyhow::anyhow!("Game not owned"));
-    }
     skin.add(LoginFlowEvent::Stage(LoginFlowStage::GettingProfile));
 
-    let profile = get_user_profile(&mc_access_token).await?;
+    let profile = match get_user_profile(&mc_access_token).await {
+        Ok(profile) => profile,
+        Err(e) => {
+            skin.add(LoginFlowEvent::Error(LoginFlowErrors::GameNotOwned));
+            return Err(anyhow::anyhow!("Game not owned: {}", e));
+        }
+    };
 
     let account = MinecraftAccount {
         username: profile.name,
@@ -332,50 +312,11 @@ pub async fn fetch_minecraft_token(
     let response = client
         .post(MINECRAFT_AUTH_URL)
         .json(&payload)
-        .header("Content-Type", "application/json")
-        .header("Accept", "application/json")
         .send()
         .await?;
     let response = response.json::<MinecraftTokenResponse>().await?;
 
     Ok((response.access_token, response.expires_in))
-}
-
-async fn check_game_ownership(mc_access_token: &str) -> anyhow::Result<bool> {
-    fn validate_signature(
-        signature: &str,
-    ) -> Result<SignatureDecodeResult, jsonwebtoken::errors::Error> {
-        let validation = Validation::new(Algorithm::RS256);
-        let result = jsonwebtoken::decode::<SignatureDecodeResult>(
-            signature,
-            &DecodingKey::from_rsa_pem(MOJANG_PUBLIC_KEY)?,
-            &validation,
-        );
-
-        match result {
-            Ok(result) => Ok(result.claims),
-            Err(e) => Err(e),
-        }
-    }
-
-    let client = reqwest::Client::new();
-
-    let response = client
-        .get(MINECRAFT_GAME_OWNERSHIP_URL)
-        .bearer_auth(mc_access_token)
-        .send()
-        .await?;
-    let response = response.json::<MinecraftGameOwnershipResponse>().await?;
-    let entitlements = validate_signature(&response.signature)?.entitlements;
-
-    let own_game = entitlements
-        .iter()
-        .any(|item| item.name == "product_minecraft")
-        && entitlements
-            .iter()
-            .any(|item| item.name == "game_minecraft");
-
-    Ok(own_game)
 }
 
 pub async fn get_user_profile(mc_access_token: &str) -> anyhow::Result<MinecraftUserProfile> {

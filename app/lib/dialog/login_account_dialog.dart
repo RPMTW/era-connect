@@ -10,17 +10,20 @@ class LoginAccountDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: authenticationApi.loginMinecraft(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return _buildWaitingAuth(snapshot.data!);
-          }
+      future: authenticationApi.loginMinecraft(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return _buildWaitingAuth(snapshot.data!);
+        } else if (snapshot.hasError) {
+          return _buildErrorResponse(context, snapshot.error);
+        }
 
-          return const EraAlertDialog(
-            title: '處理中......',
-            description: '正在向 Microsoft 請求資料中，請稍等約 1 ~ 3 秒鐘',
-          );
-        });
+        return const EraAlertDialog(
+          title: '處理中......',
+          description: '正在向 Microsoft 請求資料中，請稍等約 1 ~ 3 秒鐘',
+        );
+      },
+    );
   }
 
   Widget _buildWaitingAuth(MinecraftLoginData data) {
@@ -45,18 +48,7 @@ class LoginAccountDialog extends StatelessWidget {
             ],
           );
         } else if (snapshot.hasError) {
-          return EraAlertDialog(
-            title: '登入失敗',
-            description: '登入失敗，原因：${snapshot.error}',
-            actions: [
-              EraDialogButton.iconPrimary(
-                icon: const Icon(Icons.close_rounded),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              )
-            ],
-          );
+          return _buildErrorResponse(context, snapshot.error);
         }
 
         return StreamBuilder(
@@ -83,27 +75,80 @@ class LoginAccountDialog extends StatelessWidget {
     );
   }
 
+  Widget _buildErrorResponse(BuildContext context, Object? error) {
+    const String needsAdultVerification =
+        '本帳號需要在 [Xbox 頁面](live.xbox.com/ageverification) 完成成人驗證（僅限南韓）。';
+    final String description;
+    if (error is LoginXstsError) {
+      switch (error.field0) {
+        case XstsTokenErrorType.DoesNotHaveXboxAccount:
+          description =
+              '您的 Microsoft 帳號尚未連結 Xbox 帳號。請確認您登入的帳號是否正確，並且您至少在官方啟動器中登入過一次這個帳號。';
+        case XstsTokenErrorType.CountryNotAvailable:
+          description = '本帳號所在的國家或地區不受 Xbox Live 支援，因此無法登入 Minecraft 帳號。';
+        case XstsTokenErrorType.NeedsAdultVerificationKR1:
+          description = needsAdultVerification;
+        case XstsTokenErrorType.NeedsAdultVerificationKR2:
+          description = needsAdultVerification;
+        case XstsTokenErrorType.ChildAccount:
+          description = '''您的帳號為未成年帳號，根據 Microsoft (微軟) 政策限制，不允許未成年帳號透過第三方啟動器登入。
+          \\
+          \\
+          倘若您認為有誤，請至 [Microsoft 帳號頁面](https://account.microsoft.com/profile) 修改為正確的生日。  
+          此外，倘若您需要透過多人伺服器與好友一同享受遊戲，請開啟 [Xbox 頁面](https://account.xbox.com/Settings?wa=wsignin1.0&activetab=main%3aprivacytab) 找到一個類似「在 Xbox Live 上與其他玩家遊玩」的選項，並確保該選項已開啟。
+          \\
+          \\
+          最後等待一段時間再重新登入應該就會成功了，若仍無效可到我們的 [Discord 群組](https://discord.gg/5xApZtgV2u) 尋求技術支援。
+          ''';
+      }
+    } else if (error is LoginErrorGameNotOwn) {
+      description =
+          '''請確認您的帳號已購買 Minecraft: Java Edition 或 Xbox Game Pass 並且至少在官方啟動器中登入過一次這個帳號。
+          \\
+          倘若您尚未購買 Minecraft: Java Edition 可至 [Minecraft 官方網站](https://www.minecraft.net/store/minecraft-java-bedrock-edition-pc) 購買''';
+    } else {
+      description = '執行登入作業時發生未知錯誤，請再試一次，若仍失敗請聯繫開發者協助您解決問題，原因如下：\\$error';
+    }
+
+    return EraAlertDialog(
+      title: '登入失敗',
+      description: description,
+      actions: [
+        EraDialogButton.iconPrimary(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        )
+      ],
+    );
+  }
+
   Widget _buildDeviceCodeDialog(
       BuildContext context, LoginFlowDeviceCode deviceCode) {
     final userCode = deviceCode.userCode;
 
     return EraAlertDialog(
       title: '完成登入',
-      description:
-          '請點擊右下角的按鈕複製代碼後前往 Microsoft 登入頁面並貼上代碼以完成登入，倘若未自動複製代碼請手動輸入至 Microsoft 的登入頁面',
+      description: '請在瀏覽器中打開 ${deviceCode.verificationUri} 並輸入下方驗證碼即可完成登入。',
       content: Wrap(
         spacing: 10,
         children: userCode.characters
-            .map((e) => Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                      color: context.theme.deepBackgroundColor,
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Text(
-                    e,
-                    style: const TextStyle(fontSize: 22),
+            .map(
+              (code) => Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                    color: context.theme.deepBackgroundColor,
+                    borderRadius: BorderRadius.circular(10)),
+                child: Text(
+                  code,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontFamily: 'BaiJamjuree',
                   ),
-                ))
+                ),
+              ),
+            )
             .toList(),
       ),
       actions: [

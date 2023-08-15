@@ -17,17 +17,25 @@ class EraAlertDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      insetPadding: const EdgeInsets.only(top: 280, bottom: 230),
-      alignment: Alignment.center,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        color: context.theme.backgroundColor,
-        child: Column(
-          children: [
-            Expanded(flex: 3, child: _buildContent(context)),
-            Expanded(flex: 1, child: _buildActions(context)),
-          ],
+      child: IntrinsicWidth(
+        child: IntrinsicHeight(
+          child: Container(
+            color: context.theme.backgroundColor,
+            constraints: const BoxConstraints(
+              minHeight: 350,
+              maxHeight: 450,
+              minWidth: 580,
+              maxWidth: 620,
+            ),
+            child: Column(
+              children: [
+                Expanded(flex: 4, child: _buildContent(context)),
+                Expanded(flex: 1, child: _buildActions(context)),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -35,9 +43,9 @@ class EraAlertDialog extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+      padding: const EdgeInsets.only(top: 25, left: 35, right: 35),
       color: context.theme.backgroundColor,
-      constraints: const BoxConstraints.expand(width: 600),
+      alignment: Alignment.centerLeft,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,15 +53,15 @@ class EraAlertDialog extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-                fontSize: 40,
+                fontSize: content == null ? 45 : 40,
                 color: context.theme.textColor,
                 fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 15),
-          Text(
+          MarkdownText(
             description,
             style:
-                TextStyle(fontSize: 17, color: context.theme.tertiaryTextColor),
+                TextStyle(fontSize: 16, color: context.theme.tertiaryTextColor),
           ),
           const SizedBox(height: 20),
           if (content != null) content!,
@@ -64,15 +72,10 @@ class EraAlertDialog extends StatelessWidget {
 
   Widget _buildActions(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
       color: context.theme.deepBackgroundColor,
-      constraints: const BoxConstraints.expand(width: 600),
-      child: Wrap(
-        runAlignment: WrapAlignment.center,
-        alignment: WrapAlignment.end,
-        spacing: 10,
-        children: actions,
-      ),
+      alignment: Alignment.centerRight,
+      child: Wrap(spacing: 10, children: actions),
     );
   }
 }

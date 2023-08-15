@@ -11,6 +11,9 @@ typedef MinecraftLoginData = (
   Future<bridge.MinecraftAccount> account
 );
 
+typedef LoginXstsError = bridge.LoginFlowErrors_XstsError;
+typedef LoginErrorGameNotOwn = bridge.LoginFlowErrors_GameNotOwned;
+
 class AuthenticationApi {
   Future<MinecraftLoginData> loginMinecraft() async {
     final flowStream = api.minecraftLoginFlow();
@@ -20,12 +23,14 @@ class AuthenticationApi {
     final stageStreamController = StreamController<bridge.LoginFlowStage>();
 
     flowStream.listen((event) {
+      if (accountCompleter.isCompleted) return;
+
       if (event is bridge.LoginFlowEvent_DeviceCode) {
         deviceCodeCompleter.complete(event.field0);
       } else if (event is bridge.LoginFlowEvent_Stage) {
         stageStreamController.add(event.field0);
       } else if (event is bridge.LoginFlowEvent_Error) {
-        throw event.field0;
+        accountCompleter.completeError(event.field0);
       } else if (event is bridge.LoginFlowEvent_Success) {
         accountCompleter.complete(event.field0);
       }

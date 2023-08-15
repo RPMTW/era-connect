@@ -110,7 +110,6 @@ enum LoginFlowStage {
   AuthenticatingXboxLive,
   FetchingXstsToken,
   FetchingMinecraftToken,
-  CheckingGameOwnership,
   GettingProfile,
 }
 
@@ -186,7 +185,7 @@ sealed class Value with _$Value {
   ) = Value_CompletedSetup;
 }
 
-/// Reference: https://wiki.vg/Microsoft_Authentication_Scheme
+/// Reference: [Unofficial Mojang Wiki](https://wiki.vg/Microsoft_Authentication_Scheme)
 enum XstsTokenErrorType {
   /// The account doesn't have an Xbox account. Once they sign up for one (or login through minecraft.net to create one) then they can proceed with the login. This shouldn't happen with accounts that have purchased Minecraft with a Microsoft account, as they would've already gone through that Xbox signup process.
   DoesNotHaveXboxAccount,

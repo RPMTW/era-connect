@@ -30,8 +30,7 @@ pub use self::download::Progress;
 use self::download::{run_download, DownloadBias};
 pub use self::quilt::prepare_quilt_download;
 pub use self::vanilla::prepare_vanilla_download;
-pub use self::vanilla::{run_download, Progress};
-pub use self::vanilla::{DownloadArgs, GameOptions, JvmOptions, LaunchArgs};
+pub use self::vanilla::{GameOptions, JvmOptions, LaunchArgs};
 
 use self::config::config_state::ConfigState;
 use self::forge::{prepare_forge_download, process_forge};

@@ -271,8 +271,7 @@ impl support::IntoDart for LoginFlowStage {
             Self::AuthenticatingXboxLive => 2,
             Self::FetchingXstsToken => 3,
             Self::FetchingMinecraftToken => 4,
-            Self::CheckingGameOwnership => 5,
-            Self::GettingProfile => 6,
+            Self::GettingProfile => 5,
         }
         .into_dart()
     }

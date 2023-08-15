@@ -7,7 +7,7 @@ final ConfigApi configApi = ConfigApi();
 
 class ConfigApi {
   UILayoutConfig _uiLayout = UILayoutConfig();
-  
+
   UILayoutConfig get uiLayout => _uiLayout;
   @visibleForTesting
   set uiLayout(UILayoutConfig value) {

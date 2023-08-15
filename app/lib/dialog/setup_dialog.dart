@@ -170,7 +170,7 @@ class _LoginAccount extends StatelessWidget {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 20),
+                          horizontal: 15, vertical: 22),
                     ),
                     onPressed: () {
                       showEraDialog(

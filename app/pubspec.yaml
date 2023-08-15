@@ -73,6 +73,6 @@ flutter:
     - family: Geo
       fonts:
         - asset: assets/fonts/Geo-Regular.ttf
-    - family: Graduate
+    - family: BaiJamjuree
       fonts:
-        - asset: assets/fonts/Graduate-Regular.ttf
+        - asset: assets/fonts/BaiJamjuree-BoldItalic.ttf
