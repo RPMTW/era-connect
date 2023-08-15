@@ -34,19 +34,18 @@ class InteractiveDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding:
-          const EdgeInsets.only(top: 75, bottom: 35, left: 85, right: 85),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          height: 900,
-          width: 1600,
-          color: context.theme.backgroundColor,
-          child: Row(
-            children: [
-              Expanded(flex: isWide ? 16 : 3, child: _buildLeftArea(context)),
-              Expanded(flex: isWide ? 3 : 7, child: _buildRightArea(context)),
-            ],
-          ),
+          const EdgeInsets.only(top: 85, bottom: 35, left: 85, right: 85),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        height: 900,
+        width: 1600,
+        color: context.theme.backgroundColor,
+        child: Row(
+          children: [
+            Expanded(flex: isWide ? 16 : 3, child: _buildLeftArea(context)),
+            Expanded(flex: isWide ? 3 : 7, child: _buildRightArea(context)),
+          ],
         ),
       ),
     );

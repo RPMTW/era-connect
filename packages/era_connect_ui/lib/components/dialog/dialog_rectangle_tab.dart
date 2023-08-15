@@ -12,6 +12,7 @@ class TabItem {
 class DialogRectangleTab extends StatefulWidget {
   final String title;
   final List<TabItem> tabs;
+
   const DialogRectangleTab({super.key, required this.title, required this.tabs})
       : assert(tabs.length > 1);
 
@@ -36,7 +37,7 @@ class _DialogRectangleTabState extends State<DialogRectangleTab> {
             spacing: 15,
             children: widget.tabs.map((e) => _buildTab(e)).toList()),
         const SizedBox(height: 30),
-        _buildContent()
+        _buildContent(),
       ],
     );
   }

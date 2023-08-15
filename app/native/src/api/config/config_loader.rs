@@ -49,3 +49,14 @@ impl ConfigLoader {
         DATA_DIR.join("config")
     }
 }
+
+pub trait ConfigInstance<T: Default + DeserializeOwned + Serialize> {
+    fn file_name() -> &'static str;
+
+    fn load() -> anyhow::Result<T> {
+        let loader = ConfigLoader::new(Self::file_name().to_owned());
+        loader.load::<T>()
+    }
+
+    fn save(&self) -> anyhow::Result<()>;
+}

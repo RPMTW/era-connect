@@ -158,13 +158,60 @@ class NativeImpl implements Native {
         argNames: ["value"],
       );
 
+  Stream<LoginFlowEvent> minecraftLoginFlow({dynamic hint}) {
+    return _platform.executeStream(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_minecraft_login_flow(port_),
+      parseSuccessData: _wire2api_login_flow_event,
+      constMeta: kMinecraftLoginFlowConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kMinecraftLoginFlowConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "minecraft_login_flow",
+        argNames: [],
+      );
+
   void dispose() {
     _platform.dispose();
   }
 // Section: wire2api
 
+  String _wire2api_String(dynamic raw) {
+    return raw as String;
+  }
+
+  UuidValue _wire2api_Uuid(dynamic raw) {
+    return UuidValue.fromByteList(_wire2api_uint_8_list(raw));
+  }
+
+  AccountToken _wire2api_account_token(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return AccountToken(
+      token: _wire2api_String(arr[0]),
+      expiresAt: _wire2api_i64(arr[1]),
+    );
+  }
+
   bool _wire2api_bool(dynamic raw) {
     return raw as bool;
+  }
+
+  LoginFlowDeviceCode _wire2api_box_autoadd_login_flow_device_code(
+      dynamic raw) {
+    return _wire2api_login_flow_device_code(raw);
+  }
+
+  LoginFlowErrors _wire2api_box_autoadd_login_flow_errors(dynamic raw) {
+    return _wire2api_login_flow_errors(raw);
+  }
+
+  MinecraftAccount _wire2api_box_autoadd_minecraft_account(dynamic raw) {
+    return _wire2api_minecraft_account(raw);
   }
 
   DownloadState _wire2api_download_state(dynamic raw) {
@@ -179,6 +226,112 @@ class NativeImpl implements Native {
     return raw as int;
   }
 
+  int _wire2api_i64(dynamic raw) {
+    return castInt(raw);
+  }
+
+  List<MinecraftCape> _wire2api_list_minecraft_cape(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_minecraft_cape).toList();
+  }
+
+  List<MinecraftSkin> _wire2api_list_minecraft_skin(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_minecraft_skin).toList();
+  }
+
+  LoginFlowDeviceCode _wire2api_login_flow_device_code(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LoginFlowDeviceCode(
+      verificationUri: _wire2api_String(arr[0]),
+      userCode: _wire2api_String(arr[1]),
+    );
+  }
+
+  LoginFlowErrors _wire2api_login_flow_errors(dynamic raw) {
+    switch (raw[0]) {
+      case 0:
+        return LoginFlowErrors_XstsError(
+          _wire2api_xsts_token_error_type(raw[1]),
+        );
+      case 1:
+        return LoginFlowErrors_GameNotOwned();
+      case 2:
+        return LoginFlowErrors_UnknownError();
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  LoginFlowEvent _wire2api_login_flow_event(dynamic raw) {
+    switch (raw[0]) {
+      case 0:
+        return LoginFlowEvent_Stage(
+          _wire2api_login_flow_stage(raw[1]),
+        );
+      case 1:
+        return LoginFlowEvent_DeviceCode(
+          _wire2api_box_autoadd_login_flow_device_code(raw[1]),
+        );
+      case 2:
+        return LoginFlowEvent_Error(
+          _wire2api_box_autoadd_login_flow_errors(raw[1]),
+        );
+      case 3:
+        return LoginFlowEvent_Success(
+          _wire2api_box_autoadd_minecraft_account(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  LoginFlowStage _wire2api_login_flow_stage(dynamic raw) {
+    return LoginFlowStage.values[raw as int];
+  }
+
+  MinecraftAccount _wire2api_minecraft_account(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return MinecraftAccount(
+      username: _wire2api_String(arr[0]),
+      uuid: _wire2api_Uuid(arr[1]),
+      accessToken: _wire2api_account_token(arr[2]),
+      refreshToken: _wire2api_account_token(arr[3]),
+      skins: _wire2api_list_minecraft_skin(arr[4]),
+      capes: _wire2api_list_minecraft_cape(arr[5]),
+    );
+  }
+
+  MinecraftCape _wire2api_minecraft_cape(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return MinecraftCape(
+      id: _wire2api_Uuid(arr[0]),
+      state: _wire2api_String(arr[1]),
+      url: _wire2api_String(arr[2]),
+      alias: _wire2api_String(arr[3]),
+    );
+  }
+
+  MinecraftSkin _wire2api_minecraft_skin(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return MinecraftSkin(
+      id: _wire2api_Uuid(arr[0]),
+      state: _wire2api_String(arr[1]),
+      url: _wire2api_String(arr[2]),
+      variant: _wire2api_minecraft_skin_variant(arr[3]),
+    );
+  }
+
+  MinecraftSkinVariant _wire2api_minecraft_skin_variant(dynamic raw) {
+    return MinecraftSkinVariant.values[raw as int];
+  }
+
   Progress _wire2api_progress(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
@@ -189,6 +342,14 @@ class NativeImpl implements Native {
       currentSize: _wire2api_f64(arr[2]),
       totalSize: _wire2api_f64(arr[3]),
     );
+  }
+
+  int _wire2api_u8(dynamic raw) {
+    return raw as int;
+  }
+
+  Uint8List _wire2api_uint_8_list(dynamic raw) {
+    return raw as Uint8List;
   }
 
   void _wire2api_unit(dynamic raw) {
@@ -204,6 +365,10 @@ class NativeImpl implements Native {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  XstsTokenErrorType _wire2api_xsts_token_error_type(dynamic raw) {
+    return XstsTokenErrorType.values[raw as int];
   }
 }
 
@@ -475,6 +640,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<wire_Value>)>>('wire_set_ui_layout_config');
   late final _wire_set_ui_layout_config = _wire_set_ui_layout_configPtr
       .asFunction<void Function(int, ffi.Pointer<wire_Value>)>();
+
+  void wire_minecraft_login_flow(
+    int port_,
+  ) {
+    return _wire_minecraft_login_flow(
+      port_,
+    );
+  }
+
+  late final _wire_minecraft_login_flowPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_minecraft_login_flow');
+  late final _wire_minecraft_login_flow =
+      _wire_minecraft_login_flowPtr.asFunction<void Function(int)>();
 
   ffi.Pointer<wire_Value> new_box_autoadd_value_0() {
     return _new_box_autoadd_value_0();
