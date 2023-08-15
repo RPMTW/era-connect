@@ -43,7 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
 native/target
+native/struct-key-value-pair/target
 xcuserdata
 jniLibs
 
