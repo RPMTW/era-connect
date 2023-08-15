@@ -11,28 +11,58 @@ pub struct UILayout {
     pub completed_setup: bool,
 }
 
-#[derive(Clone, Copy)]
-pub enum Key {
-    CompletedSetup,
+macro_rules! impl_get_value {
+    ($struct_name:ident { $($field:ident : $field_ty:ty,)* }) => {
+        pub enum Key {
+            $(
+                #[allow(non_camel_case_types)]
+                $field,
+            )*
+        }
+
+        pub enum Value {
+            $(
+                #[allow(non_camel_case_types)]
+                $field($field_ty),
+            )*
+        }
+        impl $struct_name {
+            pub fn get_value(&self, key: Key) -> Value {
+                match key {
+                    $(
+                        Key::$field => {
+                            Value::$field(self.$field.clone())
+                        },
+                    )*
+                }
+            }
+            pub fn set_value(&mut self, value: Value) {
+                match value {
+                    $(
+                        Value::$field(x) => self.$field = x,
+                    )*
+                }
+            }
+        }
+    };
 }
 
-#[derive(Clone, Copy)]
-pub enum Value {
-    CompletedSetup(bool),
-}
+impl_get_value!(UILayout {
+    completed_setup: bool,
+});
 
 impl UILayout {
-    pub const fn get_value(&self, key: Key) -> Value {
-        match key {
-            Key::CompletedSetup => Value::CompletedSetup(self.completed_setup),
-        }
-    }
+    // pub const fn get_value(&self, key: Key) -> Value {
+    //     match key {
+    //         Key::CompletedSetup => Value::CompletedSetup(self.completed_setup),
+    //     }
+    // }
 
-    pub fn set_value(&mut self, value: Value) {
-        match value {
-            Value::CompletedSetup(x) => self.completed_setup = x,
-        }
-    }
+    // pub fn set_value(&mut self, value: Value) {
+    //     match value {
+    //         Value::CompletedSetup(x) => self.completed_setup = x,
+    //     }
+    // }
 
     pub fn load() -> anyhow::Result<Self> {
         let loader = ConfigLoader::new(UI_LAYOUT_FILE_NAME.to_owned());

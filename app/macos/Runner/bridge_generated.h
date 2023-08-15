@@ -11,12 +11,12 @@ typedef bool (*DartPostCObjectFnType)(DartPort port_id, void *message);
 
 typedef struct DartCObject *WireSyncReturn;
 
-typedef struct wire_Value_CompletedSetup {
+typedef struct wire_Value_completed_setup {
   bool field0;
-} wire_Value_CompletedSetup;
+} wire_Value_completed_setup;
 
 typedef union ValueKind {
-  struct wire_Value_CompletedSetup *CompletedSetup;
+  struct wire_Value_completed_setup *completed_setup;
 } ValueKind;
 
 typedef struct wire_Value {
@@ -52,7 +52,7 @@ void wire_set_ui_layout_config(int64_t port_, struct wire_Value *value);
 
 struct wire_Value *new_box_autoadd_value_0(void);
 
-union ValueKind *inflate_Value_CompletedSetup(void);
+union ValueKind *inflate_Value_completed_setup(void);
 
 void free_WireSyncReturn(WireSyncReturn ptr);
 
@@ -67,7 +67,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_get_ui_layout_config);
     dummy_var ^= ((int64_t) (void*) wire_set_ui_layout_config);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_value_0);
-    dummy_var ^= ((int64_t) (void*) inflate_Value_CompletedSetup);
+    dummy_var ^= ((int64_t) (void*) inflate_Value_completed_setup);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     dummy_var ^= ((int64_t) (void*) get_dart_object);

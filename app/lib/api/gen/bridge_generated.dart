@@ -198,7 +198,7 @@ class NativeImpl implements Native {
   Value _wire2api_value(dynamic raw) {
     switch (raw[0]) {
       case 0:
-        return Value_CompletedSetup(
+        return Value_completed_setup(
           _wire2api_bool(raw[1]),
         );
       default:
@@ -253,11 +253,11 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   void _api_fill_to_wire_value(Value apiObj, wire_Value wireObj) {
-    if (apiObj is Value_CompletedSetup) {
+    if (apiObj is Value_completed_setup) {
       var pre_field0 = api2wire_bool(apiObj.field0);
       wireObj.tag = 0;
-      wireObj.kind = inner.inflate_Value_CompletedSetup();
-      wireObj.kind.ref.CompletedSetup.ref.field0 = pre_field0;
+      wireObj.kind = inner.inflate_Value_completed_setup();
+      wireObj.kind.ref.completed_setup.ref.field0 = pre_field0;
       return;
     }
   }
@@ -486,14 +486,14 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_value_0 = _new_box_autoadd_value_0Ptr
       .asFunction<ffi.Pointer<wire_Value> Function()>();
 
-  ffi.Pointer<ValueKind> inflate_Value_CompletedSetup() {
-    return _inflate_Value_CompletedSetup();
+  ffi.Pointer<ValueKind> inflate_Value_completed_setup() {
+    return _inflate_Value_completed_setup();
   }
 
-  late final _inflate_Value_CompletedSetupPtr =
+  late final _inflate_Value_completed_setupPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<ValueKind> Function()>>(
-          'inflate_Value_CompletedSetup');
-  late final _inflate_Value_CompletedSetup = _inflate_Value_CompletedSetupPtr
+          'inflate_Value_completed_setup');
+  late final _inflate_Value_completed_setup = _inflate_Value_completed_setupPtr
       .asFunction<ffi.Pointer<ValueKind> Function()>();
 
   void free_WireSyncReturn(
@@ -513,13 +513,13 @@ class NativeWire implements FlutterRustBridgeWireBase {
 
 final class _Dart_Handle extends ffi.Opaque {}
 
-final class wire_Value_CompletedSetup extends ffi.Struct {
+final class wire_Value_completed_setup extends ffi.Struct {
   @ffi.Bool()
   external bool field0;
 }
 
 final class ValueKind extends ffi.Union {
-  external ffi.Pointer<wire_Value_CompletedSetup> CompletedSetup;
+  external ffi.Pointer<wire_Value_completed_setup> completed_setup;
 }
 
 final class wire_Value extends ffi.Struct {

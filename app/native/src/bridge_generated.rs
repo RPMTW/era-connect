@@ -157,7 +157,7 @@ impl Wire2Api<i32> for i32 {
 impl Wire2Api<Key> for i32 {
     fn wire2api(self) -> Key {
         match self {
-            0 => Key::CompletedSetup,
+            0 => Key::completed_setup,
             _ => unreachable!("Invalid variant for Key: {}", self),
         }
     }
@@ -203,7 +203,7 @@ impl rust2dart::IntoIntoDart<Progress> for Progress {
 impl support::IntoDart for Value {
     fn into_dart(self) -> support::DartAbi {
         match self {
-            Self::CompletedSetup(field0) => {
+            Self::completed_setup(field0) => {
                 vec![0.into_dart(), field0.into_into_dart().into_dart()]
             }
         }

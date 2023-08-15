@@ -3,7 +3,7 @@ import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
 import 'config_api.dart' as config_api;
 
 class UILayoutConfig {
-  bool get completedSetup => _get<bool>(bridge.Key.CompletedSetup);
+  bool get completedSetup => _get<bool>(bridge.Key.completed_setup);
   set completedSetup(bool value) => _set(bridge.Value.completedSetup(value));
 }
 

@@ -64,8 +64,8 @@ impl Wire2Api<Value> for wire_Value {
         match self.tag {
             0 => unsafe {
                 let ans = support::box_from_leak_ptr(self.kind);
-                let ans = support::box_from_leak_ptr(ans.CompletedSetup);
-                Value::CompletedSetup(ans.field0.wire2api())
+                let ans = support::box_from_leak_ptr(ans.completed_setup);
+                Value::completed_setup(ans.field0.wire2api())
             },
             _ => unreachable!(),
         }
@@ -82,12 +82,12 @@ pub struct wire_Value {
 
 #[repr(C)]
 pub union ValueKind {
-    CompletedSetup: *mut wire_Value_CompletedSetup,
+    completed_setup: *mut wire_Value_completed_setup,
 }
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct wire_Value_CompletedSetup {
+pub struct wire_Value_completed_setup {
     field0: bool,
 }
 // Section: impl NewWithNullPtr
@@ -118,9 +118,9 @@ impl NewWithNullPtr for wire_Value {
 }
 
 #[no_mangle]
-pub extern "C" fn inflate_Value_CompletedSetup() -> *mut ValueKind {
+pub extern "C" fn inflate_Value_completed_setup() -> *mut ValueKind {
     support::new_leak_box_ptr(ValueKind {
-        CompletedSetup: support::new_leak_box_ptr(wire_Value_CompletedSetup {
+        completed_setup: support::new_leak_box_ptr(wire_Value_completed_setup {
             field0: Default::default(),
         }),
     })

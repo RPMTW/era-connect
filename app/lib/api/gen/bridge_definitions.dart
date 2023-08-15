@@ -52,7 +52,7 @@ enum DownloadState {
 }
 
 enum Key {
-  CompletedSetup,
+  completed_setup,
 }
 
 class Progress {
@@ -73,5 +73,5 @@ class Progress {
 sealed class Value with _$Value {
   const factory Value.completedSetup(
     bool field0,
-  ) = Value_CompletedSetup;
+  ) = Value_completed_setup;
 }
