@@ -36,11 +36,11 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kWriteStateConstMeta;
 
-  Value getUiLayoutConfig({required Key key, dynamic hint});
+  UILayoutValue getUiLayoutConfig({required UILayoutKey key, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetUiLayoutConfigConstMeta;
 
-  Future<void> setUiLayoutConfig({required Value value, dynamic hint});
+  Future<void> setUiLayoutConfig({required UILayoutValue value, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kSetUiLayoutConfigConstMeta;
 }
@@ -49,10 +49,6 @@ enum DownloadState {
   Downloading,
   Paused,
   Stopped,
-}
-
-enum Key {
-  completed_setup,
 }
 
 class Progress {
@@ -69,9 +65,13 @@ class Progress {
   });
 }
 
+enum UILayoutKey {
+  CompletedSetup,
+}
+
 @freezed
-sealed class Value with _$Value {
-  const factory Value.completedSetup(
+sealed class UILayoutValue with _$UILayoutValue {
+  const factory UILayoutValue.completedSetup(
     bool field0,
-  ) = Value_completed_setup;
+  ) = UILayoutValue_CompletedSetup;
 }

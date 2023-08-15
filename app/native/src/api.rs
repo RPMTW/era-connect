@@ -18,7 +18,7 @@ pub use tokio::sync::{Mutex, RwLock};
 use crate::api::forge::{prepare_forge_download, process_forge};
 
 use self::config::config_state::ConfigState;
-pub use self::config::ui_layout::{Key, UILayout, Value};
+pub use self::config::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
 pub use self::download::Progress;
 use self::download::{run_download, DownloadBias};
 pub use self::quilt::prepare_quilt_download;
@@ -158,12 +158,12 @@ pub fn write_state(s: DownloadState) {
     *STATE.blocking_write() = s;
 }
 
-pub fn get_ui_layout_config(key: Key) -> SyncReturn<Value> {
+pub fn get_ui_layout_config(key: UILayoutKey) -> SyncReturn<UILayoutValue> {
     let value = CONFIG.ui_layout.blocking_read().get_value(key);
     SyncReturn(value)
 }
 
-pub fn set_ui_layout_config(value: Value) -> anyhow::Result<()> {
+pub fn set_ui_layout_config(value: UILayoutValue) -> anyhow::Result<()> {
     let mut config = CONFIG.ui_layout.blocking_write();
     config.set_value(value);
     config.save()

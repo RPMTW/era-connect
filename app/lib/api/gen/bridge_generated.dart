@@ -123,11 +123,11 @@ class NativeImpl implements Native {
         argNames: ["s"],
       );
 
-  Value getUiLayoutConfig({required Key key, dynamic hint}) {
-    var arg0 = api2wire_key(key);
+  UILayoutValue getUiLayoutConfig({required UILayoutKey key, dynamic hint}) {
+    var arg0 = api2wire_ui_layout_key(key);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner.wire_get_ui_layout_config(arg0),
-      parseSuccessData: _wire2api_value,
+      parseSuccessData: _wire2api_ui_layout_value,
       constMeta: kGetUiLayoutConfigConstMeta,
       argValues: [key],
       hint: hint,
@@ -140,8 +140,8 @@ class NativeImpl implements Native {
         argNames: ["key"],
       );
 
-  Future<void> setUiLayoutConfig({required Value value, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_value(value);
+  Future<void> setUiLayoutConfig({required UILayoutValue value, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_ui_layout_value(value);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
           _platform.inner.wire_set_ui_layout_config(port_, arg0),
@@ -191,19 +191,19 @@ class NativeImpl implements Native {
     );
   }
 
-  void _wire2api_unit(dynamic raw) {
-    return;
-  }
-
-  Value _wire2api_value(dynamic raw) {
+  UILayoutValue _wire2api_ui_layout_value(dynamic raw) {
     switch (raw[0]) {
       case 0:
-        return Value_completed_setup(
+        return UILayoutValue_CompletedSetup(
           _wire2api_bool(raw[1]),
         );
       default:
         throw Exception("unreachable");
     }
+  }
+
+  void _wire2api_unit(dynamic raw) {
+    return;
   }
 }
 
@@ -225,7 +225,7 @@ int api2wire_i32(int raw) {
 }
 
 @protected
-int api2wire_key(Key raw) {
+int api2wire_ui_layout_key(UILayoutKey raw) {
   return api2wire_i32(raw.index);
 }
 
@@ -237,9 +237,10 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 // Section: api2wire
 
   @protected
-  ffi.Pointer<wire_Value> api2wire_box_autoadd_value(Value raw) {
-    final ptr = inner.new_box_autoadd_value_0();
-    _api_fill_to_wire_value(raw, ptr.ref);
+  ffi.Pointer<wire_UILayoutValue> api2wire_box_autoadd_ui_layout_value(
+      UILayoutValue raw) {
+    final ptr = inner.new_box_autoadd_ui_layout_value_0();
+    _api_fill_to_wire_ui_layout_value(raw, ptr.ref);
     return ptr;
   }
 
@@ -247,17 +248,18 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 
 // Section: api_fill_to_wire
 
-  void _api_fill_to_wire_box_autoadd_value(
-      Value apiObj, ffi.Pointer<wire_Value> wireObj) {
-    _api_fill_to_wire_value(apiObj, wireObj.ref);
+  void _api_fill_to_wire_box_autoadd_ui_layout_value(
+      UILayoutValue apiObj, ffi.Pointer<wire_UILayoutValue> wireObj) {
+    _api_fill_to_wire_ui_layout_value(apiObj, wireObj.ref);
   }
 
-  void _api_fill_to_wire_value(Value apiObj, wire_Value wireObj) {
-    if (apiObj is Value_completed_setup) {
+  void _api_fill_to_wire_ui_layout_value(
+      UILayoutValue apiObj, wire_UILayoutValue wireObj) {
+    if (apiObj is UILayoutValue_CompletedSetup) {
       var pre_field0 = api2wire_bool(apiObj.field0);
       wireObj.tag = 0;
-      wireObj.kind = inner.inflate_Value_completed_setup();
-      wireObj.kind.ref.completed_setup.ref.field0 = pre_field0;
+      wireObj.kind = inner.inflate_UILayoutValue_CompletedSetup();
+      wireObj.kind.ref.CompletedSetup.ref.field0 = pre_field0;
       return;
     }
   }
@@ -461,7 +463,7 @@ class NativeWire implements FlutterRustBridgeWireBase {
 
   void wire_set_ui_layout_config(
     int port_,
-    ffi.Pointer<wire_Value> value,
+    ffi.Pointer<wire_UILayoutValue> value,
   ) {
     return _wire_set_ui_layout_config(
       port_,
@@ -472,29 +474,31 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_set_ui_layout_configPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Value>)>>('wire_set_ui_layout_config');
+              ffi.Pointer<wire_UILayoutValue>)>>('wire_set_ui_layout_config');
   late final _wire_set_ui_layout_config = _wire_set_ui_layout_configPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_Value>)>();
+      .asFunction<void Function(int, ffi.Pointer<wire_UILayoutValue>)>();
 
-  ffi.Pointer<wire_Value> new_box_autoadd_value_0() {
-    return _new_box_autoadd_value_0();
+  ffi.Pointer<wire_UILayoutValue> new_box_autoadd_ui_layout_value_0() {
+    return _new_box_autoadd_ui_layout_value_0();
   }
 
-  late final _new_box_autoadd_value_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_Value> Function()>>(
-          'new_box_autoadd_value_0');
-  late final _new_box_autoadd_value_0 = _new_box_autoadd_value_0Ptr
-      .asFunction<ffi.Pointer<wire_Value> Function()>();
+  late final _new_box_autoadd_ui_layout_value_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_UILayoutValue> Function()>>(
+          'new_box_autoadd_ui_layout_value_0');
+  late final _new_box_autoadd_ui_layout_value_0 =
+      _new_box_autoadd_ui_layout_value_0Ptr
+          .asFunction<ffi.Pointer<wire_UILayoutValue> Function()>();
 
-  ffi.Pointer<ValueKind> inflate_Value_completed_setup() {
-    return _inflate_Value_completed_setup();
+  ffi.Pointer<UILayoutValueKind> inflate_UILayoutValue_CompletedSetup() {
+    return _inflate_UILayoutValue_CompletedSetup();
   }
 
-  late final _inflate_Value_completed_setupPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ValueKind> Function()>>(
-          'inflate_Value_completed_setup');
-  late final _inflate_Value_completed_setup = _inflate_Value_completed_setupPtr
-      .asFunction<ffi.Pointer<ValueKind> Function()>();
+  late final _inflate_UILayoutValue_CompletedSetupPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<UILayoutValueKind> Function()>>(
+          'inflate_UILayoutValue_CompletedSetup');
+  late final _inflate_UILayoutValue_CompletedSetup =
+      _inflate_UILayoutValue_CompletedSetupPtr
+          .asFunction<ffi.Pointer<UILayoutValueKind> Function()>();
 
   void free_WireSyncReturn(
     WireSyncReturn ptr,
@@ -513,20 +517,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
 
 final class _Dart_Handle extends ffi.Opaque {}
 
-final class wire_Value_completed_setup extends ffi.Struct {
+final class wire_UILayoutValue_CompletedSetup extends ffi.Struct {
   @ffi.Bool()
   external bool field0;
 }
 
-final class ValueKind extends ffi.Union {
-  external ffi.Pointer<wire_Value_completed_setup> completed_setup;
+final class UILayoutValueKind extends ffi.Union {
+  external ffi.Pointer<wire_UILayoutValue_CompletedSetup> CompletedSetup;
 }
 
-final class wire_Value extends ffi.Struct {
+final class wire_UILayoutValue extends ffi.Struct {
   @ffi.Int32()
   external int tag;
 
-  external ffi.Pointer<ValueKind> kind;
+  external ffi.Pointer<UILayoutValueKind> kind;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<

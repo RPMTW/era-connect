@@ -9,6 +9,7 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
+struct-key-value-pair = { path = "struct-key-value-pair" }
 anyhow = { version = "1.0.72", features = ["backtrace"] }
 bytes = "1.4.0"
 color-eyre = "0.6.2"
@@ -37,4 +38,3 @@ zip = "0.6.6"
 log = "0.4"
 chrono = "0.4.26"
 fern = "0.6.2"
-convert_case = "0.6.0"

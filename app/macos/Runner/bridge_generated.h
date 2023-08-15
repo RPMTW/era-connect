@@ -11,18 +11,18 @@ typedef bool (*DartPostCObjectFnType)(DartPort port_id, void *message);
 
 typedef struct DartCObject *WireSyncReturn;
 
-typedef struct wire_Value_completed_setup {
+typedef struct wire_UILayoutValue_CompletedSetup {
   bool field0;
-} wire_Value_completed_setup;
+} wire_UILayoutValue_CompletedSetup;
 
-typedef union ValueKind {
-  struct wire_Value_completed_setup *completed_setup;
-} ValueKind;
+typedef union UILayoutValueKind {
+  struct wire_UILayoutValue_CompletedSetup *CompletedSetup;
+} UILayoutValueKind;
 
-typedef struct wire_Value {
+typedef struct wire_UILayoutValue {
   int32_t tag;
-  union ValueKind *kind;
-} wire_Value;
+  union UILayoutValueKind *kind;
+} wire_UILayoutValue;
 
 void store_dart_post_cobject(DartPostCObjectFnType ptr);
 
@@ -48,11 +48,11 @@ void wire_write_state(int64_t port_, int32_t s);
 
 WireSyncReturn wire_get_ui_layout_config(int32_t key);
 
-void wire_set_ui_layout_config(int64_t port_, struct wire_Value *value);
+void wire_set_ui_layout_config(int64_t port_, struct wire_UILayoutValue *value);
 
-struct wire_Value *new_box_autoadd_value_0(void);
+struct wire_UILayoutValue *new_box_autoadd_ui_layout_value_0(void);
 
-union ValueKind *inflate_Value_completed_setup(void);
+union UILayoutValueKind *inflate_UILayoutValue_CompletedSetup(void);
 
 void free_WireSyncReturn(WireSyncReturn ptr);
 
@@ -66,8 +66,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_write_state);
     dummy_var ^= ((int64_t) (void*) wire_get_ui_layout_config);
     dummy_var ^= ((int64_t) (void*) wire_set_ui_layout_config);
-    dummy_var ^= ((int64_t) (void*) new_box_autoadd_value_0);
-    dummy_var ^= ((int64_t) (void*) inflate_Value_completed_setup);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_ui_layout_value_0);
+    dummy_var ^= ((int64_t) (void*) inflate_UILayoutValue_CompletedSetup);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     dummy_var ^= ((int64_t) (void*) get_dart_object);

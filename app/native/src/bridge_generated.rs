@@ -85,7 +85,9 @@ fn wire_write_state_impl(port_: MessagePort, s: impl Wire2Api<DownloadState> + U
         },
     )
 }
-fn wire_get_ui_layout_config_impl(key: impl Wire2Api<Key> + UnwindSafe) -> support::WireSyncReturn {
+fn wire_get_ui_layout_config_impl(
+    key: impl Wire2Api<UILayoutKey> + UnwindSafe,
+) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
             debug_name: "get_ui_layout_config",
@@ -98,7 +100,10 @@ fn wire_get_ui_layout_config_impl(key: impl Wire2Api<Key> + UnwindSafe) -> suppo
         },
     )
 }
-fn wire_set_ui_layout_config_impl(port_: MessagePort, value: impl Wire2Api<Value> + UnwindSafe) {
+fn wire_set_ui_layout_config_impl(
+    port_: MessagePort,
+    value: impl Wire2Api<UILayoutValue> + UnwindSafe,
+) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
             debug_name: "set_ui_layout_config",
@@ -154,11 +159,11 @@ impl Wire2Api<i32> for i32 {
         self
     }
 }
-impl Wire2Api<Key> for i32 {
-    fn wire2api(self) -> Key {
+impl Wire2Api<UILayoutKey> for i32 {
+    fn wire2api(self) -> UILayoutKey {
         match self {
-            0 => Key::completed_setup,
-            _ => unreachable!("Invalid variant for Key: {}", self),
+            0 => UILayoutKey::CompletedSetup,
+            _ => unreachable!("Invalid variant for UILayoutKey: {}", self),
         }
     }
 }
@@ -200,18 +205,18 @@ impl rust2dart::IntoIntoDart<Progress> for Progress {
     }
 }
 
-impl support::IntoDart for Value {
+impl support::IntoDart for UILayoutValue {
     fn into_dart(self) -> support::DartAbi {
         match self {
-            Self::completed_setup(field0) => {
+            Self::CompletedSetup(field0) => {
                 vec![0.into_dart(), field0.into_into_dart().into_dart()]
             }
         }
         .into_dart()
     }
 }
-impl support::IntoDartExceptPrimitive for Value {}
-impl rust2dart::IntoIntoDart<Value> for Value {
+impl support::IntoDartExceptPrimitive for UILayoutValue {}
+impl rust2dart::IntoIntoDart<UILayoutValue> for UILayoutValue {
     fn into_into_dart(self) -> Self {
         self
     }
