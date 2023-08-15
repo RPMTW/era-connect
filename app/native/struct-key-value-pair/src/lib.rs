@@ -1,3 +1,39 @@
+//! example
+//! ```rust
+//! #[derive(VariantStruct)]
+//! pub struct {
+//!     field1: String,
+//!     field2: i32,
+//! }
+//! ```
+//! would turn into
+//! ```rust
+//! pub enum StructKey {
+//!     Field1,
+//!     Field2,
+//! }
+//! pub enum StructValue {
+//!     Field1(String)    
+//!     Field2(i32)
+//! }
+//! impl struct {
+//!     pub fn get_value(&self, key: StructKey) -> StructValue {
+//!         match key {
+//!             StructKey::Field1 => StructValue::Field1(self.field1.clone()),
+//!             StructKey::Field2 => StructValue::Field2(self.field2.clone()),
+//!         }
+//!     }
+//!     pub fn set_value(&mut self, value: StructValue) {
+//!         match value {
+//!             StructValue::Field1(x) => self.field1 = x,
+//!             StructValue::Field2(x) => self.field2 = x,
+//!         }
+//!     }
+//! }
+//! ```
+//! The main use case of this library is to provide a idiomatic way to get a single key out of a struct using enums.
+//! note that the value WILL be cloned. There is no way around that without using lifetimes hacks.
+
 use inflector::Inflector;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
