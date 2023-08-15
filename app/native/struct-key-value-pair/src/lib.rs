@@ -1,31 +1,26 @@
 use inflector::Inflector;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, spanned::Spanned, Ident, ItemStruct};
+use syn::{parse_macro_input, Ident, ItemStruct};
 
 #[proc_macro_derive(VariantStruct)]
 pub fn variants_enum(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemStruct);
-    let span = input.span();
     let struct_ident = input.ident.clone();
     let key_ident = format_ident!("{}Key", input.ident);
     let value_ident = format_ident!("{}Value", input.ident);
-    let ident = input
-        .fields
-        .iter()
-        .map(|field| field.ident.as_ref())
-        .flatten()
-        .collect::<Vec<_>>();
-    let camel = ident
-        .iter()
-        .map(|ident| Ident::new(ident.to_string().to_pascal_case().as_str(), span))
-        .collect::<Vec<_>>();
-    let types = input
-        .fields
-        .clone()
-        .into_iter()
-        .map(|x| x.ty)
-        .collect::<Vec<_>>();
+    let mut ident = Vec::new();
+    let mut camel = Vec::new();
+    let mut types = Vec::new();
+    for field in input.fields {
+        if let Some(x) = field.ident {
+            ident.push(x);
+            let t = ident.last().unwrap();
+            let span = t.span();
+            camel.push(Ident::new(t.to_string().to_pascal_case().as_str(), span));
+        }
+        types.push(field.ty);
+    }
     let gen = quote! {
         pub enum #key_ident {
             #(#camel),*
