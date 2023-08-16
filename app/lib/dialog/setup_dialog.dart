@@ -46,7 +46,7 @@ class SetupDialog extends StatelessWidget {
           contentPages: [const SizedBox.shrink()],
           onEvent: (event) {
             if (event == StepEvent.done) {
-              configApi.uiLayout.completedSetup = true;
+              storageApi.uiLayout.completedSetup = true;
             }
 
             return true;

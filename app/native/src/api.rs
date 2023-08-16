@@ -1,8 +1,8 @@
 pub mod authentication;
-pub mod config;
 mod download;
 pub mod forge;
 pub mod quilt;
+pub mod storage;
 pub mod vanilla;
 
 use std::fs::create_dir_all;
@@ -26,21 +26,22 @@ pub use self::authentication::account::{
 pub use self::authentication::msa_flow::{
     LoginFlowDeviceCode, LoginFlowErrors, LoginFlowEvent, LoginFlowStage, XstsTokenErrorType,
 };
-pub use self::config::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
 pub use self::download::Progress;
 pub use self::quilt::prepare_quilt_download;
+pub use self::storage::account_storage::{AccountStorageKey, AccountStorageValue};
+pub use self::storage::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
 pub use self::vanilla::prepare_vanilla_download;
 pub use self::vanilla::{GameOptions, JvmOptions, LaunchArgs};
 
-use self::config::config_loader::ConfigInstance;
-use self::config::config_state::ConfigState;
 use self::download::{run_download, DownloadBias};
+use self::storage::storage_loader::StorageInstance;
+use self::storage::storage_state::StorageState;
 use self::vanilla::launch_game;
 
 lazy_static::lazy_static! {
     static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
     static ref STATE: RwLock<DownloadState> = RwLock::new(DownloadState::default());
-    static ref CONFIG: ConfigState = ConfigState::new();
+    static ref STORAGE: StorageState = StorageState::new();
 }
 
 #[derive(Debug, Clone)]
@@ -174,15 +175,26 @@ pub fn write_state(s: DownloadState) {
     *STATE.blocking_write() = s;
 }
 
-pub fn get_ui_layout_config(key: UILayoutKey) -> SyncReturn<UILayoutValue> {
-    let value = CONFIG.ui_layout.blocking_read().get_value(key);
+pub fn get_ui_layout_storage(key: UILayoutKey) -> SyncReturn<UILayoutValue> {
+    let value = STORAGE.ui_layout.blocking_read().get_value(key);
     SyncReturn(value)
 }
 
-pub fn set_ui_layout_config(value: UILayoutValue) -> anyhow::Result<()> {
-    let mut config = CONFIG.ui_layout.blocking_write();
-    config.set_value(value);
-    config.save()
+pub fn set_ui_layout_storage(value: UILayoutValue) -> anyhow::Result<()> {
+    let mut storage = STORAGE.ui_layout.blocking_write();
+    storage.set_value(value);
+    storage.save()
+}
+
+pub fn get_account_storage(key: AccountStorageKey) -> SyncReturn<AccountStorageValue> {
+    let value = STORAGE.account_storage.blocking_read().get_value(key);
+    SyncReturn(value)
+}
+
+pub fn set_account_storage(value: AccountStorageValue) -> anyhow::Result<()> {
+    let mut storage = STORAGE.account_storage.blocking_write();
+    storage.set_value(value);
+    storage.save()
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -190,7 +202,7 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
     let result = authentication::msa_flow::login_flow(&skin).await;
     match result {
         Ok(account) => {
-            let mut storage = CONFIG.account_storage.write().await;
+            let mut storage = STORAGE.account_storage.write().await;
             storage.add_account(&account, Some(true));
             storage.save()?;
 

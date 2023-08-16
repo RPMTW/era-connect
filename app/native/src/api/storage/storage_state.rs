@@ -1,18 +1,20 @@
 use tokio::sync::RwLock;
 
-use super::{account_storage::AccountStorage, config_loader::ConfigInstance, ui_layout::UILayout};
+use super::{
+    account_storage::AccountStorage, storage_loader::StorageInstance, ui_layout::UILayout,
+};
 use anyhow::Error;
 use log::error;
 
-pub struct ConfigState {
+pub struct StorageState {
     pub account_storage: RwLock<AccountStorage>,
     pub ui_layout: RwLock<UILayout>,
 }
 
-impl ConfigState {
+impl StorageState {
     pub fn new() -> Self {
-        let account_storage = Self::load_config(AccountStorage::load());
-        let ui_layout = Self::load_config(UILayout::load());
+        let account_storage = Self::load_storage(AccountStorage::load());
+        let ui_layout = Self::load_storage(UILayout::load());
 
         Self {
             account_storage: RwLock::new(account_storage),
@@ -20,12 +22,12 @@ impl ConfigState {
         }
     }
 
-    fn load_config<T: Default>(result: Result<T, Error>) -> T {
+    fn load_storage<T: Default>(result: Result<T, Error>) -> T {
         match result {
-            Ok(config) => config,
+            Ok(storage) => storage,
             Err(e) => {
                 error!(
-                    "Failed to load {} config: {:#?}",
+                    "Failed to load {} storage file: {:#?}",
                     std::any::type_name::<T>(),
                     e
                 );

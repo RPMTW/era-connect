@@ -52,7 +52,7 @@ class EraAlertDialog extends StatelessWidget {
           ),
           const SizedBox(height: 15),
           MarkdownText(
-            description!,
+            description,
             style:
                 TextStyle(fontSize: 16, color: context.theme.tertiaryTextColor),
           ),

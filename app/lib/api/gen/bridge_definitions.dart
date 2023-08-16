@@ -36,17 +36,42 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kWriteStateConstMeta;
 
-  UILayoutValue getUiLayoutConfig({required UILayoutKey key, dynamic hint});
+  UILayoutValue getUiLayoutStorage({required UILayoutKey key, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kGetUiLayoutConfigConstMeta;
+  FlutterRustBridgeTaskConstMeta get kGetUiLayoutStorageConstMeta;
 
-  Future<void> setUiLayoutConfig({required UILayoutValue value, dynamic hint});
+  Future<void> setUiLayoutStorage({required UILayoutValue value, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kSetUiLayoutConfigConstMeta;
+  FlutterRustBridgeTaskConstMeta get kSetUiLayoutStorageConstMeta;
+
+  AccountStorageValue getAccountStorage(
+      {required AccountStorageKey key, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kGetAccountStorageConstMeta;
+
+  Future<void> setAccountStorage(
+      {required AccountStorageValue value, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kSetAccountStorageConstMeta;
 
   Stream<LoginFlowEvent> minecraftLoginFlow({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kMinecraftLoginFlowConstMeta;
+}
+
+enum AccountStorageKey {
+  Accounts,
+  MainAccount,
+}
+
+@freezed
+sealed class AccountStorageValue with _$AccountStorageValue {
+  const factory AccountStorageValue.accounts(
+    List<MinecraftAccount> field0,
+  ) = AccountStorageValue_Accounts;
+  const factory AccountStorageValue.mainAccount([
+    UuidValue? field0,
+  ]) = AccountStorageValue_MainAccount;
 }
 
 class AccountToken {

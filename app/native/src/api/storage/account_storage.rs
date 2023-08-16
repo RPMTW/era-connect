@@ -1,36 +1,37 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
+use struct_key_value_pair::VariantStruct;
 use uuid::Uuid;
 
 use crate::api::MinecraftAccount;
 
-use super::config_loader::{ConfigInstance, ConfigLoader};
+use super::storage_loader::{StorageInstance, StorageLoader};
 
 const ACCOUNT_FILE_NAME: &str = "accounts.json";
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, VariantStruct)]
 #[serde(default)]
 pub struct AccountStorage {
-    pub accounts: HashMap<Uuid, MinecraftAccount>,
+    pub accounts: Vec<MinecraftAccount>,
     /// The uuid of the main account in the [accounts] vector
     pub main_account: Option<Uuid>,
 }
 
-impl ConfigInstance<Self> for AccountStorage {
+impl StorageInstance<Self> for AccountStorage {
     fn file_name() -> &'static str {
         ACCOUNT_FILE_NAME
     }
 
     fn save(&self) -> anyhow::Result<()> {
-        let loader = ConfigLoader::new(Self::file_name().to_owned());
+        let loader = StorageLoader::new(Self::file_name().to_owned());
         loader.save(self)
     }
 }
 
 impl AccountStorage {
     pub fn add_account(&mut self, account: &MinecraftAccount, is_main_account: Option<bool>) {
-        self.accounts.insert(account.uuid, account.clone());
+        // Keep only the last account with the same UUID.
+        self.accounts.retain(|a| a.uuid != account.uuid);
+        self.accounts.push(account.clone());
 
         let set_as_main_account = is_main_account.unwrap_or(false)
             || self.accounts.len() == 1

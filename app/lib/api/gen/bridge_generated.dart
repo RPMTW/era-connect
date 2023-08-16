@@ -123,38 +123,75 @@ class NativeImpl implements Native {
         argNames: ["s"],
       );
 
-  UILayoutValue getUiLayoutConfig({required UILayoutKey key, dynamic hint}) {
+  UILayoutValue getUiLayoutStorage({required UILayoutKey key, dynamic hint}) {
     var arg0 = api2wire_ui_layout_key(key);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_get_ui_layout_config(arg0),
+      callFfi: () => _platform.inner.wire_get_ui_layout_storage(arg0),
       parseSuccessData: _wire2api_ui_layout_value,
-      constMeta: kGetUiLayoutConfigConstMeta,
+      constMeta: kGetUiLayoutStorageConstMeta,
       argValues: [key],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kGetUiLayoutConfigConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kGetUiLayoutStorageConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "get_ui_layout_config",
+        debugName: "get_ui_layout_storage",
         argNames: ["key"],
       );
 
-  Future<void> setUiLayoutConfig({required UILayoutValue value, dynamic hint}) {
+  Future<void> setUiLayoutStorage(
+      {required UILayoutValue value, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_ui_layout_value(value);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
-          _platform.inner.wire_set_ui_layout_config(port_, arg0),
+          _platform.inner.wire_set_ui_layout_storage(port_, arg0),
       parseSuccessData: _wire2api_unit,
-      constMeta: kSetUiLayoutConfigConstMeta,
+      constMeta: kSetUiLayoutStorageConstMeta,
       argValues: [value],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kSetUiLayoutConfigConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kSetUiLayoutStorageConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "set_ui_layout_config",
+        debugName: "set_ui_layout_storage",
+        argNames: ["value"],
+      );
+
+  AccountStorageValue getAccountStorage(
+      {required AccountStorageKey key, dynamic hint}) {
+    var arg0 = api2wire_account_storage_key(key);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_get_account_storage(arg0),
+      parseSuccessData: _wire2api_account_storage_value,
+      constMeta: kGetAccountStorageConstMeta,
+      argValues: [key],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kGetAccountStorageConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_account_storage",
+        argNames: ["key"],
+      );
+
+  Future<void> setAccountStorage(
+      {required AccountStorageValue value, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_account_storage_value(value);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_set_account_storage(port_, arg0),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kSetAccountStorageConstMeta,
+      argValues: [value],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kSetAccountStorageConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "set_account_storage",
         argNames: ["value"],
       );
 
@@ -185,6 +222,21 @@ class NativeImpl implements Native {
 
   UuidValue _wire2api_Uuid(dynamic raw) {
     return UuidValue.fromByteList(_wire2api_uint_8_list(raw));
+  }
+
+  AccountStorageValue _wire2api_account_storage_value(dynamic raw) {
+    switch (raw[0]) {
+      case 0:
+        return AccountStorageValue_Accounts(
+          _wire2api_list_minecraft_account(raw[1]),
+        );
+      case 1:
+        return AccountStorageValue_MainAccount(
+          _wire2api_opt_Uuid(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   AccountToken _wire2api_account_token(dynamic raw) {
@@ -228,6 +280,10 @@ class NativeImpl implements Native {
 
   int _wire2api_i64(dynamic raw) {
     return castInt(raw);
+  }
+
+  List<MinecraftAccount> _wire2api_list_minecraft_account(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_minecraft_account).toList();
   }
 
   List<MinecraftCape> _wire2api_list_minecraft_cape(dynamic raw) {
@@ -332,6 +388,10 @@ class NativeImpl implements Native {
     return MinecraftSkinVariant.values[raw as int];
   }
 
+  UuidValue? _wire2api_opt_Uuid(dynamic raw) {
+    return raw == null ? null : _wire2api_Uuid(raw);
+  }
+
   Progress _wire2api_progress(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
@@ -375,6 +435,11 @@ class NativeImpl implements Native {
 // Section: api2wire
 
 @protected
+int api2wire_account_storage_key(AccountStorageKey raw) {
+  return api2wire_i32(raw.index);
+}
+
+@protected
 bool api2wire_bool(bool raw) {
   return raw;
 }
@@ -386,6 +451,16 @@ int api2wire_download_state(DownloadState raw) {
 
 @protected
 int api2wire_i32(int raw) {
+  return raw;
+}
+
+@protected
+int api2wire_minecraft_skin_variant(MinecraftSkinVariant raw) {
+  return api2wire_i32(raw.index);
+}
+
+@protected
+int api2wire_u8(int raw) {
   return raw;
 }
 
@@ -402,6 +477,24 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 // Section: api2wire
 
   @protected
+  ffi.Pointer<wire_uint_8_list> api2wire_String(String raw) {
+    return api2wire_uint_8_list(utf8.encoder.convert(raw));
+  }
+
+  @protected
+  ffi.Pointer<wire_uint_8_list> api2wire_Uuid(UuidValue raw) {
+    return api2wire_uint_8_list(raw.toBytes());
+  }
+
+  @protected
+  ffi.Pointer<wire_AccountStorageValue>
+      api2wire_box_autoadd_account_storage_value(AccountStorageValue raw) {
+    final ptr = inner.new_box_autoadd_account_storage_value_0();
+    _api_fill_to_wire_account_storage_value(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_UILayoutValue> api2wire_box_autoadd_ui_layout_value(
       UILayoutValue raw) {
     final ptr = inner.new_box_autoadd_ui_layout_value_0();
@@ -409,13 +502,115 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     return ptr;
   }
 
+  @protected
+  int api2wire_i64(int raw) {
+    return raw;
+  }
+
+  @protected
+  ffi.Pointer<wire_list_minecraft_account> api2wire_list_minecraft_account(
+      List<MinecraftAccount> raw) {
+    final ans = inner.new_list_minecraft_account_0(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      _api_fill_to_wire_minecraft_account(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_list_minecraft_cape> api2wire_list_minecraft_cape(
+      List<MinecraftCape> raw) {
+    final ans = inner.new_list_minecraft_cape_0(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      _api_fill_to_wire_minecraft_cape(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_list_minecraft_skin> api2wire_list_minecraft_skin(
+      List<MinecraftSkin> raw) {
+    final ans = inner.new_list_minecraft_skin_0(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      _api_fill_to_wire_minecraft_skin(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_uint_8_list> api2wire_opt_Uuid(UuidValue? raw) {
+    return raw == null ? ffi.nullptr : api2wire_Uuid(raw);
+  }
+
+  @protected
+  ffi.Pointer<wire_uint_8_list> api2wire_uint_8_list(Uint8List raw) {
+    final ans = inner.new_uint_8_list_0(raw.length);
+    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
 // Section: finalizer
 
 // Section: api_fill_to_wire
 
+  void _api_fill_to_wire_account_storage_value(
+      AccountStorageValue apiObj, wire_AccountStorageValue wireObj) {
+    if (apiObj is AccountStorageValue_Accounts) {
+      var pre_field0 = api2wire_list_minecraft_account(apiObj.field0);
+      wireObj.tag = 0;
+      wireObj.kind = inner.inflate_AccountStorageValue_Accounts();
+      wireObj.kind.ref.Accounts.ref.field0 = pre_field0;
+      return;
+    }
+    if (apiObj is AccountStorageValue_MainAccount) {
+      var pre_field0 = api2wire_opt_Uuid(apiObj.field0);
+      wireObj.tag = 1;
+      wireObj.kind = inner.inflate_AccountStorageValue_MainAccount();
+      wireObj.kind.ref.MainAccount.ref.field0 = pre_field0;
+      return;
+    }
+  }
+
+  void _api_fill_to_wire_account_token(
+      AccountToken apiObj, wire_AccountToken wireObj) {
+    wireObj.token = api2wire_String(apiObj.token);
+    wireObj.expires_at = api2wire_i64(apiObj.expiresAt);
+  }
+
+  void _api_fill_to_wire_box_autoadd_account_storage_value(
+      AccountStorageValue apiObj,
+      ffi.Pointer<wire_AccountStorageValue> wireObj) {
+    _api_fill_to_wire_account_storage_value(apiObj, wireObj.ref);
+  }
+
   void _api_fill_to_wire_box_autoadd_ui_layout_value(
       UILayoutValue apiObj, ffi.Pointer<wire_UILayoutValue> wireObj) {
     _api_fill_to_wire_ui_layout_value(apiObj, wireObj.ref);
+  }
+
+  void _api_fill_to_wire_minecraft_account(
+      MinecraftAccount apiObj, wire_MinecraftAccount wireObj) {
+    wireObj.username = api2wire_String(apiObj.username);
+    wireObj.uuid = api2wire_Uuid(apiObj.uuid);
+    _api_fill_to_wire_account_token(apiObj.accessToken, wireObj.access_token);
+    _api_fill_to_wire_account_token(apiObj.refreshToken, wireObj.refresh_token);
+    wireObj.skins = api2wire_list_minecraft_skin(apiObj.skins);
+    wireObj.capes = api2wire_list_minecraft_cape(apiObj.capes);
+  }
+
+  void _api_fill_to_wire_minecraft_cape(
+      MinecraftCape apiObj, wire_MinecraftCape wireObj) {
+    wireObj.id = api2wire_Uuid(apiObj.id);
+    wireObj.state = api2wire_String(apiObj.state);
+    wireObj.url = api2wire_String(apiObj.url);
+    wireObj.alias = api2wire_String(apiObj.alias);
+  }
+
+  void _api_fill_to_wire_minecraft_skin(
+      MinecraftSkin apiObj, wire_MinecraftSkin wireObj) {
+    wireObj.id = api2wire_Uuid(apiObj.id);
+    wireObj.state = api2wire_String(apiObj.state);
+    wireObj.url = api2wire_String(apiObj.url);
+    wireObj.variant = api2wire_minecraft_skin_variant(apiObj.variant);
   }
 
   void _api_fill_to_wire_ui_layout_value(
@@ -612,36 +807,68 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_write_state =
       _wire_write_statePtr.asFunction<void Function(int, int)>();
 
-  WireSyncReturn wire_get_ui_layout_config(
+  WireSyncReturn wire_get_ui_layout_storage(
     int key,
   ) {
-    return _wire_get_ui_layout_config(
+    return _wire_get_ui_layout_storage(
       key,
     );
   }
 
-  late final _wire_get_ui_layout_configPtr =
+  late final _wire_get_ui_layout_storagePtr =
       _lookup<ffi.NativeFunction<WireSyncReturn Function(ffi.Int32)>>(
-          'wire_get_ui_layout_config');
-  late final _wire_get_ui_layout_config =
-      _wire_get_ui_layout_configPtr.asFunction<WireSyncReturn Function(int)>();
+          'wire_get_ui_layout_storage');
+  late final _wire_get_ui_layout_storage =
+      _wire_get_ui_layout_storagePtr.asFunction<WireSyncReturn Function(int)>();
 
-  void wire_set_ui_layout_config(
+  void wire_set_ui_layout_storage(
     int port_,
     ffi.Pointer<wire_UILayoutValue> value,
   ) {
-    return _wire_set_ui_layout_config(
+    return _wire_set_ui_layout_storage(
       port_,
       value,
     );
   }
 
-  late final _wire_set_ui_layout_configPtr = _lookup<
+  late final _wire_set_ui_layout_storagePtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_UILayoutValue>)>>('wire_set_ui_layout_config');
-  late final _wire_set_ui_layout_config = _wire_set_ui_layout_configPtr
+              ffi.Pointer<wire_UILayoutValue>)>>('wire_set_ui_layout_storage');
+  late final _wire_set_ui_layout_storage = _wire_set_ui_layout_storagePtr
       .asFunction<void Function(int, ffi.Pointer<wire_UILayoutValue>)>();
+
+  WireSyncReturn wire_get_account_storage(
+    int key,
+  ) {
+    return _wire_get_account_storage(
+      key,
+    );
+  }
+
+  late final _wire_get_account_storagePtr =
+      _lookup<ffi.NativeFunction<WireSyncReturn Function(ffi.Int32)>>(
+          'wire_get_account_storage');
+  late final _wire_get_account_storage =
+      _wire_get_account_storagePtr.asFunction<WireSyncReturn Function(int)>();
+
+  void wire_set_account_storage(
+    int port_,
+    ffi.Pointer<wire_AccountStorageValue> value,
+  ) {
+    return _wire_set_account_storage(
+      port_,
+      value,
+    );
+  }
+
+  late final _wire_set_account_storagePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Int64, ffi.Pointer<wire_AccountStorageValue>)>>(
+      'wire_set_account_storage');
+  late final _wire_set_account_storage = _wire_set_account_storagePtr
+      .asFunction<void Function(int, ffi.Pointer<wire_AccountStorageValue>)>();
 
   void wire_minecraft_login_flow(
     int port_,
@@ -657,6 +884,18 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_minecraft_login_flow =
       _wire_minecraft_login_flowPtr.asFunction<void Function(int)>();
 
+  ffi.Pointer<wire_AccountStorageValue>
+      new_box_autoadd_account_storage_value_0() {
+    return _new_box_autoadd_account_storage_value_0();
+  }
+
+  late final _new_box_autoadd_account_storage_value_0Ptr = _lookup<
+          ffi.NativeFunction<ffi.Pointer<wire_AccountStorageValue> Function()>>(
+      'new_box_autoadd_account_storage_value_0');
+  late final _new_box_autoadd_account_storage_value_0 =
+      _new_box_autoadd_account_storage_value_0Ptr
+          .asFunction<ffi.Pointer<wire_AccountStorageValue> Function()>();
+
   ffi.Pointer<wire_UILayoutValue> new_box_autoadd_ui_layout_value_0() {
     return _new_box_autoadd_ui_layout_value_0();
   }
@@ -667,6 +906,89 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_ui_layout_value_0 =
       _new_box_autoadd_ui_layout_value_0Ptr
           .asFunction<ffi.Pointer<wire_UILayoutValue> Function()>();
+
+  ffi.Pointer<wire_list_minecraft_account> new_list_minecraft_account_0(
+    int len,
+  ) {
+    return _new_list_minecraft_account_0(
+      len,
+    );
+  }
+
+  late final _new_list_minecraft_account_0Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<wire_list_minecraft_account> Function(
+              ffi.Int32)>>('new_list_minecraft_account_0');
+  late final _new_list_minecraft_account_0 = _new_list_minecraft_account_0Ptr
+      .asFunction<ffi.Pointer<wire_list_minecraft_account> Function(int)>();
+
+  ffi.Pointer<wire_list_minecraft_cape> new_list_minecraft_cape_0(
+    int len,
+  ) {
+    return _new_list_minecraft_cape_0(
+      len,
+    );
+  }
+
+  late final _new_list_minecraft_cape_0Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<wire_list_minecraft_cape> Function(
+              ffi.Int32)>>('new_list_minecraft_cape_0');
+  late final _new_list_minecraft_cape_0 = _new_list_minecraft_cape_0Ptr
+      .asFunction<ffi.Pointer<wire_list_minecraft_cape> Function(int)>();
+
+  ffi.Pointer<wire_list_minecraft_skin> new_list_minecraft_skin_0(
+    int len,
+  ) {
+    return _new_list_minecraft_skin_0(
+      len,
+    );
+  }
+
+  late final _new_list_minecraft_skin_0Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<wire_list_minecraft_skin> Function(
+              ffi.Int32)>>('new_list_minecraft_skin_0');
+  late final _new_list_minecraft_skin_0 = _new_list_minecraft_skin_0Ptr
+      .asFunction<ffi.Pointer<wire_list_minecraft_skin> Function(int)>();
+
+  ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
+    int len,
+  ) {
+    return _new_uint_8_list_0(
+      len,
+    );
+  }
+
+  late final _new_uint_8_list_0Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<wire_uint_8_list> Function(
+              ffi.Int32)>>('new_uint_8_list_0');
+  late final _new_uint_8_list_0 = _new_uint_8_list_0Ptr
+      .asFunction<ffi.Pointer<wire_uint_8_list> Function(int)>();
+
+  ffi.Pointer<AccountStorageValueKind> inflate_AccountStorageValue_Accounts() {
+    return _inflate_AccountStorageValue_Accounts();
+  }
+
+  late final _inflate_AccountStorageValue_AccountsPtr = _lookup<
+          ffi.NativeFunction<ffi.Pointer<AccountStorageValueKind> Function()>>(
+      'inflate_AccountStorageValue_Accounts');
+  late final _inflate_AccountStorageValue_Accounts =
+      _inflate_AccountStorageValue_AccountsPtr
+          .asFunction<ffi.Pointer<AccountStorageValueKind> Function()>();
+
+  ffi.Pointer<AccountStorageValueKind>
+      inflate_AccountStorageValue_MainAccount() {
+    return _inflate_AccountStorageValue_MainAccount();
+  }
+
+  late final _inflate_AccountStorageValue_MainAccountPtr = _lookup<
+          ffi.NativeFunction<ffi.Pointer<AccountStorageValueKind> Function()>>(
+      'inflate_AccountStorageValue_MainAccount');
+  late final _inflate_AccountStorageValue_MainAccount =
+      _inflate_AccountStorageValue_MainAccountPtr
+          .asFunction<ffi.Pointer<AccountStorageValueKind> Function()>();
 
   ffi.Pointer<UILayoutValueKind> inflate_UILayoutValue_CompletedSetup() {
     return _inflate_UILayoutValue_CompletedSetup();
@@ -710,6 +1032,97 @@ final class wire_UILayoutValue extends ffi.Struct {
   external int tag;
 
   external ffi.Pointer<UILayoutValueKind> kind;
+}
+
+final class wire_uint_8_list extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint8> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_AccountToken extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> token;
+
+  @ffi.Int64()
+  external int expires_at;
+}
+
+final class wire_MinecraftSkin extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> id;
+
+  external ffi.Pointer<wire_uint_8_list> state;
+
+  external ffi.Pointer<wire_uint_8_list> url;
+
+  @ffi.Int32()
+  external int variant;
+}
+
+final class wire_list_minecraft_skin extends ffi.Struct {
+  external ffi.Pointer<wire_MinecraftSkin> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_MinecraftCape extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> id;
+
+  external ffi.Pointer<wire_uint_8_list> state;
+
+  external ffi.Pointer<wire_uint_8_list> url;
+
+  external ffi.Pointer<wire_uint_8_list> alias;
+}
+
+final class wire_list_minecraft_cape extends ffi.Struct {
+  external ffi.Pointer<wire_MinecraftCape> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_MinecraftAccount extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> username;
+
+  external ffi.Pointer<wire_uint_8_list> uuid;
+
+  external wire_AccountToken access_token;
+
+  external wire_AccountToken refresh_token;
+
+  external ffi.Pointer<wire_list_minecraft_skin> skins;
+
+  external ffi.Pointer<wire_list_minecraft_cape> capes;
+}
+
+final class wire_list_minecraft_account extends ffi.Struct {
+  external ffi.Pointer<wire_MinecraftAccount> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_AccountStorageValue_Accounts extends ffi.Struct {
+  external ffi.Pointer<wire_list_minecraft_account> field0;
+}
+
+final class wire_AccountStorageValue_MainAccount extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> field0;
+}
+
+final class AccountStorageValueKind extends ffi.Union {
+  external ffi.Pointer<wire_AccountStorageValue_Accounts> Accounts;
+
+  external ffi.Pointer<wire_AccountStorageValue_MainAccount> MainAccount;
+}
+
+final class wire_AccountStorageValue extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external ffi.Pointer<AccountStorageValueKind> kind;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<

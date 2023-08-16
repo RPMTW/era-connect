@@ -15,6 +15,356 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
 
 /// @nodoc
+mixin _$AccountStorageValue {
+  Object? get field0 => throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<MinecraftAccount> field0) accounts,
+    required TResult Function(UuidValue? field0) mainAccount,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<MinecraftAccount> field0)? accounts,
+    TResult? Function(UuidValue? field0)? mainAccount,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<MinecraftAccount> field0)? accounts,
+    TResult Function(UuidValue? field0)? mainAccount,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(AccountStorageValue_Accounts value) accounts,
+    required TResult Function(AccountStorageValue_MainAccount value)
+        mainAccount,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(AccountStorageValue_Accounts value)? accounts,
+    TResult? Function(AccountStorageValue_MainAccount value)? mainAccount,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(AccountStorageValue_Accounts value)? accounts,
+    TResult Function(AccountStorageValue_MainAccount value)? mainAccount,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $AccountStorageValueCopyWith<$Res> {
+  factory $AccountStorageValueCopyWith(
+          AccountStorageValue value, $Res Function(AccountStorageValue) then) =
+      _$AccountStorageValueCopyWithImpl<$Res, AccountStorageValue>;
+}
+
+/// @nodoc
+class _$AccountStorageValueCopyWithImpl<$Res, $Val extends AccountStorageValue>
+    implements $AccountStorageValueCopyWith<$Res> {
+  _$AccountStorageValueCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+}
+
+/// @nodoc
+abstract class _$$AccountStorageValue_AccountsCopyWith<$Res> {
+  factory _$$AccountStorageValue_AccountsCopyWith(
+          _$AccountStorageValue_Accounts value,
+          $Res Function(_$AccountStorageValue_Accounts) then) =
+      __$$AccountStorageValue_AccountsCopyWithImpl<$Res>;
+  @useResult
+  $Res call({List<MinecraftAccount> field0});
+}
+
+/// @nodoc
+class __$$AccountStorageValue_AccountsCopyWithImpl<$Res>
+    extends _$AccountStorageValueCopyWithImpl<$Res,
+        _$AccountStorageValue_Accounts>
+    implements _$$AccountStorageValue_AccountsCopyWith<$Res> {
+  __$$AccountStorageValue_AccountsCopyWithImpl(
+      _$AccountStorageValue_Accounts _value,
+      $Res Function(_$AccountStorageValue_Accounts) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$AccountStorageValue_Accounts(
+      null == field0
+          ? _value._field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as List<MinecraftAccount>,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$AccountStorageValue_Accounts implements AccountStorageValue_Accounts {
+  const _$AccountStorageValue_Accounts(final List<MinecraftAccount> field0)
+      : _field0 = field0;
+
+  final List<MinecraftAccount> _field0;
+  @override
+  List<MinecraftAccount> get field0 {
+    if (_field0 is EqualUnmodifiableListView) return _field0;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_field0);
+  }
+
+  @override
+  String toString() {
+    return 'AccountStorageValue.accounts(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AccountStorageValue_Accounts &&
+            const DeepCollectionEquality().equals(other._field0, _field0));
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, const DeepCollectionEquality().hash(_field0));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AccountStorageValue_AccountsCopyWith<_$AccountStorageValue_Accounts>
+      get copyWith => __$$AccountStorageValue_AccountsCopyWithImpl<
+          _$AccountStorageValue_Accounts>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<MinecraftAccount> field0) accounts,
+    required TResult Function(UuidValue? field0) mainAccount,
+  }) {
+    return accounts(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<MinecraftAccount> field0)? accounts,
+    TResult? Function(UuidValue? field0)? mainAccount,
+  }) {
+    return accounts?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<MinecraftAccount> field0)? accounts,
+    TResult Function(UuidValue? field0)? mainAccount,
+    required TResult orElse(),
+  }) {
+    if (accounts != null) {
+      return accounts(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(AccountStorageValue_Accounts value) accounts,
+    required TResult Function(AccountStorageValue_MainAccount value)
+        mainAccount,
+  }) {
+    return accounts(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(AccountStorageValue_Accounts value)? accounts,
+    TResult? Function(AccountStorageValue_MainAccount value)? mainAccount,
+  }) {
+    return accounts?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(AccountStorageValue_Accounts value)? accounts,
+    TResult Function(AccountStorageValue_MainAccount value)? mainAccount,
+    required TResult orElse(),
+  }) {
+    if (accounts != null) {
+      return accounts(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class AccountStorageValue_Accounts implements AccountStorageValue {
+  const factory AccountStorageValue_Accounts(
+      final List<MinecraftAccount> field0) = _$AccountStorageValue_Accounts;
+
+  @override
+  List<MinecraftAccount> get field0;
+  @JsonKey(ignore: true)
+  _$$AccountStorageValue_AccountsCopyWith<_$AccountStorageValue_Accounts>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$AccountStorageValue_MainAccountCopyWith<$Res> {
+  factory _$$AccountStorageValue_MainAccountCopyWith(
+          _$AccountStorageValue_MainAccount value,
+          $Res Function(_$AccountStorageValue_MainAccount) then) =
+      __$$AccountStorageValue_MainAccountCopyWithImpl<$Res>;
+  @useResult
+  $Res call({UuidValue? field0});
+}
+
+/// @nodoc
+class __$$AccountStorageValue_MainAccountCopyWithImpl<$Res>
+    extends _$AccountStorageValueCopyWithImpl<$Res,
+        _$AccountStorageValue_MainAccount>
+    implements _$$AccountStorageValue_MainAccountCopyWith<$Res> {
+  __$$AccountStorageValue_MainAccountCopyWithImpl(
+      _$AccountStorageValue_MainAccount _value,
+      $Res Function(_$AccountStorageValue_MainAccount) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = freezed,
+  }) {
+    return _then(_$AccountStorageValue_MainAccount(
+      freezed == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as UuidValue?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$AccountStorageValue_MainAccount
+    implements AccountStorageValue_MainAccount {
+  const _$AccountStorageValue_MainAccount([this.field0]);
+
+  @override
+  final UuidValue? field0;
+
+  @override
+  String toString() {
+    return 'AccountStorageValue.mainAccount(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AccountStorageValue_MainAccount &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AccountStorageValue_MainAccountCopyWith<_$AccountStorageValue_MainAccount>
+      get copyWith => __$$AccountStorageValue_MainAccountCopyWithImpl<
+          _$AccountStorageValue_MainAccount>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<MinecraftAccount> field0) accounts,
+    required TResult Function(UuidValue? field0) mainAccount,
+  }) {
+    return mainAccount(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<MinecraftAccount> field0)? accounts,
+    TResult? Function(UuidValue? field0)? mainAccount,
+  }) {
+    return mainAccount?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<MinecraftAccount> field0)? accounts,
+    TResult Function(UuidValue? field0)? mainAccount,
+    required TResult orElse(),
+  }) {
+    if (mainAccount != null) {
+      return mainAccount(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(AccountStorageValue_Accounts value) accounts,
+    required TResult Function(AccountStorageValue_MainAccount value)
+        mainAccount,
+  }) {
+    return mainAccount(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(AccountStorageValue_Accounts value)? accounts,
+    TResult? Function(AccountStorageValue_MainAccount value)? mainAccount,
+  }) {
+    return mainAccount?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(AccountStorageValue_Accounts value)? accounts,
+    TResult Function(AccountStorageValue_MainAccount value)? mainAccount,
+    required TResult orElse(),
+  }) {
+    if (mainAccount != null) {
+      return mainAccount(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class AccountStorageValue_MainAccount implements AccountStorageValue {
+  const factory AccountStorageValue_MainAccount([final UuidValue? field0]) =
+      _$AccountStorageValue_MainAccount;
+
+  @override
+  UuidValue? get field0;
+  @JsonKey(ignore: true)
+  _$$AccountStorageValue_MainAccountCopyWith<_$AccountStorageValue_MainAccount>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$LoginFlowErrors {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({

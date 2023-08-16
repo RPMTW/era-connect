@@ -1,4 +1,4 @@
-import 'package:era_connect/api/config/config_api.dart';
+import 'package:era_connect/api/storage/storage_api.dart';
 import 'package:era_connect/dialog/setup_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
@@ -17,7 +17,7 @@ class _MainPageState extends State<MainPage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (mounted && !configApi.uiLayout.completedSetup) {
+      if (mounted && !storageApi.uiLayout.completedSetup) {
         showEraDialog(
           context: context,
           dialog: const SetupDialog(),

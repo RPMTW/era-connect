@@ -85,34 +85,65 @@ fn wire_write_state_impl(port_: MessagePort, s: impl Wire2Api<DownloadState> + U
         },
     )
 }
-fn wire_get_ui_layout_config_impl(
+fn wire_get_ui_layout_storage_impl(
     key: impl Wire2Api<UILayoutKey> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_ui_layout_config",
+            debug_name: "get_ui_layout_storage",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_key = key.wire2api();
-            Ok(get_ui_layout_config(api_key))
+            Ok(get_ui_layout_storage(api_key))
         },
     )
 }
-fn wire_set_ui_layout_config_impl(
+fn wire_set_ui_layout_storage_impl(
     port_: MessagePort,
     value: impl Wire2Api<UILayoutValue> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
-            debug_name: "set_ui_layout_config",
+            debug_name: "set_ui_layout_storage",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
         move || {
             let api_value = value.wire2api();
-            move |task_callback| set_ui_layout_config(api_value)
+            move |task_callback| set_ui_layout_storage(api_value)
+        },
+    )
+}
+fn wire_get_account_storage_impl(
+    key: impl Wire2Api<AccountStorageKey> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "get_account_storage",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_key = key.wire2api();
+            Ok(get_account_storage(api_key))
+        },
+    )
+}
+fn wire_set_account_storage_impl(
+    port_: MessagePort,
+    value: impl Wire2Api<AccountStorageValue> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "set_account_storage",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_value = value.wire2api();
+            move |task_callback| set_account_storage(api_value)
         },
     )
 }
@@ -152,6 +183,17 @@ where
         (!self.is_null()).then(|| self.wire2api())
     }
 }
+
+impl Wire2Api<AccountStorageKey> for i32 {
+    fn wire2api(self) -> AccountStorageKey {
+        match self {
+            0 => AccountStorageKey::Accounts,
+            1 => AccountStorageKey::MainAccount,
+            _ => unreachable!("Invalid variant for AccountStorageKey: {}", self),
+        }
+    }
+}
+
 impl Wire2Api<bool> for bool {
     fn wire2api(self) -> bool {
         self
@@ -173,6 +215,27 @@ impl Wire2Api<i32> for i32 {
         self
     }
 }
+impl Wire2Api<i64> for i64 {
+    fn wire2api(self) -> i64 {
+        self
+    }
+}
+
+impl Wire2Api<MinecraftSkinVariant> for i32 {
+    fn wire2api(self) -> MinecraftSkinVariant {
+        match self {
+            0 => MinecraftSkinVariant::Classic,
+            1 => MinecraftSkinVariant::Slim,
+            _ => unreachable!("Invalid variant for MinecraftSkinVariant: {}", self),
+        }
+    }
+}
+
+impl Wire2Api<u8> for u8 {
+    fn wire2api(self) -> u8 {
+        self
+    }
+}
 impl Wire2Api<UILayoutKey> for i32 {
     fn wire2api(self) -> UILayoutKey {
         match self {
@@ -183,6 +246,22 @@ impl Wire2Api<UILayoutKey> for i32 {
 }
 
 // Section: impl IntoDart
+
+impl support::IntoDart for AccountStorageValue {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::Accounts(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
+            Self::MainAccount(field0) => vec![1.into_dart(), field0.into_dart()],
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for AccountStorageValue {}
+impl rust2dart::IntoIntoDart<AccountStorageValue> for AccountStorageValue {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
 
 impl support::IntoDart for AccountToken {
     fn into_dart(self) -> support::DartAbi {

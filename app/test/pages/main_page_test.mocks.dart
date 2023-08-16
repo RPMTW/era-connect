@@ -3,7 +3,7 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:era_connect/api/config/ui_layout.dart' as _i2;
+import 'package:era_connect/api/storage/ui_layout.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -17,11 +17,11 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-/// A class which mocks [UILayoutConfig].
+/// A class which mocks [UILayoutStorage].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockUILayoutConfig extends _i1.Mock implements _i2.UILayoutConfig {
-  MockUILayoutConfig() {
+class MockUILayoutStorage extends _i1.Mock implements _i2.UILayoutStorage {
+  MockUILayoutStorage() {
     _i1.throwOnMissingStub(this);
   }
 
