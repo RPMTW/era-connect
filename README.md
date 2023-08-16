@@ -15,15 +15,15 @@
 To begin, ensure that you have a working installation of the following items:
 - [Flutter SDK](https://docs.flutter.dev/get-started/install)
 - [Rust language](https://rustup.rs/)
+- [System dependencies (For Non-Debian Linux)](https://cjycode.com/flutter_rust_bridge/integrate/deps.html#system-dependencies)
 
 ```bash
-cargo install flutter_rust_bridge_codegen # https://cjycode.com/flutter_rust_bridge/integrate/deps.html#build-time-dependencies
 cargo install just # https://crates.io/crates/just
 ```
 
 ### Generate binding for Rust <-> Dart
 ```bash
-just gen lint
+just default
 ```
 
 If you are using an Arch Linux machine, please execute the following command before generating the bindings:

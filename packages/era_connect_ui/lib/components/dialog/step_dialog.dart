@@ -149,12 +149,15 @@ class _StepDialogState extends State<StepDialog> {
       children: [
         Row(
           children: [
-            Text(
-              step.stepName ?? _getStepIndexName(step),
-              style: TextStyle(
-                color: context.theme.accentColor,
-                fontSize: 30,
-                fontFamily: 'Graduate',
+            SizedBox(
+              width: 40,
+              child: Text(
+                step.stepName ?? _getStepIndexName(step),
+                style: TextStyle(
+                  color: context.theme.accentColor,
+                  fontSize: 30,
+                  fontFamily: 'BaiJamjuree',
+                ),
               ),
             ),
             const SizedBox(width: 20),
@@ -188,7 +191,7 @@ class _StepDialogState extends State<StepDialog> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(child: step.contentPages[_contentPageIndex]),
-          const SizedBox(height: 35),
+          const SizedBox(height: 25),
           Align(
             alignment: Alignment.centerRight,
             child: Wrap(

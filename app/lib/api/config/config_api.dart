@@ -1,13 +1,20 @@
 import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
+import 'package:meta/meta.dart';
 
 import 'ui_layout.dart';
 
-final ConfigAPI configAPI = ConfigAPI();
+final ConfigApi configApi = ConfigApi();
 
-class ConfigAPI {
-  final UILayoutConfig uiLayout = UILayoutConfig();
+class ConfigApi {
+  UILayoutConfig _uiLayout = UILayoutConfig();
 
-  ConfigAPI();
+  UILayoutConfig get uiLayout => _uiLayout;
+  @visibleForTesting
+  set uiLayout(UILayoutConfig value) {
+    _uiLayout = value;
+  }
+
+  ConfigApi();
 }
 
 T get<T>(

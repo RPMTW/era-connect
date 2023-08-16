@@ -50,6 +50,8 @@ WireSyncReturn wire_get_ui_layout_config(int32_t key);
 
 void wire_set_ui_layout_config(int64_t port_, struct wire_UILayoutValue *value);
 
+void wire_minecraft_login_flow(int64_t port_);
+
 struct wire_UILayoutValue *new_box_autoadd_ui_layout_value_0(void);
 
 union UILayoutValueKind *inflate_UILayoutValue_CompletedSetup(void);
@@ -66,6 +68,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_write_state);
     dummy_var ^= ((int64_t) (void*) wire_get_ui_layout_config);
     dummy_var ^= ((int64_t) (void*) wire_set_ui_layout_config);
+    dummy_var ^= ((int64_t) (void*) wire_minecraft_login_flow);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_ui_layout_value_0);
     dummy_var ^= ((int64_t) (void*) inflate_UILayoutValue_CompletedSetup);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);

@@ -41,6 +41,11 @@ pub extern "C" fn wire_set_ui_layout_config(port_: i64, value: *mut wire_UILayou
     wire_set_ui_layout_config_impl(port_, value)
 }
 
+#[no_mangle]
+pub extern "C" fn wire_minecraft_login_flow(port_: i64) {
+    wire_minecraft_login_flow_impl(port_)
+}
+
 // Section: allocate functions
 
 #[no_mangle]

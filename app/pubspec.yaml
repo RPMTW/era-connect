@@ -32,7 +32,7 @@ dependencies:
 
   ffi: ^2.0.2
   flutter_rust_bridge: ^1.79.0
-  meta: ^1.8.0
+  meta: ^1.9.1
   flutter_svg: ^2.0.7
   window_manager: ^0.3.5
   provider: ^6.0.5
@@ -41,15 +41,18 @@ dependencies:
     path: ../packages/era_connect_ui
   era_connect_i18n:
     path: ../packages/era_connect_i18n
+  url_launcher: ^6.1.12
+  uuid: ^3.0.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^2.0.2
-  ffigen: ^9.0.1
+  ffigen: ^8.0.2
   build_runner: ^2.4.6
   freezed: ^2.4.1
+  mockito: ^5.4.2
 
 flutter:
   uses-material-design: true
@@ -70,6 +73,6 @@ flutter:
     - family: Geo
       fonts:
         - asset: assets/fonts/Geo-Regular.ttf
-    - family: Graduate
+    - family: BaiJamjuree
       fonts:
-        - asset: assets/fonts/Graduate-Regular.ttf
+        - asset: assets/fonts/BaiJamjuree-BoldItalic.ttf

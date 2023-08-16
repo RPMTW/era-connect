@@ -1,3 +1,4 @@
+pub mod authentication;
 pub mod config;
 mod download;
 pub mod forge;
@@ -5,28 +6,36 @@ pub mod quilt;
 pub mod vanilla;
 
 use std::fs::create_dir_all;
+use std::path::PathBuf;
 pub use std::sync::mpsc;
 pub use std::sync::mpsc::{Receiver, Sender};
 
-use anyhow::{Context, Ok};
+use anyhow::Context;
 use chrono::Local;
+use log::{info, warn};
+
 pub use flutter_rust_bridge::StreamSink;
 pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
-use log::info;
 pub use tokio::sync::{Mutex, RwLock};
 
 use crate::api::forge::{prepare_forge_download, process_forge};
 
-use self::config::config_state::ConfigState;
+pub use self::authentication::account::{
+    AccountToken, MinecraftAccount, MinecraftCape, MinecraftSkin, MinecraftSkinVariant,
+};
+pub use self::authentication::msa_flow::{
+    LoginFlowDeviceCode, LoginFlowErrors, LoginFlowEvent, LoginFlowStage, XstsTokenErrorType,
+};
 pub use self::config::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
 pub use self::download::Progress;
-use self::download::{run_download, DownloadBias};
 pub use self::quilt::prepare_quilt_download;
-use self::vanilla::launch_game;
 pub use self::vanilla::prepare_vanilla_download;
-pub use self::vanilla::PathBuf;
-
 pub use self::vanilla::{GameOptions, JvmOptions, LaunchArgs};
+
+use self::config::config_loader::ConfigInstance;
+use self::config::config_state::ConfigState;
+use self::download::{run_download, DownloadBias};
+use self::vanilla::launch_game;
 
 lazy_static::lazy_static! {
     static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
@@ -62,6 +71,13 @@ pub fn setup_logger() -> anyhow::Result<()> {
         })
         .chain(std::io::stdout())
         .chain(fern::log_file(file_path)?)
+        .filter(|metadata| {
+            if cfg!(debug_assertions) {
+                metadata.level() <= log::LevelFilter::Debug
+            } else {
+                metadata.level() <= log::LevelFilter::Info
+            }
+        })
         .apply()?;
 
     info!("Successfully setup logger");
@@ -167,4 +183,26 @@ pub fn set_ui_layout_config(value: UILayoutValue) -> anyhow::Result<()> {
     let mut config = CONFIG.ui_layout.blocking_write();
     config.set_value(value);
     config.save()
+}
+
+#[tokio::main(flavor = "current_thread")]
+pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::Result<()> {
+    let result = authentication::msa_flow::login_flow(&skin).await;
+    match result {
+        Ok(account) => {
+            let mut storage = CONFIG.account_storage.write().await;
+            storage.add_account(&account, Some(true));
+            storage.save()?;
+
+            skin.add(LoginFlowEvent::Success(account));
+            info!("Successfully login minecraft account");
+        }
+        Err(e) => {
+            skin.add(LoginFlowEvent::Error(LoginFlowErrors::UnknownError));
+            warn!("Failed to login minecraft account: {:#?}", e);
+        }
+    }
+
+    skin.close();
+    Ok(())
 }
