@@ -1,4 +1,4 @@
-default: gen lint
+default: _install_cargo_deps gen lint
 
 gen:
     cd app && flutter pub get
@@ -47,5 +47,9 @@ _ignore_generated_files_coverage:
       grep -q "// coverage:ignore-file" $file && continue; \
       echo "// coverage:ignore-file" | cat - $file > temp && mv temp $file; \
     done
+
+_install_cargo_deps:
+    cargo install flutter_rust_bridge_codegen
+    cargo install cargo-expand
 
 # vim:expandtab:sw=4:ts=4

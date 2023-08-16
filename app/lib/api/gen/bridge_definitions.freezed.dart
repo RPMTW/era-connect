@@ -1121,7 +1121,7 @@ abstract class LoginFlowEvent_Success implements LoginFlowEvent {
 }
 
 /// @nodoc
-mixin _$Value {
+mixin _$UILayoutValue {
   bool get field0 => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
@@ -1141,37 +1141,40 @@ mixin _$Value {
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value_CompletedSetup value) completedSetup,
+    required TResult Function(UILayoutValue_CompletedSetup value)
+        completedSetup,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value_CompletedSetup value)? completedSetup,
+    TResult? Function(UILayoutValue_CompletedSetup value)? completedSetup,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value_CompletedSetup value)? completedSetup,
+    TResult Function(UILayoutValue_CompletedSetup value)? completedSetup,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
-  $ValueCopyWith<Value> get copyWith => throw _privateConstructorUsedError;
+  $UILayoutValueCopyWith<UILayoutValue> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $ValueCopyWith<$Res> {
-  factory $ValueCopyWith(Value value, $Res Function(Value) then) =
-      _$ValueCopyWithImpl<$Res, Value>;
+abstract class $UILayoutValueCopyWith<$Res> {
+  factory $UILayoutValueCopyWith(
+          UILayoutValue value, $Res Function(UILayoutValue) then) =
+      _$UILayoutValueCopyWithImpl<$Res, UILayoutValue>;
   @useResult
   $Res call({bool field0});
 }
 
 /// @nodoc
-class _$ValueCopyWithImpl<$Res, $Val extends Value>
-    implements $ValueCopyWith<$Res> {
-  _$ValueCopyWithImpl(this._value, this._then);
+class _$UILayoutValueCopyWithImpl<$Res, $Val extends UILayoutValue>
+    implements $UILayoutValueCopyWith<$Res> {
+  _$UILayoutValueCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -1193,22 +1196,24 @@ class _$ValueCopyWithImpl<$Res, $Val extends Value>
 }
 
 /// @nodoc
-abstract class _$$Value_CompletedSetupCopyWith<$Res>
-    implements $ValueCopyWith<$Res> {
-  factory _$$Value_CompletedSetupCopyWith(_$Value_CompletedSetup value,
-          $Res Function(_$Value_CompletedSetup) then) =
-      __$$Value_CompletedSetupCopyWithImpl<$Res>;
+abstract class _$$UILayoutValue_CompletedSetupCopyWith<$Res>
+    implements $UILayoutValueCopyWith<$Res> {
+  factory _$$UILayoutValue_CompletedSetupCopyWith(
+          _$UILayoutValue_CompletedSetup value,
+          $Res Function(_$UILayoutValue_CompletedSetup) then) =
+      __$$UILayoutValue_CompletedSetupCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({bool field0});
 }
 
 /// @nodoc
-class __$$Value_CompletedSetupCopyWithImpl<$Res>
-    extends _$ValueCopyWithImpl<$Res, _$Value_CompletedSetup>
-    implements _$$Value_CompletedSetupCopyWith<$Res> {
-  __$$Value_CompletedSetupCopyWithImpl(_$Value_CompletedSetup _value,
-      $Res Function(_$Value_CompletedSetup) _then)
+class __$$UILayoutValue_CompletedSetupCopyWithImpl<$Res>
+    extends _$UILayoutValueCopyWithImpl<$Res, _$UILayoutValue_CompletedSetup>
+    implements _$$UILayoutValue_CompletedSetupCopyWith<$Res> {
+  __$$UILayoutValue_CompletedSetupCopyWithImpl(
+      _$UILayoutValue_CompletedSetup _value,
+      $Res Function(_$UILayoutValue_CompletedSetup) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1216,7 +1221,7 @@ class __$$Value_CompletedSetupCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$Value_CompletedSetup(
+    return _then(_$UILayoutValue_CompletedSetup(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1227,22 +1232,22 @@ class __$$Value_CompletedSetupCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$Value_CompletedSetup implements Value_CompletedSetup {
-  const _$Value_CompletedSetup(this.field0);
+class _$UILayoutValue_CompletedSetup implements UILayoutValue_CompletedSetup {
+  const _$UILayoutValue_CompletedSetup(this.field0);
 
   @override
   final bool field0;
 
   @override
   String toString() {
-    return 'Value.completedSetup(field0: $field0)';
+    return 'UILayoutValue.completedSetup(field0: $field0)';
   }
 
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$Value_CompletedSetup &&
+            other is _$UILayoutValue_CompletedSetup &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1252,9 +1257,9 @@ class _$Value_CompletedSetup implements Value_CompletedSetup {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$Value_CompletedSetupCopyWith<_$Value_CompletedSetup> get copyWith =>
-      __$$Value_CompletedSetupCopyWithImpl<_$Value_CompletedSetup>(
-          this, _$identity);
+  _$$UILayoutValue_CompletedSetupCopyWith<_$UILayoutValue_CompletedSetup>
+      get copyWith => __$$UILayoutValue_CompletedSetupCopyWithImpl<
+          _$UILayoutValue_CompletedSetup>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1287,7 +1292,8 @@ class _$Value_CompletedSetup implements Value_CompletedSetup {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value_CompletedSetup value) completedSetup,
+    required TResult Function(UILayoutValue_CompletedSetup value)
+        completedSetup,
   }) {
     return completedSetup(this);
   }
@@ -1295,7 +1301,7 @@ class _$Value_CompletedSetup implements Value_CompletedSetup {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value_CompletedSetup value)? completedSetup,
+    TResult? Function(UILayoutValue_CompletedSetup value)? completedSetup,
   }) {
     return completedSetup?.call(this);
   }
@@ -1303,7 +1309,7 @@ class _$Value_CompletedSetup implements Value_CompletedSetup {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value_CompletedSetup value)? completedSetup,
+    TResult Function(UILayoutValue_CompletedSetup value)? completedSetup,
     required TResult orElse(),
   }) {
     if (completedSetup != null) {
@@ -1313,14 +1319,14 @@ class _$Value_CompletedSetup implements Value_CompletedSetup {
   }
 }
 
-abstract class Value_CompletedSetup implements Value {
-  const factory Value_CompletedSetup(final bool field0) =
-      _$Value_CompletedSetup;
+abstract class UILayoutValue_CompletedSetup implements UILayoutValue {
+  const factory UILayoutValue_CompletedSetup(final bool field0) =
+      _$UILayoutValue_CompletedSetup;
 
   @override
   bool get field0;
   @override
   @JsonKey(ignore: true)
-  _$$Value_CompletedSetupCopyWith<_$Value_CompletedSetup> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$UILayoutValue_CompletedSetupCopyWith<_$UILayoutValue_CompletedSetup>
+      get copyWith => throw _privateConstructorUsedError;
 }

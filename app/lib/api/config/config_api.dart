@@ -18,6 +18,7 @@ class ConfigApi {
 }
 
 T get<T>(
-    bridge.Value Function({required bridge.Key key}) function, bridge.Key key) {
+    bridge.UILayoutValue Function({required bridge.UILayoutKey key}) function,
+    bridge.UILayoutKey key) {
   return function(key: key).field0 as T;
 }

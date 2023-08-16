@@ -37,7 +37,7 @@ pub extern "C" fn wire_get_ui_layout_config(key: i32) -> support::WireSyncReturn
 }
 
 #[no_mangle]
-pub extern "C" fn wire_set_ui_layout_config(port_: i64, value: *mut wire_Value) {
+pub extern "C" fn wire_set_ui_layout_config(port_: i64, value: *mut wire_UILayoutValue) {
     wire_set_ui_layout_config_impl(port_, value)
 }
 
@@ -49,28 +49,28 @@ pub extern "C" fn wire_minecraft_login_flow(port_: i64) {
 // Section: allocate functions
 
 #[no_mangle]
-pub extern "C" fn new_box_autoadd_value_0() -> *mut wire_Value {
-    support::new_leak_box_ptr(wire_Value::new_with_null_ptr())
+pub extern "C" fn new_box_autoadd_ui_layout_value_0() -> *mut wire_UILayoutValue {
+    support::new_leak_box_ptr(wire_UILayoutValue::new_with_null_ptr())
 }
 
 // Section: related functions
 
 // Section: impl Wire2Api
 
-impl Wire2Api<Value> for *mut wire_Value {
-    fn wire2api(self) -> Value {
+impl Wire2Api<UILayoutValue> for *mut wire_UILayoutValue {
+    fn wire2api(self) -> UILayoutValue {
         let wrap = unsafe { support::box_from_leak_ptr(self) };
-        Wire2Api::<Value>::wire2api(*wrap).into()
+        Wire2Api::<UILayoutValue>::wire2api(*wrap).into()
     }
 }
 
-impl Wire2Api<Value> for wire_Value {
-    fn wire2api(self) -> Value {
+impl Wire2Api<UILayoutValue> for wire_UILayoutValue {
+    fn wire2api(self) -> UILayoutValue {
         match self.tag {
             0 => unsafe {
                 let ans = support::box_from_leak_ptr(self.kind);
                 let ans = support::box_from_leak_ptr(ans.CompletedSetup);
-                Value::CompletedSetup(ans.field0.wire2api())
+                UILayoutValue::CompletedSetup(ans.field0.wire2api())
             },
             _ => unreachable!(),
         }
@@ -80,19 +80,19 @@ impl Wire2Api<Value> for wire_Value {
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct wire_Value {
+pub struct wire_UILayoutValue {
     tag: i32,
-    kind: *mut ValueKind,
+    kind: *mut UILayoutValueKind,
 }
 
 #[repr(C)]
-pub union ValueKind {
-    CompletedSetup: *mut wire_Value_CompletedSetup,
+pub union UILayoutValueKind {
+    CompletedSetup: *mut wire_UILayoutValue_CompletedSetup,
 }
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct wire_Value_CompletedSetup {
+pub struct wire_UILayoutValue_CompletedSetup {
     field0: bool,
 }
 // Section: impl NewWithNullPtr
@@ -107,13 +107,13 @@ impl<T> NewWithNullPtr for *mut T {
     }
 }
 
-impl Default for wire_Value {
+impl Default for wire_UILayoutValue {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
 }
 
-impl NewWithNullPtr for wire_Value {
+impl NewWithNullPtr for wire_UILayoutValue {
     fn new_with_null_ptr() -> Self {
         Self {
             tag: -1,
@@ -123,9 +123,9 @@ impl NewWithNullPtr for wire_Value {
 }
 
 #[no_mangle]
-pub extern "C" fn inflate_Value_CompletedSetup() -> *mut ValueKind {
-    support::new_leak_box_ptr(ValueKind {
-        CompletedSetup: support::new_leak_box_ptr(wire_Value_CompletedSetup {
+pub extern "C" fn inflate_UILayoutValue_CompletedSetup() -> *mut UILayoutValueKind {
+    support::new_leak_box_ptr(UILayoutValueKind {
+        CompletedSetup: support::new_leak_box_ptr(wire_UILayoutValue_CompletedSetup {
             field0: Default::default(),
         }),
     })

@@ -18,22 +18,23 @@ pub use flutter_rust_bridge::StreamSink;
 pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
 pub use tokio::sync::{Mutex, RwLock};
 
+use crate::api::forge::{prepare_forge_download, process_forge};
+
 pub use self::authentication::account::{
     AccountToken, MinecraftAccount, MinecraftCape, MinecraftSkin, MinecraftSkinVariant,
 };
 pub use self::authentication::msa_flow::{
     LoginFlowDeviceCode, LoginFlowErrors, LoginFlowEvent, LoginFlowStage, XstsTokenErrorType,
 };
-use self::config::config_loader::ConfigInstance;
-pub use self::config::ui_layout::{Key, UILayout, Value};
+pub use self::config::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
 pub use self::download::Progress;
-use self::download::{run_download, DownloadBias};
 pub use self::quilt::prepare_quilt_download;
 pub use self::vanilla::prepare_vanilla_download;
 pub use self::vanilla::{GameOptions, JvmOptions, LaunchArgs};
 
+use self::config::config_loader::ConfigInstance;
 use self::config::config_state::ConfigState;
-use self::forge::{prepare_forge_download, process_forge};
+use self::download::{run_download, DownloadBias};
 use self::vanilla::launch_game;
 
 lazy_static::lazy_static! {
@@ -173,12 +174,12 @@ pub fn write_state(s: DownloadState) {
     *STATE.blocking_write() = s;
 }
 
-pub fn get_ui_layout_config(key: Key) -> SyncReturn<Value> {
+pub fn get_ui_layout_config(key: UILayoutKey) -> SyncReturn<UILayoutValue> {
     let value = CONFIG.ui_layout.blocking_read().get_value(key);
     SyncReturn(value)
 }
 
-pub fn set_ui_layout_config(value: Value) -> anyhow::Result<()> {
+pub fn set_ui_layout_config(value: UILayoutValue) -> anyhow::Result<()> {
     let mut config = CONFIG.ui_layout.blocking_write();
     config.set_value(value);
     config.save()
