@@ -29,16 +29,16 @@ impl StorageInstance<Self> for AccountStorage {
 
 impl AccountStorage {
     pub fn add_account(&mut self, account: MinecraftAccount, is_main_account: bool) {
-        if self.accounts.iter().any(|x| x.uuid != account.uuid) {
-            let uuid = account.uuid;
-            self.accounts.push(account);
+        // remove all accounts that have the same uuid
+        self.accounts.retain(|a| a.uuid != account.uuid);
+        let uuid = account.uuid;
+        self.accounts.push(account);
 
-            let set_as_main_account =
-                is_main_account || self.accounts.len() == 1 || self.main_account.is_none();
+        let set_as_main_account =
+            is_main_account || self.accounts.len() == 1 || self.main_account.is_none();
 
-            if set_as_main_account {
-                self.main_account = Some(uuid);
-            }
+        if set_as_main_account {
+            self.main_account = Some(uuid);
         }
     }
 }
