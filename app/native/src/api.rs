@@ -203,7 +203,7 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
     match result {
         Ok(account) => {
             let mut storage = STORAGE.account_storage.write().await;
-            storage.add_account(&account, Some(true));
+            storage.add_account(account.clone(), true);
             storage.save()?;
 
             skin.add(LoginFlowEvent::Success(account));
