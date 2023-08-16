@@ -31,7 +31,6 @@ pub use self::quilt::prepare_quilt_download;
 pub use self::storage::account_storage::{AccountStorageKey, AccountStorageValue};
 pub use self::storage::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
 pub use self::vanilla::prepare_vanilla_download;
-pub use self::vanilla::{GameOptions, JvmOptions, LaunchArgs};
 
 use self::download::{run_download, DownloadBias};
 use self::storage::storage_loader::StorageInstance;
@@ -42,13 +41,6 @@ lazy_static::lazy_static! {
     static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
     static ref STATE: RwLock<DownloadState> = RwLock::new(DownloadState::default());
     static ref STORAGE: StorageState = StorageState::new();
-}
-
-#[derive(Debug, Clone)]
-pub struct PrepareGameArgs {
-    pub launch_args: LaunchArgs,
-    pub jvm_args: JvmOptions,
-    pub game_args: GameOptions,
 }
 
 pub fn setup_logger() -> anyhow::Result<()> {

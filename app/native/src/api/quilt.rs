@@ -10,8 +10,7 @@ use tokio::{
 
 use super::{
     download::{download_file, validate_sha1, DownloadArgs},
-    vanilla::{HandlesType, ProcessedArguments},
-    GameOptions, JvmOptions, LaunchArgs,
+    vanilla::{GameOptions, HandlesType, JvmOptions, LaunchArgs, ProcessedArguments},
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct QuiltLibrary {
