@@ -28,17 +28,17 @@ impl StorageInstance<Self> for AccountStorage {
 }
 
 impl AccountStorage {
-    pub fn add_account(&mut self, account: &MinecraftAccount, is_main_account: Option<bool>) {
-        // Keep only the last account with the same UUID.
-        self.accounts.retain(|a| a.uuid != account.uuid);
-        self.accounts.push(account.clone());
+    pub fn add_account(&mut self, account: MinecraftAccount, is_main_account: bool) {
+        if self.accounts.iter().any(|x| x.uuid != account.uuid) {
+            let uuid = account.uuid;
+            self.accounts.push(account);
 
-        let set_as_main_account = is_main_account.unwrap_or(false)
-            || self.accounts.len() == 1
-            || self.main_account.is_none();
+            let set_as_main_account =
+                is_main_account || self.accounts.len() == 1 || self.main_account.is_none();
 
-        if set_as_main_account {
-            self.main_account = Some(account.uuid);
+            if set_as_main_account {
+                self.main_account = Some(uuid);
+            }
         }
     }
 }
