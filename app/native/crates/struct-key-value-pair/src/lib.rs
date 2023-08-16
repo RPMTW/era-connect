@@ -48,6 +48,7 @@ pub fn variants_enum(input: TokenStream) -> TokenStream {
     let mut ident = Vec::new();
     let mut camel = Vec::new();
     let mut types = Vec::new();
+
     for field in input.fields {
         if let Some(x) = field.ident {
             ident.push(x);
@@ -57,6 +58,7 @@ pub fn variants_enum(input: TokenStream) -> TokenStream {
         }
         types.push(field.ty);
     }
+
     let gen = quote! {
         pub enum #key_ident {
             #(#camel),*
