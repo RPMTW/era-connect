@@ -23,8 +23,7 @@ use self::library::{parallel_library, Library};
 use self::rules::{get_rules, ActionType, Rule};
 
 use super::download::{download_file, extract_filename, validate_sha1, DownloadArgs};
-use super::storage::storage_loader;
-use super::{AccountStorageKey, AccountStorageValue, STORAGE};
+use super::STORAGE;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct GameFlags {
