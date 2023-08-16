@@ -201,6 +201,8 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
         .context("fail to create native_directory(vanilla)")?;
 
     let storage = STORAGE.account_storage.read().await;
+
+    // NOTE: have to check in frontend
     let uuid = storage
         .main_account
         .context("Can't launch game without main account")?;
