@@ -45,7 +45,7 @@ app.*.map.json
 /android/app/release
 
 native/target
-native/struct-key-value-pair/target
+native/crates/struct-key-value-pair/target
 xcuserdata
 jniLibs
 

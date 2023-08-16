@@ -9,7 +9,7 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-struct-key-value-pair = { path = "struct-key-value-pair" }
+struct-key-value-pair = { path = "crates/struct-key-value-pair" }
 anyhow = { version = "1.0.72", features = ["backtrace"] }
 bytes = "1.4.0"
 color-eyre = "0.6.2"
