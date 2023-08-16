@@ -500,8 +500,8 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge"
-version = "1.80.1"
-source = "git+https://github.com/fzyzcjy/flutter_rust_bridge#f74982796e7dd317d43f80153b0250fa8ea9aa20"
+version = "1.81.0"
+source = "git+https://github.com/fzyzcjy/flutter_rust_bridge#4dd307e3fe1510faa71ad9246e322e0500024b19"
 dependencies = [
  "allo-isolate",
  "anyhow",
@@ -525,8 +525,8 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge_macros"
-version = "1.80.1"
-source = "git+https://github.com/fzyzcjy/flutter_rust_bridge#f74982796e7dd317d43f80153b0250fa8ea9aa20"
+version = "1.81.0"
+source = "git+https://github.com/fzyzcjy/flutter_rust_bridge#4dd307e3fe1510faa71ad9246e322e0500024b19"
 
 [[package]]
 name = "fnv"
