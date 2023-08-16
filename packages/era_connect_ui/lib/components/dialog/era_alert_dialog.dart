@@ -20,21 +20,15 @@ class EraAlertDialog extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: IntrinsicWidth(
-        child: IntrinsicHeight(
-          child: Container(
-            color: context.theme.backgroundColor,
-            constraints: const BoxConstraints(
-              minHeight: 350,
-              maxHeight: 450,
-              minWidth: 580,
-              maxWidth: 620,
-            ),
-            child: Column(
-              children: [
-                Expanded(flex: 4, child: _buildContent(context)),
-                Expanded(flex: 1, child: _buildActions(context)),
-              ],
-            ),
+        child: Container(
+          color: context.theme.backgroundColor,
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildContent(context),
+              _buildActions(context),
+            ],
           ),
         ),
       ),
@@ -43,11 +37,10 @@ class EraAlertDialog extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(top: 25, left: 35, right: 35),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
       color: context.theme.backgroundColor,
       alignment: Alignment.centerLeft,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -59,7 +52,7 @@ class EraAlertDialog extends StatelessWidget {
           ),
           const SizedBox(height: 15),
           MarkdownText(
-            description,
+            description!,
             style:
                 TextStyle(fontSize: 16, color: context.theme.tertiaryTextColor),
           ),
