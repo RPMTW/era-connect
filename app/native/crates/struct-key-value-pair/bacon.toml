@@ -19,7 +19,7 @@ need_stdout = false
 command = [
     "cargo", "clippy",
     "--all-targets",
-    "--color", "always","--", "-W", "clippy::pedantic", "-W", "clippy::nursery",  "-A", "clippy::default_trait_access", "-A", "clippy::ptr_as_ptr", "-A", "clippy::wildcard_imports", "-A", "clippy::cast-precision-loss", "-A", "clippy::module_name_repetitions", "-W","clippy::str-to-string", "-W","clippy::unwrap-used", "-W","clippy::indexing-slicing", "-W","clippy::str_to_string", "-W","clippy::print_stderr", "-W","clippy::rc-buffer", "-W","clippy::get_unwrap", "-W","clippy::string-to-string", "-W","clippy::dbg_macro"
+    "--color", "always","--", "-W", "clippy::pedantic", "-W", "clippy::nursery",  "-A", "clippy::default_trait_access", "-A", "clippy::ptr_as_ptr", "-A", "clippy::wildcard_imports", "-A", "clippy::cast-precision-loss", "-A", "clippy::module_name_repetitions", "-W","clippy::str-to-string", "-W","clippy::unwrap-used", "-W","clippy::str_to_string", "-W","clippy::print_stderr", "-W","clippy::rc-buffer", "-W","clippy::get_unwrap", "-W","clippy::string-to-string", "-W","clippy::dbg_macro"
 ]
 need_stdout = false
 

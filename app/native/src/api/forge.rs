@@ -16,8 +16,9 @@ use tokio::{fs, io::AsyncBufReadExt};
 
 use super::{
     download::{download_file, extract_filename, validate_sha1, DownloadArgs},
-    vanilla::{get_game_manifest, HandlesType, ProcessedArguments},
-    GameOptions, JvmOptions, LaunchArgs,
+    vanilla::{
+        get_game_manifest, GameOptions, HandlesType, JvmOptions, LaunchArgs, ProcessedArguments,
+    },
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Processors {
