@@ -23,6 +23,7 @@ use self::library::{parallel_library, Library};
 use self::rules::{get_rules, ActionType, Rule};
 
 use super::download::{download_file, extract_filename, validate_sha1, DownloadArgs};
+use super::STORAGE;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct GameFlags {
@@ -91,6 +92,7 @@ pub struct GameOptions {
     pub game_directory: RustOpaque<PathBuf>,
     pub assets_root: RustOpaque<PathBuf>,
     pub assets_index_name: String,
+    pub auth_access_token: String,
     pub auth_uuid: String,
     pub user_type: String,
     pub version_type: String,
@@ -197,8 +199,20 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
         .await
         .context("fail to create native_directory(vanilla)")?;
 
+    let storage = STORAGE.account_storage.read().await;
+
+    // NOTE: have to check in frontend
+    let uuid = storage
+        .main_account
+        .context("Can't launch game without main account")?;
+    let minecraft_account = storage
+        .accounts
+        .iter()
+        .find(|x| x.uuid == uuid)
+        .context("Somehow fail to find the main account uuid in accounts")?;
+
     let game_options = GameOptions {
-        auth_player_name: String::from("Kyle"),
+        auth_player_name: minecraft_account.username.clone(),
         game_version_name: current_version,
         game_directory: RustOpaque::new(
             game_directory
@@ -214,7 +228,8 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
             .as_str()
             .context("assetindex id doesn't exist")?
             .to_owned(),
-        auth_uuid: String::new(),
+        auth_access_token: minecraft_account.access_token.token.clone(),
+        auth_uuid: uuid.to_string(),
         user_type: String::from("mojang"),
         version_type: String::from("release"),
     };
@@ -444,6 +459,7 @@ fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameOptions) -> Vec<
                 "assets_root" => &assets_root,
                 "assets_index_name" => &game_arguments.assets_index_name,
                 "auth_uuid" => &game_arguments.auth_uuid,
+                "auth_access_token" => &game_arguments.auth_access_token,
                 "version_type" => &game_arguments.version_type,
                 _ => "",
             });
