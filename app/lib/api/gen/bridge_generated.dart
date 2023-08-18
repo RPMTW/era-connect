@@ -30,6 +30,7 @@ class NativeImpl implements Native {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_setup_logger(port_),
       parseSuccessData: _wire2api_unit,
+      parseErrorData: _wire2api_FrbAnyhowException,
       constMeta: kSetupLoggerConstMeta,
       argValues: [],
       hint: hint,
@@ -46,6 +47,7 @@ class NativeImpl implements Native {
     return _platform.executeStream(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_launch_vanilla(port_),
       parseSuccessData: _wire2api_progress,
+      parseErrorData: null,
       constMeta: kLaunchVanillaConstMeta,
       argValues: [],
       hint: hint,
@@ -62,6 +64,7 @@ class NativeImpl implements Native {
     return _platform.executeStream(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_launch_forge(port_),
       parseSuccessData: _wire2api_progress,
+      parseErrorData: null,
       constMeta: kLaunchForgeConstMeta,
       argValues: [],
       hint: hint,
@@ -78,6 +81,7 @@ class NativeImpl implements Native {
     return _platform.executeStream(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_launch_quilt(port_),
       parseSuccessData: _wire2api_progress,
+      parseErrorData: null,
       constMeta: kLaunchQuiltConstMeta,
       argValues: [],
       hint: hint,
@@ -94,6 +98,7 @@ class NativeImpl implements Native {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_fetch_state(port_),
       parseSuccessData: _wire2api_download_state,
+      parseErrorData: null,
       constMeta: kFetchStateConstMeta,
       argValues: [],
       hint: hint,
@@ -111,6 +116,7 @@ class NativeImpl implements Native {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_write_state(port_, arg0),
       parseSuccessData: _wire2api_unit,
+      parseErrorData: null,
       constMeta: kWriteStateConstMeta,
       argValues: [s],
       hint: hint,
@@ -128,6 +134,7 @@ class NativeImpl implements Native {
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner.wire_get_ui_layout_storage(arg0),
       parseSuccessData: _wire2api_ui_layout_value,
+      parseErrorData: null,
       constMeta: kGetUiLayoutStorageConstMeta,
       argValues: [key],
       hint: hint,
@@ -147,6 +154,7 @@ class NativeImpl implements Native {
       callFfi: (port_) =>
           _platform.inner.wire_set_ui_layout_storage(port_, arg0),
       parseSuccessData: _wire2api_unit,
+      parseErrorData: _wire2api_FrbAnyhowException,
       constMeta: kSetUiLayoutStorageConstMeta,
       argValues: [value],
       hint: hint,
@@ -165,6 +173,7 @@ class NativeImpl implements Native {
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner.wire_get_account_storage(arg0),
       parseSuccessData: _wire2api_account_storage_value,
+      parseErrorData: null,
       constMeta: kGetAccountStorageConstMeta,
       argValues: [key],
       hint: hint,
@@ -183,6 +192,7 @@ class NativeImpl implements Native {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_set_account_storage(port_, arg0),
       parseSuccessData: _wire2api_unit,
+      parseErrorData: _wire2api_FrbAnyhowException,
       constMeta: kSetAccountStorageConstMeta,
       argValues: [value],
       hint: hint,
@@ -199,6 +209,7 @@ class NativeImpl implements Native {
     return _platform.executeStream(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_minecraft_login_flow(port_),
       parseSuccessData: _wire2api_login_flow_event,
+      parseErrorData: null,
       constMeta: kMinecraftLoginFlowConstMeta,
       argValues: [],
       hint: hint,
@@ -215,6 +226,10 @@ class NativeImpl implements Native {
     _platform.dispose();
   }
 // Section: wire2api
+
+  FrbAnyhowException _wire2api_FrbAnyhowException(dynamic raw) {
+    return FrbAnyhowException(raw as String);
+  }
 
   String _wire2api_String(dynamic raw) {
     return raw as String;
