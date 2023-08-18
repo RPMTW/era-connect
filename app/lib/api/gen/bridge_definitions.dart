@@ -74,14 +74,12 @@ sealed class AccountStorageValue with _$AccountStorageValue {
   ]) = AccountStorageValue_MainAccount;
 }
 
-class AccountToken {
-  final String token;
-  final int expiresAt;
-
-  const AccountToken({
-    required this.token,
-    required this.expiresAt,
-  });
+@freezed
+class AccountToken with _$AccountToken {
+  const factory AccountToken({
+    required String token,
+    required int expiresAt,
+  }) = _AccountToken;
 }
 
 enum DownloadState {
@@ -134,50 +132,36 @@ enum LoginFlowStage {
   GettingProfile,
 }
 
-class MinecraftAccount {
-  final String username;
-  final UuidValue uuid;
-  final AccountToken accessToken;
-  final AccountToken refreshToken;
-  final List<MinecraftSkin> skins;
-  final List<MinecraftCape> capes;
-
-  const MinecraftAccount({
-    required this.username,
-    required this.uuid,
-    required this.accessToken,
-    required this.refreshToken,
-    required this.skins,
-    required this.capes,
-  });
+@freezed
+class MinecraftAccount with _$MinecraftAccount {
+  const factory MinecraftAccount({
+    required String username,
+    required UuidValue uuid,
+    required AccountToken accessToken,
+    required AccountToken refreshToken,
+    required List<MinecraftSkin> skins,
+    required List<MinecraftCape> capes,
+  }) = _MinecraftAccount;
 }
 
-class MinecraftCape {
-  final UuidValue id;
-  final String state;
-  final String url;
-  final String alias;
-
-  const MinecraftCape({
-    required this.id,
-    required this.state,
-    required this.url,
-    required this.alias,
-  });
+@freezed
+class MinecraftCape with _$MinecraftCape {
+  const factory MinecraftCape({
+    required UuidValue id,
+    required String state,
+    required String url,
+    required String alias,
+  }) = _MinecraftCape;
 }
 
-class MinecraftSkin {
-  final UuidValue id;
-  final String state;
-  final String url;
-  final MinecraftSkinVariant variant;
-
-  const MinecraftSkin({
-    required this.id,
-    required this.state,
-    required this.url,
-    required this.variant,
-  });
+@freezed
+class MinecraftSkin with _$MinecraftSkin {
+  const factory MinecraftSkin({
+    required UuidValue id,
+    required String state,
+    required String url,
+    required MinecraftSkinVariant variant,
+  }) = _MinecraftSkin;
 }
 
 enum MinecraftSkinVariant {

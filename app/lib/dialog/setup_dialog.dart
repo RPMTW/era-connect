@@ -149,6 +149,8 @@ class _LoginAccount extends StatelessWidget {
   }
 
   Column _buildSingleAccount(BuildContext context) {
+    final accounts = storageApi.accountStorage.accounts;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -159,27 +161,9 @@ class _LoginAccount extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.person_add_alt_rounded),
-                    label: Text('立即登入',
-                        style: TextStyle(color: context.theme.textColor)),
-                    style: TextButton.styleFrom(
-                      backgroundColor: context.theme.deepBackgroundColor,
-                      iconColor: context.theme.textColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 22),
-                    ),
-                    onPressed: () {
-                      showEraDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        dialog: const LoginAccountDialog(),
-                      );
-                    },
-                  ),
+                  child: accounts.isEmpty
+                      ? _buildLoginButton(context)
+                      : _buildAccountTile(accounts.first),
                 ),
               ],
             ),
@@ -192,6 +176,37 @@ class _LoginAccount extends StatelessWidget {
               TextStyle(color: context.theme.tertiaryTextColor, fontSize: 13),
         )
       ],
+    );
+  }
+
+  Widget _buildAccountTile(MinecraftAccount account) {
+    print(account);
+
+    return ListTile(
+      title: Text(account.username),
+      subtitle: const Text('Minecraft 帳號'),
+    );
+  }
+
+  Widget _buildLoginButton(BuildContext context) {
+    return TextButton.icon(
+      icon: const Icon(Icons.person_add_alt_rounded),
+      label: Text('立即登入', style: TextStyle(color: context.theme.textColor)),
+      style: TextButton.styleFrom(
+        backgroundColor: context.theme.deepBackgroundColor,
+        iconColor: context.theme.textColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 22),
+      ),
+      onPressed: () {
+        showEraDialog(
+          context: context,
+          barrierDismissible: true,
+          dialog: const LoginAccountDialog(),
+        );
+      },
     );
   }
 }

@@ -365,6 +365,142 @@ abstract class AccountStorageValue_MainAccount implements AccountStorageValue {
 }
 
 /// @nodoc
+mixin _$AccountToken {
+  String get token => throw _privateConstructorUsedError;
+  int get expiresAt => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $AccountTokenCopyWith<AccountToken> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $AccountTokenCopyWith<$Res> {
+  factory $AccountTokenCopyWith(
+          AccountToken value, $Res Function(AccountToken) then) =
+      _$AccountTokenCopyWithImpl<$Res, AccountToken>;
+  @useResult
+  $Res call({String token, int expiresAt});
+}
+
+/// @nodoc
+class _$AccountTokenCopyWithImpl<$Res, $Val extends AccountToken>
+    implements $AccountTokenCopyWith<$Res> {
+  _$AccountTokenCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? token = null,
+    Object? expiresAt = null,
+  }) {
+    return _then(_value.copyWith(
+      token: null == token
+          ? _value.token
+          : token // ignore: cast_nullable_to_non_nullable
+              as String,
+      expiresAt: null == expiresAt
+          ? _value.expiresAt
+          : expiresAt // ignore: cast_nullable_to_non_nullable
+              as int,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$_AccountTokenCopyWith<$Res>
+    implements $AccountTokenCopyWith<$Res> {
+  factory _$$_AccountTokenCopyWith(
+          _$_AccountToken value, $Res Function(_$_AccountToken) then) =
+      __$$_AccountTokenCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String token, int expiresAt});
+}
+
+/// @nodoc
+class __$$_AccountTokenCopyWithImpl<$Res>
+    extends _$AccountTokenCopyWithImpl<$Res, _$_AccountToken>
+    implements _$$_AccountTokenCopyWith<$Res> {
+  __$$_AccountTokenCopyWithImpl(
+      _$_AccountToken _value, $Res Function(_$_AccountToken) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? token = null,
+    Object? expiresAt = null,
+  }) {
+    return _then(_$_AccountToken(
+      token: null == token
+          ? _value.token
+          : token // ignore: cast_nullable_to_non_nullable
+              as String,
+      expiresAt: null == expiresAt
+          ? _value.expiresAt
+          : expiresAt // ignore: cast_nullable_to_non_nullable
+              as int,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$_AccountToken implements _AccountToken {
+  const _$_AccountToken({required this.token, required this.expiresAt});
+
+  @override
+  final String token;
+  @override
+  final int expiresAt;
+
+  @override
+  String toString() {
+    return 'AccountToken(token: $token, expiresAt: $expiresAt)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$_AccountToken &&
+            (identical(other.token, token) || other.token == token) &&
+            (identical(other.expiresAt, expiresAt) ||
+                other.expiresAt == expiresAt));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, token, expiresAt);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$_AccountTokenCopyWith<_$_AccountToken> get copyWith =>
+      __$$_AccountTokenCopyWithImpl<_$_AccountToken>(this, _$identity);
+}
+
+abstract class _AccountToken implements AccountToken {
+  const factory _AccountToken(
+      {required final String token,
+      required final int expiresAt}) = _$_AccountToken;
+
+  @override
+  String get token;
+  @override
+  int get expiresAt;
+  @override
+  @JsonKey(ignore: true)
+  _$$_AccountTokenCopyWith<_$_AccountToken> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$LoginFlowErrors {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
@@ -1329,6 +1465,8 @@ abstract class _$$LoginFlowEvent_SuccessCopyWith<$Res> {
       __$$LoginFlowEvent_SuccessCopyWithImpl<$Res>;
   @useResult
   $Res call({MinecraftAccount field0});
+
+  $MinecraftAccountCopyWith<$Res> get field0;
 }
 
 /// @nodoc
@@ -1350,6 +1488,14 @@ class __$$LoginFlowEvent_SuccessCopyWithImpl<$Res>
           : field0 // ignore: cast_nullable_to_non_nullable
               as MinecraftAccount,
     ));
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $MinecraftAccountCopyWith<$Res> get field0 {
+    return $MinecraftAccountCopyWith<$Res>(_value.field0, (value) {
+      return _then(_value.copyWith(field0: value));
+    });
   }
 }
 
@@ -1467,6 +1613,622 @@ abstract class LoginFlowEvent_Success implements LoginFlowEvent {
   MinecraftAccount get field0;
   @JsonKey(ignore: true)
   _$$LoginFlowEvent_SuccessCopyWith<_$LoginFlowEvent_Success> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$MinecraftAccount {
+  String get username => throw _privateConstructorUsedError;
+  UuidValue get uuid => throw _privateConstructorUsedError;
+  AccountToken get accessToken => throw _privateConstructorUsedError;
+  AccountToken get refreshToken => throw _privateConstructorUsedError;
+  List<MinecraftSkin> get skins => throw _privateConstructorUsedError;
+  List<MinecraftCape> get capes => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $MinecraftAccountCopyWith<MinecraftAccount> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $MinecraftAccountCopyWith<$Res> {
+  factory $MinecraftAccountCopyWith(
+          MinecraftAccount value, $Res Function(MinecraftAccount) then) =
+      _$MinecraftAccountCopyWithImpl<$Res, MinecraftAccount>;
+  @useResult
+  $Res call(
+      {String username,
+      UuidValue uuid,
+      AccountToken accessToken,
+      AccountToken refreshToken,
+      List<MinecraftSkin> skins,
+      List<MinecraftCape> capes});
+
+  $AccountTokenCopyWith<$Res> get accessToken;
+  $AccountTokenCopyWith<$Res> get refreshToken;
+}
+
+/// @nodoc
+class _$MinecraftAccountCopyWithImpl<$Res, $Val extends MinecraftAccount>
+    implements $MinecraftAccountCopyWith<$Res> {
+  _$MinecraftAccountCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? username = null,
+    Object? uuid = null,
+    Object? accessToken = null,
+    Object? refreshToken = null,
+    Object? skins = null,
+    Object? capes = null,
+  }) {
+    return _then(_value.copyWith(
+      username: null == username
+          ? _value.username
+          : username // ignore: cast_nullable_to_non_nullable
+              as String,
+      uuid: null == uuid
+          ? _value.uuid
+          : uuid // ignore: cast_nullable_to_non_nullable
+              as UuidValue,
+      accessToken: null == accessToken
+          ? _value.accessToken
+          : accessToken // ignore: cast_nullable_to_non_nullable
+              as AccountToken,
+      refreshToken: null == refreshToken
+          ? _value.refreshToken
+          : refreshToken // ignore: cast_nullable_to_non_nullable
+              as AccountToken,
+      skins: null == skins
+          ? _value.skins
+          : skins // ignore: cast_nullable_to_non_nullable
+              as List<MinecraftSkin>,
+      capes: null == capes
+          ? _value.capes
+          : capes // ignore: cast_nullable_to_non_nullable
+              as List<MinecraftCape>,
+    ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $AccountTokenCopyWith<$Res> get accessToken {
+    return $AccountTokenCopyWith<$Res>(_value.accessToken, (value) {
+      return _then(_value.copyWith(accessToken: value) as $Val);
+    });
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $AccountTokenCopyWith<$Res> get refreshToken {
+    return $AccountTokenCopyWith<$Res>(_value.refreshToken, (value) {
+      return _then(_value.copyWith(refreshToken: value) as $Val);
+    });
+  }
+}
+
+/// @nodoc
+abstract class _$$_MinecraftAccountCopyWith<$Res>
+    implements $MinecraftAccountCopyWith<$Res> {
+  factory _$$_MinecraftAccountCopyWith(
+          _$_MinecraftAccount value, $Res Function(_$_MinecraftAccount) then) =
+      __$$_MinecraftAccountCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String username,
+      UuidValue uuid,
+      AccountToken accessToken,
+      AccountToken refreshToken,
+      List<MinecraftSkin> skins,
+      List<MinecraftCape> capes});
+
+  @override
+  $AccountTokenCopyWith<$Res> get accessToken;
+  @override
+  $AccountTokenCopyWith<$Res> get refreshToken;
+}
+
+/// @nodoc
+class __$$_MinecraftAccountCopyWithImpl<$Res>
+    extends _$MinecraftAccountCopyWithImpl<$Res, _$_MinecraftAccount>
+    implements _$$_MinecraftAccountCopyWith<$Res> {
+  __$$_MinecraftAccountCopyWithImpl(
+      _$_MinecraftAccount _value, $Res Function(_$_MinecraftAccount) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? username = null,
+    Object? uuid = null,
+    Object? accessToken = null,
+    Object? refreshToken = null,
+    Object? skins = null,
+    Object? capes = null,
+  }) {
+    return _then(_$_MinecraftAccount(
+      username: null == username
+          ? _value.username
+          : username // ignore: cast_nullable_to_non_nullable
+              as String,
+      uuid: null == uuid
+          ? _value.uuid
+          : uuid // ignore: cast_nullable_to_non_nullable
+              as UuidValue,
+      accessToken: null == accessToken
+          ? _value.accessToken
+          : accessToken // ignore: cast_nullable_to_non_nullable
+              as AccountToken,
+      refreshToken: null == refreshToken
+          ? _value.refreshToken
+          : refreshToken // ignore: cast_nullable_to_non_nullable
+              as AccountToken,
+      skins: null == skins
+          ? _value._skins
+          : skins // ignore: cast_nullable_to_non_nullable
+              as List<MinecraftSkin>,
+      capes: null == capes
+          ? _value._capes
+          : capes // ignore: cast_nullable_to_non_nullable
+              as List<MinecraftCape>,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$_MinecraftAccount implements _MinecraftAccount {
+  const _$_MinecraftAccount(
+      {required this.username,
+      required this.uuid,
+      required this.accessToken,
+      required this.refreshToken,
+      required final List<MinecraftSkin> skins,
+      required final List<MinecraftCape> capes})
+      : _skins = skins,
+        _capes = capes;
+
+  @override
+  final String username;
+  @override
+  final UuidValue uuid;
+  @override
+  final AccountToken accessToken;
+  @override
+  final AccountToken refreshToken;
+  final List<MinecraftSkin> _skins;
+  @override
+  List<MinecraftSkin> get skins {
+    if (_skins is EqualUnmodifiableListView) return _skins;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_skins);
+  }
+
+  final List<MinecraftCape> _capes;
+  @override
+  List<MinecraftCape> get capes {
+    if (_capes is EqualUnmodifiableListView) return _capes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_capes);
+  }
+
+  @override
+  String toString() {
+    return 'MinecraftAccount(username: $username, uuid: $uuid, accessToken: $accessToken, refreshToken: $refreshToken, skins: $skins, capes: $capes)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$_MinecraftAccount &&
+            (identical(other.username, username) ||
+                other.username == username) &&
+            (identical(other.uuid, uuid) || other.uuid == uuid) &&
+            (identical(other.accessToken, accessToken) ||
+                other.accessToken == accessToken) &&
+            (identical(other.refreshToken, refreshToken) ||
+                other.refreshToken == refreshToken) &&
+            const DeepCollectionEquality().equals(other._skins, _skins) &&
+            const DeepCollectionEquality().equals(other._capes, _capes));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      username,
+      uuid,
+      accessToken,
+      refreshToken,
+      const DeepCollectionEquality().hash(_skins),
+      const DeepCollectionEquality().hash(_capes));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$_MinecraftAccountCopyWith<_$_MinecraftAccount> get copyWith =>
+      __$$_MinecraftAccountCopyWithImpl<_$_MinecraftAccount>(this, _$identity);
+}
+
+abstract class _MinecraftAccount implements MinecraftAccount {
+  const factory _MinecraftAccount(
+      {required final String username,
+      required final UuidValue uuid,
+      required final AccountToken accessToken,
+      required final AccountToken refreshToken,
+      required final List<MinecraftSkin> skins,
+      required final List<MinecraftCape> capes}) = _$_MinecraftAccount;
+
+  @override
+  String get username;
+  @override
+  UuidValue get uuid;
+  @override
+  AccountToken get accessToken;
+  @override
+  AccountToken get refreshToken;
+  @override
+  List<MinecraftSkin> get skins;
+  @override
+  List<MinecraftCape> get capes;
+  @override
+  @JsonKey(ignore: true)
+  _$$_MinecraftAccountCopyWith<_$_MinecraftAccount> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$MinecraftCape {
+  UuidValue get id => throw _privateConstructorUsedError;
+  String get state => throw _privateConstructorUsedError;
+  String get url => throw _privateConstructorUsedError;
+  String get alias => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $MinecraftCapeCopyWith<MinecraftCape> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $MinecraftCapeCopyWith<$Res> {
+  factory $MinecraftCapeCopyWith(
+          MinecraftCape value, $Res Function(MinecraftCape) then) =
+      _$MinecraftCapeCopyWithImpl<$Res, MinecraftCape>;
+  @useResult
+  $Res call({UuidValue id, String state, String url, String alias});
+}
+
+/// @nodoc
+class _$MinecraftCapeCopyWithImpl<$Res, $Val extends MinecraftCape>
+    implements $MinecraftCapeCopyWith<$Res> {
+  _$MinecraftCapeCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? state = null,
+    Object? url = null,
+    Object? alias = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as UuidValue,
+      state: null == state
+          ? _value.state
+          : state // ignore: cast_nullable_to_non_nullable
+              as String,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      alias: null == alias
+          ? _value.alias
+          : alias // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$_MinecraftCapeCopyWith<$Res>
+    implements $MinecraftCapeCopyWith<$Res> {
+  factory _$$_MinecraftCapeCopyWith(
+          _$_MinecraftCape value, $Res Function(_$_MinecraftCape) then) =
+      __$$_MinecraftCapeCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({UuidValue id, String state, String url, String alias});
+}
+
+/// @nodoc
+class __$$_MinecraftCapeCopyWithImpl<$Res>
+    extends _$MinecraftCapeCopyWithImpl<$Res, _$_MinecraftCape>
+    implements _$$_MinecraftCapeCopyWith<$Res> {
+  __$$_MinecraftCapeCopyWithImpl(
+      _$_MinecraftCape _value, $Res Function(_$_MinecraftCape) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? state = null,
+    Object? url = null,
+    Object? alias = null,
+  }) {
+    return _then(_$_MinecraftCape(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as UuidValue,
+      state: null == state
+          ? _value.state
+          : state // ignore: cast_nullable_to_non_nullable
+              as String,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      alias: null == alias
+          ? _value.alias
+          : alias // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$_MinecraftCape implements _MinecraftCape {
+  const _$_MinecraftCape(
+      {required this.id,
+      required this.state,
+      required this.url,
+      required this.alias});
+
+  @override
+  final UuidValue id;
+  @override
+  final String state;
+  @override
+  final String url;
+  @override
+  final String alias;
+
+  @override
+  String toString() {
+    return 'MinecraftCape(id: $id, state: $state, url: $url, alias: $alias)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$_MinecraftCape &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.state, state) || other.state == state) &&
+            (identical(other.url, url) || other.url == url) &&
+            (identical(other.alias, alias) || other.alias == alias));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, id, state, url, alias);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$_MinecraftCapeCopyWith<_$_MinecraftCape> get copyWith =>
+      __$$_MinecraftCapeCopyWithImpl<_$_MinecraftCape>(this, _$identity);
+}
+
+abstract class _MinecraftCape implements MinecraftCape {
+  const factory _MinecraftCape(
+      {required final UuidValue id,
+      required final String state,
+      required final String url,
+      required final String alias}) = _$_MinecraftCape;
+
+  @override
+  UuidValue get id;
+  @override
+  String get state;
+  @override
+  String get url;
+  @override
+  String get alias;
+  @override
+  @JsonKey(ignore: true)
+  _$$_MinecraftCapeCopyWith<_$_MinecraftCape> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$MinecraftSkin {
+  UuidValue get id => throw _privateConstructorUsedError;
+  String get state => throw _privateConstructorUsedError;
+  String get url => throw _privateConstructorUsedError;
+  MinecraftSkinVariant get variant => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $MinecraftSkinCopyWith<MinecraftSkin> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $MinecraftSkinCopyWith<$Res> {
+  factory $MinecraftSkinCopyWith(
+          MinecraftSkin value, $Res Function(MinecraftSkin) then) =
+      _$MinecraftSkinCopyWithImpl<$Res, MinecraftSkin>;
+  @useResult
+  $Res call(
+      {UuidValue id, String state, String url, MinecraftSkinVariant variant});
+}
+
+/// @nodoc
+class _$MinecraftSkinCopyWithImpl<$Res, $Val extends MinecraftSkin>
+    implements $MinecraftSkinCopyWith<$Res> {
+  _$MinecraftSkinCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? state = null,
+    Object? url = null,
+    Object? variant = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as UuidValue,
+      state: null == state
+          ? _value.state
+          : state // ignore: cast_nullable_to_non_nullable
+              as String,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      variant: null == variant
+          ? _value.variant
+          : variant // ignore: cast_nullable_to_non_nullable
+              as MinecraftSkinVariant,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$_MinecraftSkinCopyWith<$Res>
+    implements $MinecraftSkinCopyWith<$Res> {
+  factory _$$_MinecraftSkinCopyWith(
+          _$_MinecraftSkin value, $Res Function(_$_MinecraftSkin) then) =
+      __$$_MinecraftSkinCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {UuidValue id, String state, String url, MinecraftSkinVariant variant});
+}
+
+/// @nodoc
+class __$$_MinecraftSkinCopyWithImpl<$Res>
+    extends _$MinecraftSkinCopyWithImpl<$Res, _$_MinecraftSkin>
+    implements _$$_MinecraftSkinCopyWith<$Res> {
+  __$$_MinecraftSkinCopyWithImpl(
+      _$_MinecraftSkin _value, $Res Function(_$_MinecraftSkin) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? state = null,
+    Object? url = null,
+    Object? variant = null,
+  }) {
+    return _then(_$_MinecraftSkin(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as UuidValue,
+      state: null == state
+          ? _value.state
+          : state // ignore: cast_nullable_to_non_nullable
+              as String,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      variant: null == variant
+          ? _value.variant
+          : variant // ignore: cast_nullable_to_non_nullable
+              as MinecraftSkinVariant,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$_MinecraftSkin implements _MinecraftSkin {
+  const _$_MinecraftSkin(
+      {required this.id,
+      required this.state,
+      required this.url,
+      required this.variant});
+
+  @override
+  final UuidValue id;
+  @override
+  final String state;
+  @override
+  final String url;
+  @override
+  final MinecraftSkinVariant variant;
+
+  @override
+  String toString() {
+    return 'MinecraftSkin(id: $id, state: $state, url: $url, variant: $variant)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$_MinecraftSkin &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.state, state) || other.state == state) &&
+            (identical(other.url, url) || other.url == url) &&
+            (identical(other.variant, variant) || other.variant == variant));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, id, state, url, variant);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$_MinecraftSkinCopyWith<_$_MinecraftSkin> get copyWith =>
+      __$$_MinecraftSkinCopyWithImpl<_$_MinecraftSkin>(this, _$identity);
+}
+
+abstract class _MinecraftSkin implements MinecraftSkin {
+  const factory _MinecraftSkin(
+      {required final UuidValue id,
+      required final String state,
+      required final String url,
+      required final MinecraftSkinVariant variant}) = _$_MinecraftSkin;
+
+  @override
+  UuidValue get id;
+  @override
+  String get state;
+  @override
+  String get url;
+  @override
+  MinecraftSkinVariant get variant;
+  @override
+  @JsonKey(ignore: true)
+  _$$_MinecraftSkinCopyWith<_$_MinecraftSkin> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
