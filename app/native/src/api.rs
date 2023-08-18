@@ -35,7 +35,7 @@ pub use self::vanilla::prepare_vanilla_download;
 use self::download::{run_download, DownloadBias};
 use self::storage::storage_loader::StorageInstance;
 use self::storage::storage_state::StorageState;
-use self::vanilla::launch_game;
+use self::vanilla::{launch_game, VanillaLaunchError};
 
 lazy_static::lazy_static! {
     static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
@@ -89,8 +89,16 @@ pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> 
     launch_game(c.1.launch_args).await
 }
 
+use thiserror::Error;
+#[derive(Error, Debug)]
+pub enum MyError {
+    #[error(transparent)]
+    Launch(#[from] VanillaLaunchError),
+    #[error(transparent)]
+    Other(#[from] anyhow::Error), // source and Display delegate to anyhow::Error
+}
 #[tokio::main(flavor = "current_thread")]
-pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
+pub async fn launch_forge(stream: StreamSink<Progress>) -> Result<(), MyError> {
     let (vanilla_download_args, vanilla_arguments) = prepare_vanilla_download().await?;
     info!("Starts Vanilla Downloading");
     let vanilla_bias = DownloadBias {
@@ -120,7 +128,8 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
     )
     .await?;
 
-    launch_game(processed_arguments).await
+    launch_game(processed_arguments).await?;
+    Ok(())
 }
 
 #[tokio::main(flavor = "current_thread")]

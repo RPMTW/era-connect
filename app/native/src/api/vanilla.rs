@@ -2,7 +2,6 @@ pub mod assets;
 pub mod library;
 pub mod rules;
 
-use anyhow::bail;
 use anyhow::{Context, Result};
 use flutter_rust_bridge::RustOpaque;
 use futures::Future;
@@ -158,7 +157,21 @@ pub async fn get_game_manifest(
     Ok((contents, version))
 }
 
-pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArguments)> {
+use thiserror::Error;
+#[derive(Error, Debug)]
+pub enum VanillaLaunchError {
+    #[error("Token expired")]
+    TokenExpire,
+    #[error(transparent)]
+    Io {
+        #[from]
+        source: std::io::Error,
+    },
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
+}
+pub async fn prepare_vanilla_download(
+) -> Result<(DownloadArgs, ProcessedArguments), VanillaLaunchError> {
     let (game_manifest, current_version) = get_game_manifest(
         String::from("https://launchermeta.mojang.com/mc/game/version_manifest.json"),
         None,
@@ -256,7 +269,9 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
     let main_class: String =
         String::deserialize(&game_manifest["mainClass"]).context("Failed to get MainClass")?;
 
-    let client_jar = std::env::current_dir()?.join(extract_filename(&downloads_list.client.url)?);
+    let client_jar = std::env::current_dir()
+        .unwrap()
+        .join(extract_filename(&downloads_list.client.url)?);
 
     let jvm_argument = game_manifest["arguments"]["jvm"]
         .as_array()
@@ -316,7 +331,7 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
         os_version::OsVersion::Linux(_) => OsName::Linux,
         os_version::OsVersion::Windows(_) => OsName::Windows,
         os_version::OsVersion::MacOS(_) => OsName::Osx,
-        _ => bail!("not supported"),
+        _ => return Err(anyhow::anyhow!("not supported").into()),
     };
 
     let mut parsed_library_list = Vec::new();
