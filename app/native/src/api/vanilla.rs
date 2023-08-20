@@ -221,7 +221,6 @@ impl From<std::io::Error> for VanillaLaunchError {
             ErrorKind::Unsupported => CustomIoErrorKind::Unsupported,
             ErrorKind::UnexpectedEof => CustomIoErrorKind::UnexpectedEof,
             ErrorKind::OutOfMemory => CustomIoErrorKind::OutOfMemory,
-            ErrorKind::Other => CustomIoErrorKind::Other,
             _ => CustomIoErrorKind::Other,
         })
     }

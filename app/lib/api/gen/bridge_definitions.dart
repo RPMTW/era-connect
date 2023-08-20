@@ -213,6 +213,12 @@ sealed class MyError with _$MyError {
   const factory MyError.launch(
     VanillaLaunchError field0,
   ) = MyError_Launch;
+  const factory MyError.joinError(
+    String field0,
+  ) = MyError_JoinError;
+  const factory MyError.anyhow(
+    String field0,
+  ) = MyError_Anyhow;
 }
 
 @freezed

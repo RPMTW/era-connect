@@ -123,7 +123,7 @@ pub async fn run_download(
     sink: StreamSink<Progress>,
     download_args: DownloadArgs,
     bias: DownloadBias,
-) -> Result<StreamSink<Progress>> {
+) -> StreamSink<Progress> {
     let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
 
@@ -167,16 +167,19 @@ pub async fn run_download(
         }
     });
     // Create a semaphore with a limit on the number of concurrent downloads
-    join_futures(handles, 128).await?;
+    if let Err(err) = join_futures(handles, 128).await {
+        sink_clone.add(Progress::Err(err.into()));
+        return sink_clone;
+    }
     download_complete.store(true, Ordering::Release);
-    task.await?;
-    Ok(sink_clone)
+    if let Err(err) = task.await {
+        sink_clone.add(Progress::Err(err.into()));
+        return sink_clone;
+    }
+    sink_clone
 }
 
-pub async fn join_futures(
-    handles: HandlesType,
-    concurrency_limit: usize,
-) -> Result<(), anyhow::Error> {
+pub async fn join_futures(handles: HandlesType, concurrency_limit: usize) -> Result<()> {
     let mut download_stream = tokio_stream::iter(handles).buffer_unordered(concurrency_limit);
     while let Some(x) = download_stream.next().await {
         let state = *STATE.read().await;

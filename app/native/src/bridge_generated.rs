@@ -487,6 +487,8 @@ impl support::IntoDart for MyError {
     fn into_dart(self) -> support::DartAbi {
         match self {
             Self::Launch(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
+            Self::JoinError(field0) => vec![1.into_dart(), field0.into_into_dart().into_dart()],
+            Self::Anyhow(field0) => vec![2.into_dart(), field0.into_into_dart().into_dart()],
         }
         .into_dart()
     }
