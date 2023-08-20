@@ -19,7 +19,7 @@ use tokio::{
     time::{self, Instant},
 };
 
-use super::{vanilla::HandlesType, DownloadState, STATE};
+use super::{vanilla::HandlesType, DownloadState, MyError, STATE};
 
 pub async fn download_file(
     url: String,
@@ -99,11 +99,14 @@ expected: {}
 }
 
 #[derive(Clone)]
-pub struct Progress {
-    pub speed: f64,
-    pub percentages: f64,
-    pub current_size: f64,
-    pub total_size: f64,
+pub enum Progress {
+    Ok {
+        speed: f64,
+        percentages: f64,
+        current_size: f64,
+        total_size: f64,
+    },
+    Err(MyError),
 }
 
 /// set percentages bias
@@ -137,7 +140,7 @@ pub async fn run_download(
         let mut prev_bytes = 0.0;
         while !download_complete_clone.load(Ordering::Acquire) {
             time::sleep(Duration::from_millis(500)).await;
-            let progress = Progress {
+            let progress = Progress::Ok {
                 speed: (current_size_clone.load(Ordering::Relaxed) as f64 - prev_bytes)
                     / instant.elapsed().as_secs_f64()
                     / 1_000_000.0,

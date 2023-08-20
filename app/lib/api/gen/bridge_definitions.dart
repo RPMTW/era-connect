@@ -76,12 +76,35 @@ sealed class AccountStorageValue with _$AccountStorageValue {
 
 class AccountToken {
   final String token;
-  final int expiresAt;
+  final DateTime expiresAt;
 
   const AccountToken({
     required this.token,
     required this.expiresAt,
   });
+}
+
+enum CustomIoErrorKind {
+  NotFound,
+  PermissionDenied,
+  ConnectionRefused,
+  ConnectionReset,
+  ConnectionAborted,
+  NotConnected,
+  AddrInUse,
+  AddrNotAvailable,
+  BrokenPipe,
+  AlreadyExists,
+  WouldBlock,
+  InvalidInput,
+  InvalidData,
+  TimedOut,
+  WriteZero,
+  Interrupted,
+  Unsupported,
+  UnexpectedEof,
+  OutOfMemory,
+  Other,
 }
 
 enum DownloadState {
@@ -185,18 +208,24 @@ enum MinecraftSkinVariant {
   Slim,
 }
 
-class Progress {
-  final double speed;
-  final double percentages;
-  final double currentSize;
-  final double totalSize;
+@freezed
+sealed class MyError with _$MyError {
+  const factory MyError.launch(
+    VanillaLaunchError field0,
+  ) = MyError_Launch;
+}
 
-  const Progress({
-    required this.speed,
-    required this.percentages,
-    required this.currentSize,
-    required this.totalSize,
-  });
+@freezed
+sealed class Progress with _$Progress {
+  const factory Progress.ok({
+    required double speed,
+    required double percentages,
+    required double currentSize,
+    required double totalSize,
+  }) = Progress_Ok;
+  const factory Progress.err(
+    MyError field0,
+  ) = Progress_Err;
 }
 
 enum UILayoutKey {
@@ -208,6 +237,19 @@ sealed class UILayoutValue with _$UILayoutValue {
   const factory UILayoutValue.completedSetup(
     bool field0,
   ) = UILayoutValue_CompletedSetup;
+}
+
+@freezed
+sealed class VanillaLaunchError with _$VanillaLaunchError {
+  const factory VanillaLaunchError.tokenExpire(
+    DateTime field0,
+  ) = VanillaLaunchError_TokenExpire;
+  const factory VanillaLaunchError.io(
+    CustomIoErrorKind field0,
+  ) = VanillaLaunchError_Io;
+  const factory VanillaLaunchError.other(
+    String field0,
+  ) = VanillaLaunchError_Other;
 }
 
 /// Reference: [Unofficial Mojang Wiki](https://wiki.vg/Microsoft_Authentication_Scheme)

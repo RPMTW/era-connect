@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -38,5 +39,5 @@ pub struct MinecraftCape {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountToken {
     pub token: String,
-    pub expires_at: i64,
+    pub expires_at: DateTime<Utc>,
 }

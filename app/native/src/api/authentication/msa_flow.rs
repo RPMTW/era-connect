@@ -178,11 +178,11 @@ pub async fn login_flow(skin: &StreamSink<LoginFlowEvent>) -> anyhow::Result<Min
         uuid: profile.id,
         access_token: AccountToken {
             token: mc_access_token,
-            expires_at: Utc::now().add(Duration::seconds(expires_in)).timestamp(),
+            expires_at: Utc::now().add(Duration::seconds(expires_in)),
         },
         refresh_token: AccountToken {
             token: refresh_token,
-            expires_at: Utc::now().add(Duration::days(90)).timestamp(),
+            expires_at: Utc::now().add(Duration::days(90)),
         },
         capes: profile.capes,
         skins: profile.skins,

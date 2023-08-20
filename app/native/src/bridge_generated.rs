@@ -183,6 +183,16 @@ where
         (!self.is_null()).then(|| self.wire2api())
     }
 }
+impl Wire2Api<chrono::DateTime<chrono::Utc>> for i64 {
+    fn wire2api(self) -> chrono::DateTime<chrono::Utc> {
+        let Timestamp { s, ns } = wire2api_timestamp(self);
+        chrono::DateTime::<chrono::Utc>::from_utc(
+            chrono::NaiveDateTime::from_timestamp_opt(s, ns)
+                .expect("invalid or out-of-range datetime"),
+            chrono::Utc,
+        )
+    }
+}
 
 impl Wire2Api<AccountStorageKey> for i32 {
     fn wire2api(self) -> AccountStorageKey {
@@ -274,6 +284,40 @@ impl support::IntoDart for AccountToken {
 }
 impl support::IntoDartExceptPrimitive for AccountToken {}
 impl rust2dart::IntoIntoDart<AccountToken> for AccountToken {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for CustomIoErrorKind {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::NotFound => 0,
+            Self::PermissionDenied => 1,
+            Self::ConnectionRefused => 2,
+            Self::ConnectionReset => 3,
+            Self::ConnectionAborted => 4,
+            Self::NotConnected => 5,
+            Self::AddrInUse => 6,
+            Self::AddrNotAvailable => 7,
+            Self::BrokenPipe => 8,
+            Self::AlreadyExists => 9,
+            Self::WouldBlock => 10,
+            Self::InvalidInput => 11,
+            Self::InvalidData => 12,
+            Self::TimedOut => 13,
+            Self::WriteZero => 14,
+            Self::Interrupted => 15,
+            Self::Unsupported => 16,
+            Self::UnexpectedEof => 17,
+            Self::OutOfMemory => 18,
+            Self::Other => 19,
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for CustomIoErrorKind {}
+impl rust2dart::IntoIntoDart<CustomIoErrorKind> for CustomIoErrorKind {
     fn into_into_dart(self) -> Self {
         self
     }
@@ -439,14 +483,38 @@ impl rust2dart::IntoIntoDart<MinecraftSkinVariant> for MinecraftSkinVariant {
     }
 }
 
+impl support::IntoDart for MyError {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::Launch(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for MyError {}
+impl rust2dart::IntoIntoDart<MyError> for MyError {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
 impl support::IntoDart for Progress {
     fn into_dart(self) -> support::DartAbi {
-        vec![
-            self.speed.into_into_dart().into_dart(),
-            self.percentages.into_into_dart().into_dart(),
-            self.current_size.into_into_dart().into_dart(),
-            self.total_size.into_into_dart().into_dart(),
-        ]
+        match self {
+            Self::Ok {
+                speed,
+                percentages,
+                current_size,
+                total_size,
+            } => vec![
+                0.into_dart(),
+                speed.into_into_dart().into_dart(),
+                percentages.into_into_dart().into_dart(),
+                current_size.into_into_dart().into_dart(),
+                total_size.into_into_dart().into_dart(),
+            ],
+            Self::Err(field0) => vec![1.into_dart(), field0.into_into_dart().into_dart()],
+        }
         .into_dart()
     }
 }
@@ -469,6 +537,23 @@ impl support::IntoDart for UILayoutValue {
 }
 impl support::IntoDartExceptPrimitive for UILayoutValue {}
 impl rust2dart::IntoIntoDart<UILayoutValue> for UILayoutValue {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for VanillaLaunchError {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::TokenExpire(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
+            Self::Io(field0) => vec![1.into_dart(), field0.into_into_dart().into_dart()],
+            Self::Other(field0) => vec![2.into_dart(), field0.into_into_dart().into_dart()],
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for VanillaLaunchError {}
+impl rust2dart::IntoIntoDart<VanillaLaunchError> for VanillaLaunchError {
     fn into_into_dart(self) -> Self {
         self
     }

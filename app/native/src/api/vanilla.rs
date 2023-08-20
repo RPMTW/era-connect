@@ -3,16 +3,17 @@ pub mod library;
 pub mod rules;
 
 use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
 use flutter_rust_bridge::RustOpaque;
 use futures::Future;
 use log::error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+pub use std::io::ErrorKind;
 pub use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::{atomic::AtomicUsize, atomic::Ordering, Arc};
-use tokio::fs::{self, create_dir_all, File};
-use tokio::io::AsyncWriteExt;
+use tokio::fs::{self, create_dir_all};
 
 use crate::api::vanilla::library::os_match;
 use crate::api::vanilla::rules::OsName;
@@ -158,18 +159,74 @@ pub async fn get_game_manifest(
 }
 
 use thiserror::Error;
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum VanillaLaunchError {
     #[error("Token expired")]
-    TokenExpire,
-    #[error(transparent)]
-    Io {
-        #[from]
-        source: std::io::Error,
-    },
-    #[error(transparent)]
-    Other(#[from] anyhow::Error),
+    TokenExpire(DateTime<Utc>),
+    #[error("io")]
+    Io(CustomIoErrorKind),
+    #[error("some weird error you know")]
+    Other(String),
 }
+
+// we don't use the mirror feature because it will force us to use unstable rust
+#[derive(Debug, Clone)]
+pub enum CustomIoErrorKind {
+    NotFound,
+    PermissionDenied,
+    ConnectionRefused,
+    ConnectionReset,
+    ConnectionAborted,
+    NotConnected,
+    AddrInUse,
+    AddrNotAvailable,
+    BrokenPipe,
+    AlreadyExists,
+    WouldBlock,
+    InvalidInput,
+    InvalidData,
+    TimedOut,
+    WriteZero,
+    Interrupted,
+    Unsupported,
+    UnexpectedEof,
+    OutOfMemory,
+    Other,
+}
+
+impl From<anyhow::Error> for VanillaLaunchError {
+    fn from(value: anyhow::Error) -> Self {
+        Self::Other(value.backtrace().to_string())
+    }
+}
+impl From<std::io::Error> for VanillaLaunchError {
+    fn from(value: std::io::Error) -> Self {
+        Self::Io(match value.kind() {
+            ErrorKind::NotFound => CustomIoErrorKind::NotFound,
+            ErrorKind::PermissionDenied => CustomIoErrorKind::PermissionDenied,
+            ErrorKind::ConnectionRefused => CustomIoErrorKind::ConnectionRefused,
+            ErrorKind::ConnectionReset => CustomIoErrorKind::ConnectionReset,
+            ErrorKind::ConnectionAborted => CustomIoErrorKind::ConnectionAborted,
+            ErrorKind::NotConnected => CustomIoErrorKind::NotConnected,
+            ErrorKind::AddrInUse => CustomIoErrorKind::AddrInUse,
+            ErrorKind::AddrNotAvailable => CustomIoErrorKind::AddrNotAvailable,
+            ErrorKind::BrokenPipe => CustomIoErrorKind::BrokenPipe,
+            ErrorKind::AlreadyExists => CustomIoErrorKind::AlreadyExists,
+            ErrorKind::WouldBlock => CustomIoErrorKind::WouldBlock,
+            ErrorKind::InvalidInput => CustomIoErrorKind::InvalidInput,
+            ErrorKind::InvalidData => CustomIoErrorKind::InvalidData,
+            ErrorKind::TimedOut => CustomIoErrorKind::TimedOut,
+            ErrorKind::WriteZero => CustomIoErrorKind::WriteZero,
+            ErrorKind::Interrupted => CustomIoErrorKind::Interrupted,
+            ErrorKind::Unsupported => CustomIoErrorKind::Unsupported,
+            ErrorKind::UnexpectedEof => CustomIoErrorKind::UnexpectedEof,
+            ErrorKind::OutOfMemory => CustomIoErrorKind::OutOfMemory,
+            ErrorKind::Other => CustomIoErrorKind::Other,
+            _ => CustomIoErrorKind::Other,
+        })
+    }
+}
+
 pub async fn prepare_vanilla_download(
 ) -> Result<(DownloadArgs, ProcessedArguments), VanillaLaunchError> {
     let (game_manifest, current_version) = get_game_manifest(
@@ -223,6 +280,11 @@ pub async fn prepare_vanilla_download(
         .iter()
         .find(|x| x.uuid == uuid)
         .context("Somehow fail to find the main account uuid in accounts")?;
+    let now = Utc::now();
+    let expires_at = minecraft_account.access_token.expires_at;
+    if now > expires_at {
+        return Err(VanillaLaunchError::TokenExpire(expires_at));
+    }
 
     let game_options = GameOptions {
         auth_player_name: minecraft_account.username.clone(),
@@ -389,8 +451,7 @@ pub async fn prepare_vanilla_download(
             Some(Arc::clone(&current_size)),
         )
         .await?;
-        let mut f = File::create(client_jar_filename).await?;
-        f.write_all(&bytes).await?;
+        fs::write(client_jar_filename, &bytes).await?;
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     }
     let asset_settings = extract_assets(asset_index, asset_directory).await?;

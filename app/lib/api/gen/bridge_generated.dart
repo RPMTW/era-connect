@@ -227,6 +227,10 @@ class NativeImpl implements Native {
   }
 // Section: wire2api
 
+  DateTime _wire2api_Chrono_Utc(dynamic raw) {
+    return wire2apiTimestamp(ts: _wire2api_i64(raw), isUtc: true);
+  }
+
   FrbAnyhowException _wire2api_FrbAnyhowException(dynamic raw) {
     return FrbAnyhowException(raw as String);
   }
@@ -260,7 +264,7 @@ class NativeImpl implements Native {
       throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return AccountToken(
       token: _wire2api_String(arr[0]),
-      expiresAt: _wire2api_i64(arr[1]),
+      expiresAt: _wire2api_Chrono_Utc(arr[1]),
     );
   }
 
@@ -279,6 +283,18 @@ class NativeImpl implements Native {
 
   MinecraftAccount _wire2api_box_autoadd_minecraft_account(dynamic raw) {
     return _wire2api_minecraft_account(raw);
+  }
+
+  MyError _wire2api_box_autoadd_my_error(dynamic raw) {
+    return _wire2api_my_error(raw);
+  }
+
+  VanillaLaunchError _wire2api_box_autoadd_vanilla_launch_error(dynamic raw) {
+    return _wire2api_vanilla_launch_error(raw);
+  }
+
+  CustomIoErrorKind _wire2api_custom_io_error_kind(dynamic raw) {
+    return CustomIoErrorKind.values[raw as int];
   }
 
   DownloadState _wire2api_download_state(dynamic raw) {
@@ -403,20 +419,37 @@ class NativeImpl implements Native {
     return MinecraftSkinVariant.values[raw as int];
   }
 
+  MyError _wire2api_my_error(dynamic raw) {
+    switch (raw[0]) {
+      case 0:
+        return MyError_Launch(
+          _wire2api_box_autoadd_vanilla_launch_error(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
   UuidValue? _wire2api_opt_Uuid(dynamic raw) {
     return raw == null ? null : _wire2api_Uuid(raw);
   }
 
   Progress _wire2api_progress(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-    return Progress(
-      speed: _wire2api_f64(arr[0]),
-      percentages: _wire2api_f64(arr[1]),
-      currentSize: _wire2api_f64(arr[2]),
-      totalSize: _wire2api_f64(arr[3]),
-    );
+    switch (raw[0]) {
+      case 0:
+        return Progress_Ok(
+          speed: _wire2api_f64(raw[1]),
+          percentages: _wire2api_f64(raw[2]),
+          currentSize: _wire2api_f64(raw[3]),
+          totalSize: _wire2api_f64(raw[4]),
+        );
+      case 1:
+        return Progress_Err(
+          _wire2api_box_autoadd_my_error(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   int _wire2api_u8(dynamic raw) {
@@ -440,6 +473,25 @@ class NativeImpl implements Native {
 
   void _wire2api_unit(dynamic raw) {
     return;
+  }
+
+  VanillaLaunchError _wire2api_vanilla_launch_error(dynamic raw) {
+    switch (raw[0]) {
+      case 0:
+        return VanillaLaunchError_TokenExpire(
+          _wire2api_Chrono_Utc(raw[1]),
+        );
+      case 1:
+        return VanillaLaunchError_Io(
+          _wire2api_custom_io_error_kind(raw[1]),
+        );
+      case 2:
+        return VanillaLaunchError_Other(
+          _wire2api_String(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   XstsTokenErrorType _wire2api_xsts_token_error_type(dynamic raw) {
@@ -490,6 +542,11 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   NativePlatform(ffi.DynamicLibrary dylib) : super(NativeWire(dylib));
 
 // Section: api2wire
+
+  @protected
+  int api2wire_Chrono_Utc(DateTime raw) {
+    return api2wire_i64(raw.microsecondsSinceEpoch);
+  }
 
   @protected
   ffi.Pointer<wire_uint_8_list> api2wire_String(String raw) {
@@ -588,7 +645,7 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   void _api_fill_to_wire_account_token(
       AccountToken apiObj, wire_AccountToken wireObj) {
     wireObj.token = api2wire_String(apiObj.token);
-    wireObj.expires_at = api2wire_i64(apiObj.expiresAt);
+    wireObj.expires_at = api2wire_Chrono_Utc(apiObj.expiresAt);
   }
 
   void _api_fill_to_wire_box_autoadd_account_storage_value(
@@ -976,9 +1033,9 @@ class NativeWire implements FlutterRustBridgeWireBase {
   }
 
   late final _new_uint_8_list_0Ptr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<wire_uint_8_list> Function(
-              ffi.Int32)>>('new_uint_8_list_0');
+          ffi
+          .NativeFunction<ffi.Pointer<wire_uint_8_list> Function(ffi.Int32)>>(
+      'new_uint_8_list_0');
   late final _new_uint_8_list_0 = _new_uint_8_list_0Ptr
       .asFunction<ffi.Pointer<wire_uint_8_list> Function(int)>();
 
