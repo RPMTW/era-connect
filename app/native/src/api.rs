@@ -10,7 +10,7 @@ use std::path::PathBuf;
 pub use std::sync::mpsc;
 pub use std::sync::mpsc::{Receiver, Sender};
 
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use chrono::Local;
 use log::{info, warn};
 
@@ -46,7 +46,7 @@ lazy_static::lazy_static! {
 }
 
 pub fn setup_logger() -> anyhow::Result<()> {
-    color_eyre::install().unwrap();
+    color_eyre::install().map_err(|x| anyhow!("{x:?}"))?;
     let file_name = format!("{}.log", Local::now().format("%Y-%m-%d-%H-%M-%S"));
     let file_path = DATA_DIR.join("logs").join(file_name);
     let parent = file_path
@@ -81,16 +81,23 @@ pub fn setup_logger() -> anyhow::Result<()> {
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let c = prepare_vanilla_download().await?;
+pub async fn launch_vanilla(stream: StreamSink<Progress>) {
+    let c = match prepare_vanilla_download().await {
+        Ok(x) => x,
+        Err(err) => {
+            stream.add(Progress::Err(err.into()));
+            return;
+        }
+    };
 
     let vanilla_bias = DownloadBias {
         start: 0.0,
         end: 100.0,
     };
-    run_download(stream, c.0, vanilla_bias).await;
-    launch_game(c.1.launch_args).await.unwrap();
-    Ok(())
+    let stream = run_download(stream, c.0, vanilla_bias).await;
+    if let Err(err) = launch_game(c.1.launch_args).await {
+        stream.add(Progress::Err(err.into()));
+    }
 }
 
 use thiserror::Error;
@@ -109,12 +116,12 @@ impl From<color_eyre::Report> for MyError {
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
+pub async fn launch_forge(stream: StreamSink<Progress>) {
     let (vanilla_download_args, vanilla_arguments) = match prepare_vanilla_download().await {
         Ok(x) => x,
         Err(err) => {
             stream.add(Progress::Err(err.into()));
-            return Ok(());
+            return;
         }
     };
     info!("Starts Vanilla Downloading");
@@ -133,7 +140,7 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
         Ok(x) => x,
         Err(x) => {
             stream.add(Progress::Err(x.into()));
-            return Ok(());
+            return;
         }
     };
 
@@ -155,17 +162,24 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
         Ok(x) => x,
         Err(err) => {
             stream.add(Progress::Err(err.into()));
-            return Ok(());
+            return;
         }
     };
 
-    launch_game(processed_arguments).await.unwrap();
-    Ok(())
+    if let Err(err) = launch_game(processed_arguments).await {
+        stream.add(Progress::Err(err.into()));
+    }
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let (download_args, vanilla_arguments) = prepare_vanilla_download().await?;
+pub async fn launch_quilt(stream: StreamSink<Progress>) {
+    let (download_args, vanilla_arguments) = match prepare_vanilla_download().await {
+        Ok(x) => x,
+        Err(err) => {
+            stream.add(Progress::Err(err.into()));
+            return;
+        }
+    };
     let vanilla_bias = DownloadBias {
         start: 0.0,
         end: 90.0,
@@ -182,16 +196,17 @@ pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
         Ok(x) => x,
         Err(err) => {
             stream.add(Progress::Err(err.into()));
-            return Ok(());
+            return;
         }
     };
     let quilt_bias = DownloadBias {
         start: 90.0,
         end: 100.0,
     };
-    run_download(stream, download_args, quilt_bias).await;
-    launch_game(quilt_processed.launch_args).await.unwrap();
-    Ok(())
+    let stream = run_download(stream, download_args, quilt_bias).await;
+    if let Err(err) = launch_game(quilt_processed.launch_args).await {
+        stream.add(Progress::Err(err.into()));
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

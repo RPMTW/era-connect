@@ -39,7 +39,11 @@ fn wire_launch_vanilla_impl(port_: MessagePort) {
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
-        move || move |task_callback| launch_vanilla(task_callback.stream_sink::<_, Progress>()),
+        move || {
+            move |task_callback| {
+                Result::<_, ()>::Ok(launch_vanilla(task_callback.stream_sink::<_, Progress>()))
+            }
+        },
     )
 }
 fn wire_launch_forge_impl(port_: MessagePort) {
@@ -49,7 +53,11 @@ fn wire_launch_forge_impl(port_: MessagePort) {
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
-        move || move |task_callback| launch_forge(task_callback.stream_sink::<_, Progress>()),
+        move || {
+            move |task_callback| {
+                Result::<_, ()>::Ok(launch_forge(task_callback.stream_sink::<_, Progress>()))
+            }
+        },
     )
 }
 fn wire_launch_quilt_impl(port_: MessagePort) {
@@ -59,7 +67,11 @@ fn wire_launch_quilt_impl(port_: MessagePort) {
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
-        move || move |task_callback| launch_quilt(task_callback.stream_sink::<_, Progress>()),
+        move || {
+            move |task_callback| {
+                Result::<_, ()>::Ok(launch_quilt(task_callback.stream_sink::<_, Progress>()))
+            }
+        },
     )
 }
 fn wire_fetch_state_impl(port_: MessagePort) {
