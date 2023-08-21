@@ -473,12 +473,7 @@ impl support::IntoDart for MyError {
     fn into_dart(self) -> support::DartAbi {
         match self {
             Self::Launch(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
-            Self::JoinError(field0) => vec![1.into_dart(), field0.into_into_dart().into_dart()],
-            Self::Anyhow { msg, backtrace } => vec![
-                2.into_dart(),
-                msg.into_into_dart().into_dart(),
-                backtrace.into_into_dart().into_dart(),
-            ],
+            Self::Anyhow(field0) => vec![1.into_dart(), field0.into_into_dart().into_dart()],
         }
         .into_dart()
     }
@@ -543,11 +538,7 @@ impl support::IntoDart for VanillaLaunchError {
                 msg.into_into_dart().into_dart(),
                 error.into_into_dart().into_dart(),
             ],
-            Self::Anyhow { msg, backtrace } => vec![
-                2.into_dart(),
-                msg.into_into_dart().into_dart(),
-                backtrace.into_into_dart().into_dart(),
-            ],
+            Self::Anyhow(field0) => vec![2.into_dart(), field0.into_into_dart().into_dart()],
         }
         .into_dart()
     }

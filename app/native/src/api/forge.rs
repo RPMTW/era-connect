@@ -8,7 +8,9 @@ use std::{
     },
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::anyhow;
+use color_eyre::eyre::{bail, eyre, Context};
+use color_eyre::{eyre::ContextCompat, Result};
 use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -85,7 +87,7 @@ pub async fn prepare_forge_download(
     jvm_options: JvmOptions,
     game_options: GameOptions,
 ) -> Result<(DownloadArgs, ProcessedArguments, Value)> {
-    // refactor
+    // NOTE: check if works after color_eyre
     let bytes = download_file(
         "https://meta.modrinth.com/forge/v0/versions/1.20.1-forge-47.1.43.json".to_owned(),
         None,
@@ -123,12 +125,12 @@ pub async fn prepare_forge_download(
                         .await?;
                     total_size_clone.fetch_add(artifact.size, Ordering::Relaxed);
                     let bytes = download_file(url, Some(current_size_clone)).await?;
-                    fs::write(path, bytes).await.map_err(|err| anyhow!(err))
+                    fs::write(path, bytes).await.map_err(|err| eyre!(err))
                 } else if let Err(err) = validate_sha1(&path, &sha1).await {
                     total_size_clone.fetch_add(artifact.size, Ordering::Relaxed);
                     error!("{err}\n redownloading");
                     let bytes = download_file(url, Some(current_size_clone)).await?;
-                    fs::write(path, bytes).await.map_err(|err| anyhow!(err))
+                    fs::write(path, bytes).await.map_err(|err| eyre!(err))
                 } else {
                     debug!("hash verified");
                     Ok(())
@@ -147,10 +149,14 @@ pub async fn prepare_forge_download(
                 if path.exists() {
                     Ok(())
                 } else {
-                    fs::create_dir_all(path.parent().context("library parent dir doesn't exist")?)
-                        .await?;
+                    fs::create_dir_all(
+                        path.parent()
+                            .context("library parent dir doesn't exist")
+                            .unwrap(),
+                    )
+                    .await?;
                     let bytes = download_file(url, None).await?;
-                    fs::write(path, bytes).await.map_err(|err| anyhow!(err))
+                    fs::write(path, bytes).await.map_err(|err| eyre!(err))
                 }
             }));
         }
@@ -223,7 +229,8 @@ pub async fn process_forge(
         "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_owned(),
         None,
     )
-    .await?;
+    .await
+    .unwrap();
     for processor in processors {
         let jar = convert_maven_to_path(&processor.jar, Some(&folder))?;
         let processor_main_class = get_processor_main_class(jar.clone())
@@ -252,15 +259,18 @@ pub async fn process_forge(
                             })
                         })
                         .context("failed to acquire server url")?;
-                    let path = std::env::current_dir()?.join(extract_filename(url)?);
+                    let path = std::env::current_dir()?.join(extract_filename(url).unwrap());
                     if !path.exists() {
                         fs::create_dir_all(
                             path.parent()
                                 .context("failed to get parent dir of server jar")?,
                         )
                         .await?;
-                        let bytes = download_file(url.to_owned(), None).await?;
-                        fs::write(&path, bytes).await.map_err(|err| anyhow!(err))?;
+                        let bytes = download_file(url.to_owned(), None).await.unwrap();
+                        fs::write(&path, bytes)
+                            .await
+                            .map_err(|err| anyhow!(err))
+                            .unwrap();
                     }
                     side = x.to_string();
                     minecraft_jar = path.to_string_lossy().to_string();

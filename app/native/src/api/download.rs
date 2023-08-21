@@ -7,8 +7,9 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{anyhow, bail, Context, Result};
 use bytes::Bytes;
+use color_eyre::eyre::{bail, eyre, ContextCompat};
+use color_eyre::Result;
 use flutter_rust_bridge::StreamSink;
 use futures::StreamExt;
 use log::{error, info};
@@ -29,7 +30,7 @@ pub async fn download_file(
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
         .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
         .build()
-        .map_err(|err| anyhow!("{err:?}\n{}", &url))?;
+        .map_err(|err| eyre!("{err:?}\n{}", &url))?;
     let response_result = client.get(&url).send().await;
     let retry_amount = 3;
     let mut response = match response_result {
@@ -173,7 +174,7 @@ pub async fn run_download(
     }
     download_complete.store(true, Ordering::Release);
     if let Err(err) = task.await {
-        sink_clone.add(Progress::Err(err.into()));
+        sink_clone.add(Progress::Err(eyre!(err).into()));
         return sink_clone;
     }
     sink_clone

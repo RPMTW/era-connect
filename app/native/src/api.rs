@@ -17,7 +17,6 @@ use log::{info, warn};
 pub use flutter_rust_bridge::StreamSink;
 pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
 pub use tokio::sync::{Mutex, RwLock};
-use tokio::task::JoinError;
 
 use crate::api::forge::{prepare_forge_download, process_forge};
 
@@ -47,6 +46,7 @@ lazy_static::lazy_static! {
 }
 
 pub fn setup_logger() -> anyhow::Result<()> {
+    color_eyre::install().unwrap();
     let file_name = format!("{}.log", Local::now().format("%Y-%m-%d-%H-%M-%S"));
     let file_path = DATA_DIR.join("logs").join(file_name);
     let parent = file_path
@@ -89,7 +89,8 @@ pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> 
         end: 100.0,
     };
     run_download(stream, c.0, vanilla_bias).await;
-    launch_game(c.1.launch_args).await
+    launch_game(c.1.launch_args).await.unwrap();
+    Ok(())
 }
 
 use thiserror::Error;
@@ -97,24 +98,13 @@ use thiserror::Error;
 pub enum MyError {
     #[error(transparent)]
     Launch(#[from] VanillaLaunchError),
-    #[error("Join error")]
-    JoinError(String),
     #[error("Anyhow error")]
-    Anyhow { msg: String, backtrace: String },
+    Anyhow(String),
 }
 
-impl From<anyhow::Error> for MyError {
-    fn from(value: anyhow::Error) -> Self {
-        Self::Anyhow {
-            msg: format!("{value:?}"),
-            backtrace: value.backtrace().to_string(),
-        }
-    }
-}
-
-impl From<JoinError> for MyError {
-    fn from(value: JoinError) -> Self {
-        Self::JoinError(format!("{value:?}"))
+impl From<color_eyre::Report> for MyError {
+    fn from(value: color_eyre::Report) -> Self {
+        Self::Anyhow(format!("{value:?}"))
     }
 }
 
@@ -133,12 +123,19 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
         end: 90.0,
     };
     let stream = run_download(stream, vanilla_download_args, vanilla_bias).await;
-    let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
+    let (forge_download_args, forge_arguments, manifest) = match prepare_forge_download(
         vanilla_arguments.launch_args,
         vanilla_arguments.jvm_args,
         vanilla_arguments.game_args,
     )
-    .await?;
+    .await
+    {
+        Ok(x) => x,
+        Err(x) => {
+            stream.add(Progress::Err(x.into()));
+            return Ok(());
+        }
+    };
 
     let forge_bias = DownloadBias {
         start: 90.0,
@@ -162,7 +159,7 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
         }
     };
 
-    launch_game(processed_arguments).await?;
+    launch_game(processed_arguments).await.unwrap();
     Ok(())
 }
 
@@ -174,19 +171,27 @@ pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
         end: 90.0,
     };
     let stream = run_download(stream, download_args, vanilla_bias).await;
-    let (download_args, quilt_processed) = prepare_quilt_download(
+    let (download_args, quilt_processed) = match prepare_quilt_download(
         String::from("1.20.1"),
         vanilla_arguments.launch_args,
         vanilla_arguments.jvm_args,
         vanilla_arguments.game_args,
     )
-    .await?;
+    .await
+    {
+        Ok(x) => x,
+        Err(err) => {
+            stream.add(Progress::Err(err.into()));
+            return Ok(());
+        }
+    };
     let quilt_bias = DownloadBias {
         start: 90.0,
         end: 100.0,
     };
     run_download(stream, download_args, quilt_bias).await;
-    launch_game(quilt_processed.launch_args).await
+    launch_game(quilt_processed.launch_args).await.unwrap();
+    Ok(())
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

@@ -6,7 +6,10 @@ use std::{
     },
 };
 
-use anyhow::{bail, Context, Result};
+use color_eyre::{
+    eyre::{bail, eyre, Context, ContextCompat},
+    Result,
+};
 use flutter_rust_bridge::RustOpaque;
 use log::error;
 use serde::{Deserialize, Serialize};
@@ -16,7 +19,6 @@ use crate::api::{
     download::{download_file, validate_sha1},
     vanilla::HandlesType,
 };
-use anyhow::anyhow;
 
 use super::rules::{ActionType, OsName, Rule};
 
@@ -71,7 +73,7 @@ pub async fn parallel_library(
     let download_total_size = Arc::new(AtomicUsize::new(0));
     let num_libraries = library_list_arc.len();
 
-    let current_os = os_version::detect()?;
+    let current_os = os_version::detect().map_err(|x| eyre!(x))?;
     let current_os_type = match current_os {
         os_version::OsVersion::Linux(_) => OsName::Linux,
         os_version::OsVersion::Windows(_) => OsName::Windows,
@@ -137,7 +139,7 @@ pub async fn parallel_library(
                     let bytes = download_file(url.clone(), Some(current_size_clone)).await?;
                     fs::write(&non_native_download_path, bytes)
                         .await
-                        .map_err(|err| anyhow!(err))
+                        .map_err(|err| eyre!(err))
                 }
             } else {
                 Ok(())

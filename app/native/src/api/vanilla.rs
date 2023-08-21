@@ -2,14 +2,14 @@ pub mod assets;
 pub mod library;
 pub mod rules;
 
-use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
+use color_eyre::eyre::{Context, ContextCompat};
+use color_eyre::Result;
 use flutter_rust_bridge::RustOpaque;
 use futures::Future;
 use log::error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::backtrace::Backtrace;
 pub use std::io::ErrorKind;
 pub use std::path::PathBuf;
 use std::pin::Pin;
@@ -170,7 +170,7 @@ pub enum VanillaLaunchError {
         error: CustomIoErrorKind,
     },
     #[error("some weird error you know")]
-    Anyhow { msg: String, backtrace: String },
+    Anyhow(String),
 }
 
 // we don't use the mirror feature because it will force us to use unstable rust
@@ -184,12 +184,14 @@ pub enum CustomIoErrorKind {
     Other,
 }
 
+impl From<color_eyre::Report> for VanillaLaunchError {
+    fn from(value: color_eyre::Report) -> Self {
+        Self::Anyhow(format!("{value:?}"))
+    }
+}
 impl From<anyhow::Error> for VanillaLaunchError {
     fn from(value: anyhow::Error) -> Self {
-        Self::Anyhow {
-            msg: format!("{value:?}"),
-            backtrace: value.backtrace().to_string(),
-        }
+        Self::Anyhow(value.to_string())
     }
 }
 impl From<std::io::Error> for CustomIoErrorKind {
@@ -324,7 +326,10 @@ pub async fn prepare_vanilla_download(
         String::deserialize(&game_manifest["mainClass"]).context("Failed to get MainClass")?;
 
     let client_jar = std::env::current_dir()
-        .unwrap()
+        .map_err(|x| VanillaLaunchError::Io {
+            msg: String::from("can't locate current_dir"),
+            error: x.into(),
+        })?
         .join(extract_filename(&downloads_list.client.url)?);
 
     let jvm_argument = game_manifest["arguments"]["jvm"]

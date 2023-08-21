@@ -1,6 +1,9 @@
 use std::sync::{atomic::AtomicUsize, Arc};
 
-use anyhow::{anyhow, Context, Result};
+use color_eyre::{
+    eyre::{eyre, ContextCompat},
+    Result,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::{
@@ -123,10 +126,10 @@ pub async fn prepare_quilt_download(
             }
             if !path.exists() {
                 let bytes = download_file(url, Some(current_size_clone)).await?;
-                fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
+                fs::write(&path, bytes).await.map_err(|err| eyre!(err))
             } else if validate_sha1(&sha1_path, &sha1).await.is_err() {
                 let bytes = download_file(url, Some(current_size_clone)).await?;
-                fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
+                fs::write(&path, bytes).await.map_err(|err| eyre!(err))
             } else {
                 Ok(())
             }

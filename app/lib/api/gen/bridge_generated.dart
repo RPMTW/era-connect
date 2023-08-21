@@ -426,13 +426,8 @@ class NativeImpl implements Native {
           _wire2api_box_autoadd_vanilla_launch_error(raw[1]),
         );
       case 1:
-        return MyError_JoinError(
-          _wire2api_String(raw[1]),
-        );
-      case 2:
         return MyError_Anyhow(
-          msg: _wire2api_String(raw[1]),
-          backtrace: _wire2api_String(raw[2]),
+          _wire2api_String(raw[1]),
         );
       default:
         throw Exception("unreachable");
@@ -497,8 +492,7 @@ class NativeImpl implements Native {
         );
       case 2:
         return VanillaLaunchError_Anyhow(
-          msg: _wire2api_String(raw[1]),
-          backtrace: _wire2api_String(raw[2]),
+          _wire2api_String(raw[1]),
         );
       default:
         throw Exception("unreachable");
