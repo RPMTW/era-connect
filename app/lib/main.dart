@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
+import 'package:era_connect/api/ffi.dart';
 import 'package:era_connect/api/lib.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
@@ -23,17 +25,20 @@ void main() async {
     await windowManager.setMinimumSize(const Size(1350, 820));
     await initializeAPIs();
     runApp(const EraConnectApp());
-    // testRust();
+    testRust();
   });
 }
 
-// void testRust() async {
-//   final forge = api.launchForge();
-//   forge.listen((event) {
-//     print("speed: ${event.speed}");
-//     print("percentages: ${event.percentages}");
-//   });
-// }
+void testRust() async {
+  final forge = api.launchForge();
+  forge.listen((event) {
+    if (event is bridge.Progress_Ok) {
+      print("${event.speed}");
+    } else if (event is bridge.Progress_Err) {
+      print("${event.field0}");
+    }
+  });
+}
 
 class EraConnectApp extends StatefulWidget {
   const EraConnectApp({Key? key}) : super(key: key);

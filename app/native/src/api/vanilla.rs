@@ -9,6 +9,7 @@ use futures::Future;
 use log::error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::backtrace::Backtrace;
 pub use std::io::ErrorKind;
 pub use std::path::PathBuf;
 use std::pin::Pin;
@@ -163,10 +164,13 @@ use thiserror::Error;
 pub enum VanillaLaunchError {
     #[error("Token expired")]
     TokenExpire(DateTime<Utc>),
-    #[error("io")]
-    Io(CustomIoErrorKind),
+    #[error("Io error")]
+    Io {
+        msg: String,
+        error: CustomIoErrorKind,
+    },
     #[error("some weird error you know")]
-    Other(String),
+    Anyhow { msg: String, backtrace: String },
 }
 
 // we don't use the mirror feature because it will force us to use unstable rust
@@ -174,55 +178,30 @@ pub enum VanillaLaunchError {
 pub enum CustomIoErrorKind {
     NotFound,
     PermissionDenied,
-    ConnectionRefused,
-    ConnectionReset,
-    ConnectionAborted,
-    NotConnected,
-    AddrInUse,
-    AddrNotAvailable,
-    BrokenPipe,
     AlreadyExists,
-    WouldBlock,
     InvalidInput,
-    InvalidData,
     TimedOut,
-    WriteZero,
-    Interrupted,
-    Unsupported,
-    UnexpectedEof,
-    OutOfMemory,
     Other,
 }
 
 impl From<anyhow::Error> for VanillaLaunchError {
     fn from(value: anyhow::Error) -> Self {
-        Self::Other(value.backtrace().to_string())
+        Self::Anyhow {
+            msg: format!("{value:?}"),
+            backtrace: value.backtrace().to_string(),
+        }
     }
 }
-impl From<std::io::Error> for VanillaLaunchError {
+impl From<std::io::Error> for CustomIoErrorKind {
     fn from(value: std::io::Error) -> Self {
-        Self::Io(match value.kind() {
+        match value.kind() {
             ErrorKind::NotFound => CustomIoErrorKind::NotFound,
             ErrorKind::PermissionDenied => CustomIoErrorKind::PermissionDenied,
-            ErrorKind::ConnectionRefused => CustomIoErrorKind::ConnectionRefused,
-            ErrorKind::ConnectionReset => CustomIoErrorKind::ConnectionReset,
-            ErrorKind::ConnectionAborted => CustomIoErrorKind::ConnectionAborted,
-            ErrorKind::NotConnected => CustomIoErrorKind::NotConnected,
-            ErrorKind::AddrInUse => CustomIoErrorKind::AddrInUse,
-            ErrorKind::AddrNotAvailable => CustomIoErrorKind::AddrNotAvailable,
-            ErrorKind::BrokenPipe => CustomIoErrorKind::BrokenPipe,
             ErrorKind::AlreadyExists => CustomIoErrorKind::AlreadyExists,
-            ErrorKind::WouldBlock => CustomIoErrorKind::WouldBlock,
             ErrorKind::InvalidInput => CustomIoErrorKind::InvalidInput,
-            ErrorKind::InvalidData => CustomIoErrorKind::InvalidData,
             ErrorKind::TimedOut => CustomIoErrorKind::TimedOut,
-            ErrorKind::WriteZero => CustomIoErrorKind::WriteZero,
-            ErrorKind::Interrupted => CustomIoErrorKind::Interrupted,
-            ErrorKind::Unsupported => CustomIoErrorKind::Unsupported,
-            ErrorKind::UnexpectedEof => CustomIoErrorKind::UnexpectedEof,
-            ErrorKind::OutOfMemory => CustomIoErrorKind::OutOfMemory,
             _ => CustomIoErrorKind::Other,
-        })
+        }
     }
 }
 
@@ -257,16 +236,28 @@ pub async fn prepare_vanilla_download(
 
     create_dir_all(&library_directory)
         .await
-        .context("fail to create library_directory(vanilla)")?;
+        .map_err(|err| VanillaLaunchError::Io {
+            msg: library_directory.to_string_lossy().to_string(),
+            error: err.into(),
+        })?;
     create_dir_all(&asset_directory)
         .await
-        .context("fail to create asset_directory(vanilla)")?;
+        .map_err(|err| VanillaLaunchError::Io {
+            msg: asset_directory.to_string_lossy().to_string(),
+            error: err.into(),
+        })?;
     create_dir_all(&game_directory)
         .await
-        .context("fail to create game_directory(vanilla)")?;
+        .map_err(|err| VanillaLaunchError::Io {
+            msg: game_directory.to_string_lossy().to_string(),
+            error: err.into(),
+        })?;
     create_dir_all(&native_directory)
         .await
-        .context("fail to create native_directory(vanilla)")?;
+        .map_err(|err| VanillaLaunchError::Io {
+            msg: native_directory.to_string_lossy().to_string(),
+            error: err.into(),
+        })?;
 
     let storage = STORAGE.account_storage.read().await;
 
@@ -288,16 +279,18 @@ pub async fn prepare_vanilla_download(
     let game_options = GameOptions {
         auth_player_name: minecraft_account.username.clone(),
         game_version_name: current_version,
-        game_directory: RustOpaque::new(
-            game_directory
-                .canonicalize()
-                .context("Fail to canonicalize game_directory(game_options)")?,
-        ),
-        assets_root: RustOpaque::new(
-            asset_directory
-                .canonicalize()
-                .context("Fail to canonicalize asset_directory(game_options)")?,
-        ),
+        game_directory: RustOpaque::new(game_directory.canonicalize().map_err(|err| {
+            VanillaLaunchError::Io {
+                msg: game_directory.to_string_lossy().to_string(),
+                error: err.into(),
+            }
+        })?),
+        assets_root: RustOpaque::new(asset_directory.canonicalize().map_err(|err| {
+            VanillaLaunchError::Io {
+                msg: game_directory.to_string_lossy().to_string(),
+                error: err.into(),
+            }
+        })?),
         assets_index_name: game_manifest["assetIndex"]["id"]
             .as_str()
             .context("assetindex id doesn't exist")?
@@ -347,6 +340,14 @@ pub async fn prepare_vanilla_download(
         additional_arguments: None,
     };
 
+    let current_os = os_version::detect()?;
+    let current_os_type = match current_os {
+        os_version::OsVersion::Linux(_) => OsName::Linux,
+        os_version::OsVersion::Windows(_) => OsName::Windows,
+        os_version::OsVersion::MacOS(_) => OsName::Osx,
+        _ => return Err(anyhow::anyhow!("not supported").into()),
+    };
+
     let mut jvm_options = JvmOptions {
         launcher_name: String::from("era-connect"),
         launcher_version: String::from("0.0.1"),
@@ -387,18 +388,10 @@ pub async fn prepare_vanilla_download(
     )
     .await?;
 
-    let current_os = os_version::detect()?;
-    let current_os_type = match current_os {
-        os_version::OsVersion::Linux(_) => OsName::Linux,
-        os_version::OsVersion::Windows(_) => OsName::Windows,
-        os_version::OsVersion::MacOS(_) => OsName::Osx,
-        _ => return Err(anyhow::anyhow!("not supported").into()),
-    };
-
     let mut parsed_library_list = Vec::new();
     for library in library_list.iter() {
-        let (process_native, is_native_library, _) = os_match(library, &current_os_type);
-        if !process_native && !is_native_library {
+        let (process_native, _) = os_match(library, &current_os_type);
+        if !process_native {
             parsed_library_list.push(library);
         }
     }
@@ -406,7 +399,7 @@ pub async fn prepare_vanilla_download(
     let mut classpath_list = parsed_library_list
         .iter()
         .map(|x| {
-            Arc::clone(&library_path)
+            library_path
                 .join(&x.downloads.artifact.path)
                 .to_string_lossy()
                 .to_string()
@@ -414,7 +407,7 @@ pub async fn prepare_vanilla_download(
         .collect::<Vec<String>>();
 
     classpath_list.push(client_jar.to_string_lossy().to_string());
-    jvm_options.classpath = classpath_list.join(":");
+    jvm_options.classpath = classpath_list.join(&jvm_options.classpath_separator);
 
     for x in jvm_flags.rules {
         if x.action == ActionType::Allow
@@ -436,7 +429,12 @@ pub async fn prepare_vanilla_download(
             Some(Arc::clone(&current_size)),
         )
         .await?;
-        fs::write(client_jar_filename, &bytes).await?;
+        fs::write(&client_jar_filename, &bytes)
+            .await
+            .map_err(|err| VanillaLaunchError::Io {
+                msg: client_jar_filename.to_string_lossy().to_string(),
+                error: err.into(),
+            })?;
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     } else if let Err(x) = validate_sha1(
         &PathBuf::from(&extract_filename(&downloads_list.client.url)?),
@@ -450,7 +448,12 @@ pub async fn prepare_vanilla_download(
             Some(Arc::clone(&current_size)),
         )
         .await?;
-        fs::write(client_jar_filename, &bytes).await?;
+        fs::write(&client_jar_filename, &bytes)
+            .await
+            .map_err(|err| VanillaLaunchError::Io {
+                msg: client_jar_filename.to_string_lossy().to_string(),
+                error: err.into(),
+            })?;
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     }
     let asset_settings = extract_assets(asset_index, asset_directory).await?;

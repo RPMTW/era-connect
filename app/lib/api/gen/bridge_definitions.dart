@@ -87,23 +87,9 @@ class AccountToken {
 enum CustomIoErrorKind {
   NotFound,
   PermissionDenied,
-  ConnectionRefused,
-  ConnectionReset,
-  ConnectionAborted,
-  NotConnected,
-  AddrInUse,
-  AddrNotAvailable,
-  BrokenPipe,
   AlreadyExists,
-  WouldBlock,
   InvalidInput,
-  InvalidData,
   TimedOut,
-  WriteZero,
-  Interrupted,
-  Unsupported,
-  UnexpectedEof,
-  OutOfMemory,
   Other,
 }
 
@@ -216,9 +202,10 @@ sealed class MyError with _$MyError {
   const factory MyError.joinError(
     String field0,
   ) = MyError_JoinError;
-  const factory MyError.anyhow(
-    String field0,
-  ) = MyError_Anyhow;
+  const factory MyError.anyhow({
+    required String msg,
+    required String backtrace,
+  }) = MyError_Anyhow;
 }
 
 @freezed
@@ -250,12 +237,14 @@ sealed class VanillaLaunchError with _$VanillaLaunchError {
   const factory VanillaLaunchError.tokenExpire(
     DateTime field0,
   ) = VanillaLaunchError_TokenExpire;
-  const factory VanillaLaunchError.io(
-    CustomIoErrorKind field0,
-  ) = VanillaLaunchError_Io;
-  const factory VanillaLaunchError.other(
-    String field0,
-  ) = VanillaLaunchError_Other;
+  const factory VanillaLaunchError.io({
+    required String msg,
+    required CustomIoErrorKind error,
+  }) = VanillaLaunchError_Io;
+  const factory VanillaLaunchError.anyhow({
+    required String msg,
+    required String backtrace,
+  }) = VanillaLaunchError_Anyhow;
 }
 
 /// Reference: [Unofficial Mojang Wiki](https://wiki.vg/Microsoft_Authentication_Scheme)

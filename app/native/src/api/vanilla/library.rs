@@ -40,28 +40,24 @@ pub struct LibraryArtifact {
     pub artifact: Metadata,
 }
 
-pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bool, &'a str) {
+pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, &'a str) {
     let mut process_native = false;
-    let mut is_native_library = false;
     let mut library_extension_type = "";
     if let Some(rule) = &library.rules {
         for x in rule {
-            if let Some(os) = &x.os {
-                if let Some(name) = os.name {
-                    if current_os_type == &name && x.action == ActionType::Allow {
-                        process_native = true;
-                    }
-                    is_native_library = true;
-                    library_extension_type = match current_os_type {
-                        OsName::Osx => ".dylib",
-                        OsName::Linux => ".so",
-                        OsName::Windows => ".dll",
-                    }
+            if let Some(name) = x.os.as_ref().and_then(|x| x.name) {
+                if current_os_type == &name && x.action == ActionType::Allow {
+                    process_native = true;
+                }
+                library_extension_type = match current_os_type {
+                    OsName::Osx => ".dylib",
+                    OsName::Linux => ".so",
+                    OsName::Windows => ".dll",
                 }
             }
         }
     }
-    (process_native, is_native_library, library_extension_type)
+    (process_native, library_extension_type)
 }
 pub async fn parallel_library(
     library_list_arc: Arc<[Library]>,
@@ -97,11 +93,10 @@ pub async fn parallel_library(
                     .get(index)
                     .context("Fail to get library list at index")?;
                 let path = library.downloads.artifact.path.clone();
-                let (process_native, is_native_library, library_extension) =
-                    os_match(library, &current_os_type);
+                let (process_native, library_extension) = os_match(library, &current_os_type);
                 let non_native_download_path = folder_clone.join(&path);
                 let non_native_redownload = if non_native_download_path.exists() {
-                    if let Err(x) = if !process_native && !is_native_library {
+                    if let Err(x) = if !process_native {
                         validate_sha1(&non_native_download_path, &library.downloads.artifact.sha1)
                             .await
                     } else {

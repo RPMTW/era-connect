@@ -162,7 +162,7 @@ pub async fn prepare_forge_download(
             .jvm_args
             .get_mut(pos + 1)
             .context("the next argument of -cp doesn't exist")?;
-        classpaths.push(':');
+        classpaths.push_str(&jvm_options.classpath_separator);
         classpaths.push_str(classpath.join(":").as_str());
     }
 

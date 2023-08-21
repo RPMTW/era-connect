@@ -431,7 +431,8 @@ class NativeImpl implements Native {
         );
       case 2:
         return MyError_Anyhow(
-          _wire2api_String(raw[1]),
+          msg: _wire2api_String(raw[1]),
+          backtrace: _wire2api_String(raw[2]),
         );
       default:
         throw Exception("unreachable");
@@ -491,11 +492,13 @@ class NativeImpl implements Native {
         );
       case 1:
         return VanillaLaunchError_Io(
-          _wire2api_custom_io_error_kind(raw[1]),
+          msg: _wire2api_String(raw[1]),
+          error: _wire2api_custom_io_error_kind(raw[2]),
         );
       case 2:
-        return VanillaLaunchError_Other(
-          _wire2api_String(raw[1]),
+        return VanillaLaunchError_Anyhow(
+          msg: _wire2api_String(raw[1]),
+          backtrace: _wire2api_String(raw[2]),
         );
       default:
         throw Exception("unreachable");

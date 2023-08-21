@@ -77,7 +77,9 @@ pub async fn prepare_quilt_download(
     let mut launch_args = launch_args;
 
     // NOTE: easily forgetable `:`
-    jvm_options.classpath.push(':');
+    jvm_options
+        .classpath
+        .push_str(&jvm_options.classpath_separator);
     jvm_options.classpath.push_str(
         &path_vec
             .iter()

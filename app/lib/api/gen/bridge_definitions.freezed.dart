@@ -1472,26 +1472,25 @@ abstract class LoginFlowEvent_Success implements LoginFlowEvent {
 
 /// @nodoc
 mixin _$MyError {
-  Object get field0 => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(VanillaLaunchError field0) launch,
     required TResult Function(String field0) joinError,
-    required TResult Function(String field0) anyhow,
+    required TResult Function(String msg, String backtrace) anyhow,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(VanillaLaunchError field0)? launch,
     TResult? Function(String field0)? joinError,
-    TResult? Function(String field0)? anyhow,
+    TResult? Function(String msg, String backtrace)? anyhow,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(VanillaLaunchError field0)? launch,
     TResult Function(String field0)? joinError,
-    TResult Function(String field0)? anyhow,
+    TResult Function(String msg, String backtrace)? anyhow,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -1612,7 +1611,7 @@ class _$MyError_Launch implements MyError_Launch {
   TResult when<TResult extends Object?>({
     required TResult Function(VanillaLaunchError field0) launch,
     required TResult Function(String field0) joinError,
-    required TResult Function(String field0) anyhow,
+    required TResult Function(String msg, String backtrace) anyhow,
   }) {
     return launch(field0);
   }
@@ -1622,7 +1621,7 @@ class _$MyError_Launch implements MyError_Launch {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(VanillaLaunchError field0)? launch,
     TResult? Function(String field0)? joinError,
-    TResult? Function(String field0)? anyhow,
+    TResult? Function(String msg, String backtrace)? anyhow,
   }) {
     return launch?.call(field0);
   }
@@ -1632,7 +1631,7 @@ class _$MyError_Launch implements MyError_Launch {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(VanillaLaunchError field0)? launch,
     TResult Function(String field0)? joinError,
-    TResult Function(String field0)? anyhow,
+    TResult Function(String msg, String backtrace)? anyhow,
     required TResult orElse(),
   }) {
     if (launch != null) {
@@ -1680,7 +1679,6 @@ abstract class MyError_Launch implements MyError {
   const factory MyError_Launch(final VanillaLaunchError field0) =
       _$MyError_Launch;
 
-  @override
   VanillaLaunchError get field0;
   @JsonKey(ignore: true)
   _$$MyError_LaunchCopyWith<_$MyError_Launch> get copyWith =>
@@ -1753,7 +1751,7 @@ class _$MyError_JoinError implements MyError_JoinError {
   TResult when<TResult extends Object?>({
     required TResult Function(VanillaLaunchError field0) launch,
     required TResult Function(String field0) joinError,
-    required TResult Function(String field0) anyhow,
+    required TResult Function(String msg, String backtrace) anyhow,
   }) {
     return joinError(field0);
   }
@@ -1763,7 +1761,7 @@ class _$MyError_JoinError implements MyError_JoinError {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(VanillaLaunchError field0)? launch,
     TResult? Function(String field0)? joinError,
-    TResult? Function(String field0)? anyhow,
+    TResult? Function(String msg, String backtrace)? anyhow,
   }) {
     return joinError?.call(field0);
   }
@@ -1773,7 +1771,7 @@ class _$MyError_JoinError implements MyError_JoinError {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(VanillaLaunchError field0)? launch,
     TResult Function(String field0)? joinError,
-    TResult Function(String field0)? anyhow,
+    TResult Function(String msg, String backtrace)? anyhow,
     required TResult orElse(),
   }) {
     if (joinError != null) {
@@ -1820,7 +1818,6 @@ class _$MyError_JoinError implements MyError_JoinError {
 abstract class MyError_JoinError implements MyError {
   const factory MyError_JoinError(final String field0) = _$MyError_JoinError;
 
-  @override
   String get field0;
   @JsonKey(ignore: true)
   _$$MyError_JoinErrorCopyWith<_$MyError_JoinError> get copyWith =>
@@ -1833,7 +1830,7 @@ abstract class _$$MyError_AnyhowCopyWith<$Res> {
           _$MyError_Anyhow value, $Res Function(_$MyError_Anyhow) then) =
       __$$MyError_AnyhowCopyWithImpl<$Res>;
   @useResult
-  $Res call({String field0});
+  $Res call({String msg, String backtrace});
 }
 
 /// @nodoc
@@ -1847,12 +1844,17 @@ class __$$MyError_AnyhowCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? field0 = null,
+    Object? msg = null,
+    Object? backtrace = null,
   }) {
     return _then(_$MyError_Anyhow(
-      null == field0
-          ? _value.field0
-          : field0 // ignore: cast_nullable_to_non_nullable
+      msg: null == msg
+          ? _value.msg
+          : msg // ignore: cast_nullable_to_non_nullable
+              as String,
+      backtrace: null == backtrace
+          ? _value.backtrace
+          : backtrace // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }
@@ -1861,14 +1863,16 @@ class __$$MyError_AnyhowCopyWithImpl<$Res>
 /// @nodoc
 
 class _$MyError_Anyhow implements MyError_Anyhow {
-  const _$MyError_Anyhow(this.field0);
+  const _$MyError_Anyhow({required this.msg, required this.backtrace});
 
   @override
-  final String field0;
+  final String msg;
+  @override
+  final String backtrace;
 
   @override
   String toString() {
-    return 'MyError.anyhow(field0: $field0)';
+    return 'MyError.anyhow(msg: $msg, backtrace: $backtrace)';
   }
 
   @override
@@ -1876,11 +1880,13 @@ class _$MyError_Anyhow implements MyError_Anyhow {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$MyError_Anyhow &&
-            (identical(other.field0, field0) || other.field0 == field0));
+            (identical(other.msg, msg) || other.msg == msg) &&
+            (identical(other.backtrace, backtrace) ||
+                other.backtrace == backtrace));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, field0);
+  int get hashCode => Object.hash(runtimeType, msg, backtrace);
 
   @JsonKey(ignore: true)
   @override
@@ -1893,9 +1899,9 @@ class _$MyError_Anyhow implements MyError_Anyhow {
   TResult when<TResult extends Object?>({
     required TResult Function(VanillaLaunchError field0) launch,
     required TResult Function(String field0) joinError,
-    required TResult Function(String field0) anyhow,
+    required TResult Function(String msg, String backtrace) anyhow,
   }) {
-    return anyhow(field0);
+    return anyhow(msg, backtrace);
   }
 
   @override
@@ -1903,9 +1909,9 @@ class _$MyError_Anyhow implements MyError_Anyhow {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(VanillaLaunchError field0)? launch,
     TResult? Function(String field0)? joinError,
-    TResult? Function(String field0)? anyhow,
+    TResult? Function(String msg, String backtrace)? anyhow,
   }) {
-    return anyhow?.call(field0);
+    return anyhow?.call(msg, backtrace);
   }
 
   @override
@@ -1913,11 +1919,11 @@ class _$MyError_Anyhow implements MyError_Anyhow {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(VanillaLaunchError field0)? launch,
     TResult Function(String field0)? joinError,
-    TResult Function(String field0)? anyhow,
+    TResult Function(String msg, String backtrace)? anyhow,
     required TResult orElse(),
   }) {
     if (anyhow != null) {
-      return anyhow(field0);
+      return anyhow(msg, backtrace);
     }
     return orElse();
   }
@@ -1958,10 +1964,12 @@ class _$MyError_Anyhow implements MyError_Anyhow {
 }
 
 abstract class MyError_Anyhow implements MyError {
-  const factory MyError_Anyhow(final String field0) = _$MyError_Anyhow;
+  const factory MyError_Anyhow(
+      {required final String msg,
+      required final String backtrace}) = _$MyError_Anyhow;
 
-  @override
-  String get field0;
+  String get msg;
+  String get backtrace;
   @JsonKey(ignore: true)
   _$$MyError_AnyhowCopyWith<_$MyError_Anyhow> get copyWith =>
       throw _privateConstructorUsedError;
@@ -2573,26 +2581,25 @@ abstract class UILayoutValue_CompletedSetup implements UILayoutValue {
 
 /// @nodoc
 mixin _$VanillaLaunchError {
-  Object get field0 => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(DateTime field0) tokenExpire,
-    required TResult Function(CustomIoErrorKind field0) io,
-    required TResult Function(String field0) other,
+    required TResult Function(String msg, CustomIoErrorKind error) io,
+    required TResult Function(String msg, String backtrace) anyhow,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(DateTime field0)? tokenExpire,
-    TResult? Function(CustomIoErrorKind field0)? io,
-    TResult? Function(String field0)? other,
+    TResult? Function(String msg, CustomIoErrorKind error)? io,
+    TResult? Function(String msg, String backtrace)? anyhow,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(DateTime field0)? tokenExpire,
-    TResult Function(CustomIoErrorKind field0)? io,
-    TResult Function(String field0)? other,
+    TResult Function(String msg, CustomIoErrorKind error)? io,
+    TResult Function(String msg, String backtrace)? anyhow,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -2600,21 +2607,21 @@ mixin _$VanillaLaunchError {
   TResult map<TResult extends Object?>({
     required TResult Function(VanillaLaunchError_TokenExpire value) tokenExpire,
     required TResult Function(VanillaLaunchError_Io value) io,
-    required TResult Function(VanillaLaunchError_Other value) other,
+    required TResult Function(VanillaLaunchError_Anyhow value) anyhow,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(VanillaLaunchError_TokenExpire value)? tokenExpire,
     TResult? Function(VanillaLaunchError_Io value)? io,
-    TResult? Function(VanillaLaunchError_Other value)? other,
+    TResult? Function(VanillaLaunchError_Anyhow value)? anyhow,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(VanillaLaunchError_TokenExpire value)? tokenExpire,
     TResult Function(VanillaLaunchError_Io value)? io,
-    TResult Function(VanillaLaunchError_Other value)? other,
+    TResult Function(VanillaLaunchError_Anyhow value)? anyhow,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -2708,8 +2715,8 @@ class _$VanillaLaunchError_TokenExpire
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(DateTime field0) tokenExpire,
-    required TResult Function(CustomIoErrorKind field0) io,
-    required TResult Function(String field0) other,
+    required TResult Function(String msg, CustomIoErrorKind error) io,
+    required TResult Function(String msg, String backtrace) anyhow,
   }) {
     return tokenExpire(field0);
   }
@@ -2718,8 +2725,8 @@ class _$VanillaLaunchError_TokenExpire
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(DateTime field0)? tokenExpire,
-    TResult? Function(CustomIoErrorKind field0)? io,
-    TResult? Function(String field0)? other,
+    TResult? Function(String msg, CustomIoErrorKind error)? io,
+    TResult? Function(String msg, String backtrace)? anyhow,
   }) {
     return tokenExpire?.call(field0);
   }
@@ -2728,8 +2735,8 @@ class _$VanillaLaunchError_TokenExpire
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(DateTime field0)? tokenExpire,
-    TResult Function(CustomIoErrorKind field0)? io,
-    TResult Function(String field0)? other,
+    TResult Function(String msg, CustomIoErrorKind error)? io,
+    TResult Function(String msg, String backtrace)? anyhow,
     required TResult orElse(),
   }) {
     if (tokenExpire != null) {
@@ -2743,7 +2750,7 @@ class _$VanillaLaunchError_TokenExpire
   TResult map<TResult extends Object?>({
     required TResult Function(VanillaLaunchError_TokenExpire value) tokenExpire,
     required TResult Function(VanillaLaunchError_Io value) io,
-    required TResult Function(VanillaLaunchError_Other value) other,
+    required TResult Function(VanillaLaunchError_Anyhow value) anyhow,
   }) {
     return tokenExpire(this);
   }
@@ -2753,7 +2760,7 @@ class _$VanillaLaunchError_TokenExpire
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(VanillaLaunchError_TokenExpire value)? tokenExpire,
     TResult? Function(VanillaLaunchError_Io value)? io,
-    TResult? Function(VanillaLaunchError_Other value)? other,
+    TResult? Function(VanillaLaunchError_Anyhow value)? anyhow,
   }) {
     return tokenExpire?.call(this);
   }
@@ -2763,7 +2770,7 @@ class _$VanillaLaunchError_TokenExpire
   TResult maybeMap<TResult extends Object?>({
     TResult Function(VanillaLaunchError_TokenExpire value)? tokenExpire,
     TResult Function(VanillaLaunchError_Io value)? io,
-    TResult Function(VanillaLaunchError_Other value)? other,
+    TResult Function(VanillaLaunchError_Anyhow value)? anyhow,
     required TResult orElse(),
   }) {
     if (tokenExpire != null) {
@@ -2777,7 +2784,6 @@ abstract class VanillaLaunchError_TokenExpire implements VanillaLaunchError {
   const factory VanillaLaunchError_TokenExpire(final DateTime field0) =
       _$VanillaLaunchError_TokenExpire;
 
-  @override
   DateTime get field0;
   @JsonKey(ignore: true)
   _$$VanillaLaunchError_TokenExpireCopyWith<_$VanillaLaunchError_TokenExpire>
@@ -2790,7 +2796,7 @@ abstract class _$$VanillaLaunchError_IoCopyWith<$Res> {
           $Res Function(_$VanillaLaunchError_Io) then) =
       __$$VanillaLaunchError_IoCopyWithImpl<$Res>;
   @useResult
-  $Res call({CustomIoErrorKind field0});
+  $Res call({String msg, CustomIoErrorKind error});
 }
 
 /// @nodoc
@@ -2804,12 +2810,17 @@ class __$$VanillaLaunchError_IoCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? field0 = null,
+    Object? msg = null,
+    Object? error = null,
   }) {
     return _then(_$VanillaLaunchError_Io(
-      null == field0
-          ? _value.field0
-          : field0 // ignore: cast_nullable_to_non_nullable
+      msg: null == msg
+          ? _value.msg
+          : msg // ignore: cast_nullable_to_non_nullable
+              as String,
+      error: null == error
+          ? _value.error
+          : error // ignore: cast_nullable_to_non_nullable
               as CustomIoErrorKind,
     ));
   }
@@ -2818,14 +2829,16 @@ class __$$VanillaLaunchError_IoCopyWithImpl<$Res>
 /// @nodoc
 
 class _$VanillaLaunchError_Io implements VanillaLaunchError_Io {
-  const _$VanillaLaunchError_Io(this.field0);
+  const _$VanillaLaunchError_Io({required this.msg, required this.error});
 
   @override
-  final CustomIoErrorKind field0;
+  final String msg;
+  @override
+  final CustomIoErrorKind error;
 
   @override
   String toString() {
-    return 'VanillaLaunchError.io(field0: $field0)';
+    return 'VanillaLaunchError.io(msg: $msg, error: $error)';
   }
 
   @override
@@ -2833,11 +2846,12 @@ class _$VanillaLaunchError_Io implements VanillaLaunchError_Io {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$VanillaLaunchError_Io &&
-            (identical(other.field0, field0) || other.field0 == field0));
+            (identical(other.msg, msg) || other.msg == msg) &&
+            (identical(other.error, error) || other.error == error));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, field0);
+  int get hashCode => Object.hash(runtimeType, msg, error);
 
   @JsonKey(ignore: true)
   @override
@@ -2850,32 +2864,32 @@ class _$VanillaLaunchError_Io implements VanillaLaunchError_Io {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(DateTime field0) tokenExpire,
-    required TResult Function(CustomIoErrorKind field0) io,
-    required TResult Function(String field0) other,
+    required TResult Function(String msg, CustomIoErrorKind error) io,
+    required TResult Function(String msg, String backtrace) anyhow,
   }) {
-    return io(field0);
+    return io(msg, error);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(DateTime field0)? tokenExpire,
-    TResult? Function(CustomIoErrorKind field0)? io,
-    TResult? Function(String field0)? other,
+    TResult? Function(String msg, CustomIoErrorKind error)? io,
+    TResult? Function(String msg, String backtrace)? anyhow,
   }) {
-    return io?.call(field0);
+    return io?.call(msg, error);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(DateTime field0)? tokenExpire,
-    TResult Function(CustomIoErrorKind field0)? io,
-    TResult Function(String field0)? other,
+    TResult Function(String msg, CustomIoErrorKind error)? io,
+    TResult Function(String msg, String backtrace)? anyhow,
     required TResult orElse(),
   }) {
     if (io != null) {
-      return io(field0);
+      return io(msg, error);
     }
     return orElse();
   }
@@ -2885,7 +2899,7 @@ class _$VanillaLaunchError_Io implements VanillaLaunchError_Io {
   TResult map<TResult extends Object?>({
     required TResult Function(VanillaLaunchError_TokenExpire value) tokenExpire,
     required TResult Function(VanillaLaunchError_Io value) io,
-    required TResult Function(VanillaLaunchError_Other value) other,
+    required TResult Function(VanillaLaunchError_Anyhow value) anyhow,
   }) {
     return io(this);
   }
@@ -2895,7 +2909,7 @@ class _$VanillaLaunchError_Io implements VanillaLaunchError_Io {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(VanillaLaunchError_TokenExpire value)? tokenExpire,
     TResult? Function(VanillaLaunchError_Io value)? io,
-    TResult? Function(VanillaLaunchError_Other value)? other,
+    TResult? Function(VanillaLaunchError_Anyhow value)? anyhow,
   }) {
     return io?.call(this);
   }
@@ -2905,7 +2919,7 @@ class _$VanillaLaunchError_Io implements VanillaLaunchError_Io {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(VanillaLaunchError_TokenExpire value)? tokenExpire,
     TResult Function(VanillaLaunchError_Io value)? io,
-    TResult Function(VanillaLaunchError_Other value)? other,
+    TResult Function(VanillaLaunchError_Anyhow value)? anyhow,
     required TResult orElse(),
   }) {
     if (io != null) {
@@ -2916,42 +2930,49 @@ class _$VanillaLaunchError_Io implements VanillaLaunchError_Io {
 }
 
 abstract class VanillaLaunchError_Io implements VanillaLaunchError {
-  const factory VanillaLaunchError_Io(final CustomIoErrorKind field0) =
-      _$VanillaLaunchError_Io;
+  const factory VanillaLaunchError_Io(
+      {required final String msg,
+      required final CustomIoErrorKind error}) = _$VanillaLaunchError_Io;
 
-  @override
-  CustomIoErrorKind get field0;
+  String get msg;
+  CustomIoErrorKind get error;
   @JsonKey(ignore: true)
   _$$VanillaLaunchError_IoCopyWith<_$VanillaLaunchError_Io> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$VanillaLaunchError_OtherCopyWith<$Res> {
-  factory _$$VanillaLaunchError_OtherCopyWith(_$VanillaLaunchError_Other value,
-          $Res Function(_$VanillaLaunchError_Other) then) =
-      __$$VanillaLaunchError_OtherCopyWithImpl<$Res>;
+abstract class _$$VanillaLaunchError_AnyhowCopyWith<$Res> {
+  factory _$$VanillaLaunchError_AnyhowCopyWith(
+          _$VanillaLaunchError_Anyhow value,
+          $Res Function(_$VanillaLaunchError_Anyhow) then) =
+      __$$VanillaLaunchError_AnyhowCopyWithImpl<$Res>;
   @useResult
-  $Res call({String field0});
+  $Res call({String msg, String backtrace});
 }
 
 /// @nodoc
-class __$$VanillaLaunchError_OtherCopyWithImpl<$Res>
-    extends _$VanillaLaunchErrorCopyWithImpl<$Res, _$VanillaLaunchError_Other>
-    implements _$$VanillaLaunchError_OtherCopyWith<$Res> {
-  __$$VanillaLaunchError_OtherCopyWithImpl(_$VanillaLaunchError_Other _value,
-      $Res Function(_$VanillaLaunchError_Other) _then)
+class __$$VanillaLaunchError_AnyhowCopyWithImpl<$Res>
+    extends _$VanillaLaunchErrorCopyWithImpl<$Res, _$VanillaLaunchError_Anyhow>
+    implements _$$VanillaLaunchError_AnyhowCopyWith<$Res> {
+  __$$VanillaLaunchError_AnyhowCopyWithImpl(_$VanillaLaunchError_Anyhow _value,
+      $Res Function(_$VanillaLaunchError_Anyhow) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? field0 = null,
+    Object? msg = null,
+    Object? backtrace = null,
   }) {
-    return _then(_$VanillaLaunchError_Other(
-      null == field0
-          ? _value.field0
-          : field0 // ignore: cast_nullable_to_non_nullable
+    return _then(_$VanillaLaunchError_Anyhow(
+      msg: null == msg
+          ? _value.msg
+          : msg // ignore: cast_nullable_to_non_nullable
+              as String,
+      backtrace: null == backtrace
+          ? _value.backtrace
+          : backtrace // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }
@@ -2959,66 +2980,70 @@ class __$$VanillaLaunchError_OtherCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$VanillaLaunchError_Other implements VanillaLaunchError_Other {
-  const _$VanillaLaunchError_Other(this.field0);
+class _$VanillaLaunchError_Anyhow implements VanillaLaunchError_Anyhow {
+  const _$VanillaLaunchError_Anyhow(
+      {required this.msg, required this.backtrace});
 
   @override
-  final String field0;
+  final String msg;
+  @override
+  final String backtrace;
 
   @override
   String toString() {
-    return 'VanillaLaunchError.other(field0: $field0)';
+    return 'VanillaLaunchError.anyhow(msg: $msg, backtrace: $backtrace)';
   }
 
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$VanillaLaunchError_Other &&
-            (identical(other.field0, field0) || other.field0 == field0));
+            other is _$VanillaLaunchError_Anyhow &&
+            (identical(other.msg, msg) || other.msg == msg) &&
+            (identical(other.backtrace, backtrace) ||
+                other.backtrace == backtrace));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, field0);
+  int get hashCode => Object.hash(runtimeType, msg, backtrace);
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$VanillaLaunchError_OtherCopyWith<_$VanillaLaunchError_Other>
-      get copyWith =>
-          __$$VanillaLaunchError_OtherCopyWithImpl<_$VanillaLaunchError_Other>(
-              this, _$identity);
+  _$$VanillaLaunchError_AnyhowCopyWith<_$VanillaLaunchError_Anyhow>
+      get copyWith => __$$VanillaLaunchError_AnyhowCopyWithImpl<
+          _$VanillaLaunchError_Anyhow>(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(DateTime field0) tokenExpire,
-    required TResult Function(CustomIoErrorKind field0) io,
-    required TResult Function(String field0) other,
+    required TResult Function(String msg, CustomIoErrorKind error) io,
+    required TResult Function(String msg, String backtrace) anyhow,
   }) {
-    return other(field0);
+    return anyhow(msg, backtrace);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(DateTime field0)? tokenExpire,
-    TResult? Function(CustomIoErrorKind field0)? io,
-    TResult? Function(String field0)? other,
+    TResult? Function(String msg, CustomIoErrorKind error)? io,
+    TResult? Function(String msg, String backtrace)? anyhow,
   }) {
-    return other?.call(field0);
+    return anyhow?.call(msg, backtrace);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(DateTime field0)? tokenExpire,
-    TResult Function(CustomIoErrorKind field0)? io,
-    TResult Function(String field0)? other,
+    TResult Function(String msg, CustomIoErrorKind error)? io,
+    TResult Function(String msg, String backtrace)? anyhow,
     required TResult orElse(),
   }) {
-    if (other != null) {
-      return other(field0);
+    if (anyhow != null) {
+      return anyhow(msg, backtrace);
     }
     return orElse();
   }
@@ -3028,9 +3053,9 @@ class _$VanillaLaunchError_Other implements VanillaLaunchError_Other {
   TResult map<TResult extends Object?>({
     required TResult Function(VanillaLaunchError_TokenExpire value) tokenExpire,
     required TResult Function(VanillaLaunchError_Io value) io,
-    required TResult Function(VanillaLaunchError_Other value) other,
+    required TResult Function(VanillaLaunchError_Anyhow value) anyhow,
   }) {
-    return other(this);
+    return anyhow(this);
   }
 
   @override
@@ -3038,9 +3063,9 @@ class _$VanillaLaunchError_Other implements VanillaLaunchError_Other {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(VanillaLaunchError_TokenExpire value)? tokenExpire,
     TResult? Function(VanillaLaunchError_Io value)? io,
-    TResult? Function(VanillaLaunchError_Other value)? other,
+    TResult? Function(VanillaLaunchError_Anyhow value)? anyhow,
   }) {
-    return other?.call(this);
+    return anyhow?.call(this);
   }
 
   @override
@@ -3048,23 +3073,24 @@ class _$VanillaLaunchError_Other implements VanillaLaunchError_Other {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(VanillaLaunchError_TokenExpire value)? tokenExpire,
     TResult Function(VanillaLaunchError_Io value)? io,
-    TResult Function(VanillaLaunchError_Other value)? other,
+    TResult Function(VanillaLaunchError_Anyhow value)? anyhow,
     required TResult orElse(),
   }) {
-    if (other != null) {
-      return other(this);
+    if (anyhow != null) {
+      return anyhow(this);
     }
     return orElse();
   }
 }
 
-abstract class VanillaLaunchError_Other implements VanillaLaunchError {
-  const factory VanillaLaunchError_Other(final String field0) =
-      _$VanillaLaunchError_Other;
+abstract class VanillaLaunchError_Anyhow implements VanillaLaunchError {
+  const factory VanillaLaunchError_Anyhow(
+      {required final String msg,
+      required final String backtrace}) = _$VanillaLaunchError_Anyhow;
 
-  @override
-  String get field0;
+  String get msg;
+  String get backtrace;
   @JsonKey(ignore: true)
-  _$$VanillaLaunchError_OtherCopyWith<_$VanillaLaunchError_Other>
+  _$$VanillaLaunchError_AnyhowCopyWith<_$VanillaLaunchError_Anyhow>
       get copyWith => throw _privateConstructorUsedError;
 }

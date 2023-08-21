@@ -100,12 +100,15 @@ pub enum MyError {
     #[error("Join error")]
     JoinError(String),
     #[error("Anyhow error")]
-    Anyhow(String),
+    Anyhow { msg: String, backtrace: String },
 }
 
 impl From<anyhow::Error> for MyError {
     fn from(value: anyhow::Error) -> Self {
-        Self::Anyhow(value.backtrace().to_string())
+        Self::Anyhow {
+            msg: format!("{value:?}"),
+            backtrace: value.backtrace().to_string(),
+        }
     }
 }
 

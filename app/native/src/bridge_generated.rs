@@ -294,24 +294,10 @@ impl support::IntoDart for CustomIoErrorKind {
         match self {
             Self::NotFound => 0,
             Self::PermissionDenied => 1,
-            Self::ConnectionRefused => 2,
-            Self::ConnectionReset => 3,
-            Self::ConnectionAborted => 4,
-            Self::NotConnected => 5,
-            Self::AddrInUse => 6,
-            Self::AddrNotAvailable => 7,
-            Self::BrokenPipe => 8,
-            Self::AlreadyExists => 9,
-            Self::WouldBlock => 10,
-            Self::InvalidInput => 11,
-            Self::InvalidData => 12,
-            Self::TimedOut => 13,
-            Self::WriteZero => 14,
-            Self::Interrupted => 15,
-            Self::Unsupported => 16,
-            Self::UnexpectedEof => 17,
-            Self::OutOfMemory => 18,
-            Self::Other => 19,
+            Self::AlreadyExists => 2,
+            Self::InvalidInput => 3,
+            Self::TimedOut => 4,
+            Self::Other => 5,
         }
         .into_dart()
     }
@@ -488,7 +474,11 @@ impl support::IntoDart for MyError {
         match self {
             Self::Launch(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
             Self::JoinError(field0) => vec![1.into_dart(), field0.into_into_dart().into_dart()],
-            Self::Anyhow(field0) => vec![2.into_dart(), field0.into_into_dart().into_dart()],
+            Self::Anyhow { msg, backtrace } => vec![
+                2.into_dart(),
+                msg.into_into_dart().into_dart(),
+                backtrace.into_into_dart().into_dart(),
+            ],
         }
         .into_dart()
     }
@@ -548,8 +538,16 @@ impl support::IntoDart for VanillaLaunchError {
     fn into_dart(self) -> support::DartAbi {
         match self {
             Self::TokenExpire(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
-            Self::Io(field0) => vec![1.into_dart(), field0.into_into_dart().into_dart()],
-            Self::Other(field0) => vec![2.into_dart(), field0.into_into_dart().into_dart()],
+            Self::Io { msg, error } => vec![
+                1.into_dart(),
+                msg.into_into_dart().into_dart(),
+                error.into_into_dart().into_dart(),
+            ],
+            Self::Anyhow { msg, backtrace } => vec![
+                2.into_dart(),
+                msg.into_into_dart().into_dart(),
+                backtrace.into_into_dart().into_dart(),
+            ],
         }
         .into_dart()
     }
