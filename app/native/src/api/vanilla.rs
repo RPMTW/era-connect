@@ -3,7 +3,7 @@ pub mod library;
 pub mod rules;
 
 use chrono::{DateTime, Utc};
-use color_eyre::eyre::{Context, ContextCompat};
+use color_eyre::eyre::{eyre, Context, ContextCompat};
 use color_eyre::Result;
 use flutter_rust_bridge::RustOpaque;
 use futures::Future;
@@ -189,20 +189,16 @@ impl From<color_eyre::Report> for VanillaLaunchError {
         Self::Anyhow(format!("{value:?}"))
     }
 }
-impl From<anyhow::Error> for VanillaLaunchError {
-    fn from(value: anyhow::Error) -> Self {
-        Self::Anyhow(value.to_string())
-    }
-}
+
 impl From<std::io::Error> for CustomIoErrorKind {
     fn from(value: std::io::Error) -> Self {
         match value.kind() {
-            ErrorKind::NotFound => CustomIoErrorKind::NotFound,
-            ErrorKind::PermissionDenied => CustomIoErrorKind::PermissionDenied,
-            ErrorKind::AlreadyExists => CustomIoErrorKind::AlreadyExists,
-            ErrorKind::InvalidInput => CustomIoErrorKind::InvalidInput,
-            ErrorKind::TimedOut => CustomIoErrorKind::TimedOut,
-            _ => CustomIoErrorKind::Other,
+            ErrorKind::NotFound => Self::NotFound,
+            ErrorKind::PermissionDenied => Self::PermissionDenied,
+            ErrorKind::AlreadyExists => Self::AlreadyExists,
+            ErrorKind::InvalidInput => Self::InvalidInput,
+            ErrorKind::TimedOut => Self::TimedOut,
+            _ => Self::Other,
         }
     }
 }
@@ -345,12 +341,12 @@ pub async fn prepare_vanilla_download(
         additional_arguments: None,
     };
 
-    let current_os = os_version::detect()?;
+    let current_os = os_version::detect().map_err(|err| eyre!(err))?;
     let current_os_type = match current_os {
         os_version::OsVersion::Linux(_) => OsName::Linux,
         os_version::OsVersion::Windows(_) => OsName::Windows,
         os_version::OsVersion::MacOS(_) => OsName::Osx,
-        _ => return Err(anyhow::anyhow!("not supported").into()),
+        _ => return Err(eyre!("not supported").into()),
     };
 
     let mut jvm_options = JvmOptions {

@@ -1,4 +1,7 @@
-use anyhow::{Context, Result};
+use color_eyre::{
+    eyre::{eyre, Context, ContextCompat},
+    Result,
+};
 use core::fmt;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -54,10 +57,11 @@ pub fn get_rules(argument: &[Value]) -> Result<Vec<Rule>> {
         .map(|x| {
             Rule::deserialize(
                 x.get("rules")
-                    .expect("rules doen't exists")
+                    .context("rules doen't exists")?
                     .get(0)
-                    .expect("somehow rules exist but its empty"),
+                    .context("somehow rules exist but its empty")?,
             )
+            .map_err(|err| eyre!(err))
         })
         .collect();
     rules.context("Failed to collect/serialize rules")

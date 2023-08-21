@@ -8,7 +8,6 @@ use std::{
     },
 };
 
-use anyhow::anyhow;
 use color_eyre::eyre::{bail, eyre, Context};
 use color_eyre::{eyre::ContextCompat, Result};
 use log::{debug, error, warn};
@@ -149,12 +148,8 @@ pub async fn prepare_forge_download(
                 if path.exists() {
                     Ok(())
                 } else {
-                    fs::create_dir_all(
-                        path.parent()
-                            .context("library parent dir doesn't exist")
-                            .unwrap(),
-                    )
-                    .await?;
+                    fs::create_dir_all(path.parent().context("library parent dir doesn't exist")?)
+                        .await?;
                     let bytes = download_file(url, None).await?;
                     fs::write(path, bytes).await.map_err(|err| eyre!(err))
                 }
@@ -229,8 +224,7 @@ pub async fn process_forge(
         "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_owned(),
         None,
     )
-    .await
-    .unwrap();
+    .await?;
     for processor in processors {
         let jar = convert_maven_to_path(&processor.jar, Some(&folder))?;
         let processor_main_class = get_processor_main_class(jar.clone())
@@ -259,18 +253,15 @@ pub async fn process_forge(
                             })
                         })
                         .context("failed to acquire server url")?;
-                    let path = std::env::current_dir()?.join(extract_filename(url).unwrap());
+                    let path = std::env::current_dir()?.join(extract_filename(url)?);
                     if !path.exists() {
                         fs::create_dir_all(
                             path.parent()
                                 .context("failed to get parent dir of server jar")?,
                         )
                         .await?;
-                        let bytes = download_file(url.to_owned(), None).await.unwrap();
-                        fs::write(&path, bytes)
-                            .await
-                            .map_err(|err| anyhow!(err))
-                            .unwrap();
+                        let bytes = download_file(url.to_owned(), None).await?;
+                        fs::write(&path, bytes).await.map_err(|err| eyre!(err))?;
                     }
                     side = x.to_string();
                     minecraft_jar = path.to_string_lossy().to_string();

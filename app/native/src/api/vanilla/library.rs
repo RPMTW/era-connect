@@ -98,11 +98,11 @@ pub async fn parallel_library(
                 let (process_native, library_extension) = os_match(library, &current_os_type);
                 let non_native_download_path = folder_clone.join(&path);
                 let non_native_redownload = if non_native_download_path.exists() {
-                    if let Err(x) = if !process_native {
+                    if let Err(x) = if process_native {
+                        Ok(())
+                    } else {
                         validate_sha1(&non_native_download_path, &library.downloads.artifact.sha1)
                             .await
-                    } else {
-                        Ok(())
                     } {
                         error!("{x}, \nredownloading.");
                         true
