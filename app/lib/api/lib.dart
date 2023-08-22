@@ -1,6 +1,5 @@
 import 'ffi.dart' show api;
 
-export 'ffi.dart' show api;
 export 'storage/lib.dart';
 export 'authentication/lib.dart';
 

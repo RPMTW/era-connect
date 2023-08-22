@@ -16,6 +16,9 @@ clean:
     cd app flutter clean
     cd native && cargo clean
 
+run: 
+    cd app && flutter pub get && flutter run
+
 test:
     dart pub global activate full_coverage
     rm -rf coverage

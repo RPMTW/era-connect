@@ -51,7 +51,7 @@ pub enum LoginFlowStage {
 pub enum LoginFlowErrors {
     XstsError(XstsTokenErrorType),
     GameNotOwned,
-    UnknownError,
+    UnknownError(String),
 }
 
 type OAuthClient = oauth2::Client<

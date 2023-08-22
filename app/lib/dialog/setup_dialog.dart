@@ -163,7 +163,7 @@ class _LoginAccount extends StatelessWidget {
                 Expanded(
                   child: accounts.isEmpty
                       ? _buildLoginButton(context)
-                      : _buildAccountTile(accounts.first),
+                      : _buildAccountTile(context, accounts.first),
                 ),
               ],
             ),
@@ -179,12 +179,34 @@ class _LoginAccount extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountTile(MinecraftAccount account) {
-    print(account);
+  Widget _buildAccountTile(BuildContext context, MinecraftAccount account) {
+    return Material(
+      child: ListTile(
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: account.skins.first.renderHead(size: 50),
+        ),
+        title: Text(account.username),
+        subtitle: Text(
+          'Minecraft 帳號',
+          style: TextStyle(color: context.theme.tertiaryTextColor),
+        ),
+        trailing: EraDialogButton.textSecondary(
+          text: '重新登入',
+          onPressed: () async {
+            await storageApi.accountStorage.removeAccount(account.uuid);
 
-    return ListTile(
-      title: Text(account.username),
-      subtitle: const Text('Minecraft 帳號'),
+            if (!context.mounted) return;
+            _showLoginAccountDialog(context);
+          },
+        ),
+        tileColor: context.theme.deepBackgroundColor,
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+      ),
     );
   }
 
@@ -200,13 +222,15 @@ class _LoginAccount extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 22),
       ),
-      onPressed: () {
-        showEraDialog(
-          context: context,
-          barrierDismissible: true,
-          dialog: const LoginAccountDialog(),
-        );
-      },
+      onPressed: () => _showLoginAccountDialog(context),
+    );
+  }
+
+  Future<void> _showLoginAccountDialog(BuildContext context) {
+    return showEraDialog(
+      context: context,
+      barrierDismissible: true,
+      dialog: const LoginAccountDialog(),
     );
   }
 }

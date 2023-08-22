@@ -43,3 +43,4 @@ chrono = "0.4.26"
 fern = "0.6.2"
 oauth2 = "4.4.1"
 uuid = { version = "1.4.1", features = ["serde", "v4"] }
+image = "0.24.7"

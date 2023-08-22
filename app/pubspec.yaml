@@ -60,6 +60,7 @@ flutter:
   assets:
     - assets/icons/
     - assets/i18n/
+    - assets/images/
 
   fonts:
     - family: GenSenRounded

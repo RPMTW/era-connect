@@ -177,22 +177,39 @@ class NativeImpl implements Native {
         argNames: ["key"],
       );
 
-  Future<void> setAccountStorage(
-      {required AccountStorageValue value, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_account_storage_value(value);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_set_account_storage(port_, arg0),
-      parseSuccessData: _wire2api_unit,
-      constMeta: kSetAccountStorageConstMeta,
-      argValues: [value],
+  String? getSkinFilePath({required MinecraftSkin skin, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_minecraft_skin(skin);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_get_skin_file_path(arg0),
+      parseSuccessData: _wire2api_opt_String,
+      constMeta: kGetSkinFilePathConstMeta,
+      argValues: [skin],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kSetAccountStorageConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kGetSkinFilePathConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "set_account_storage",
-        argNames: ["value"],
+        debugName: "get_skin_file_path",
+        argNames: ["skin"],
+      );
+
+  Future<void> removeMinecraftAccount({required UuidValue uuid, dynamic hint}) {
+    var arg0 = _platform.api2wire_Uuid(uuid);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_remove_minecraft_account(port_, arg0),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kRemoveMinecraftAccountConstMeta,
+      argValues: [uuid],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kRemoveMinecraftAccountConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "remove_minecraft_account",
+        argNames: ["uuid"],
       );
 
   Stream<LoginFlowEvent> minecraftLoginFlow({dynamic hint}) {
@@ -313,7 +330,9 @@ class NativeImpl implements Native {
       case 1:
         return LoginFlowErrors_GameNotOwned();
       case 2:
-        return LoginFlowErrors_UnknownError();
+        return LoginFlowErrors_UnknownError(
+          _wire2api_String(raw[1]),
+        );
       default:
         throw Exception("unreachable");
     }
@@ -386,6 +405,10 @@ class NativeImpl implements Native {
 
   MinecraftSkinVariant _wire2api_minecraft_skin_variant(dynamic raw) {
     return MinecraftSkinVariant.values[raw as int];
+  }
+
+  String? _wire2api_opt_String(dynamic raw) {
+    return raw == null ? null : _wire2api_String(raw);
   }
 
   UuidValue? _wire2api_opt_Uuid(dynamic raw) {
@@ -487,10 +510,10 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
-  ffi.Pointer<wire_AccountStorageValue>
-      api2wire_box_autoadd_account_storage_value(AccountStorageValue raw) {
-    final ptr = inner.new_box_autoadd_account_storage_value_0();
-    _api_fill_to_wire_account_storage_value(raw, ptr.ref);
+  ffi.Pointer<wire_MinecraftSkin> api2wire_box_autoadd_minecraft_skin(
+      MinecraftSkin raw) {
+    final ptr = inner.new_box_autoadd_minecraft_skin_0();
+    _api_fill_to_wire_minecraft_skin(raw, ptr.ref);
     return ptr;
   }
 
@@ -503,46 +526,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
-  int api2wire_i64(int raw) {
-    return raw;
-  }
-
-  @protected
-  ffi.Pointer<wire_list_minecraft_account> api2wire_list_minecraft_account(
-      List<MinecraftAccount> raw) {
-    final ans = inner.new_list_minecraft_account_0(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      _api_fill_to_wire_minecraft_account(raw[i], ans.ref.ptr[i]);
-    }
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_list_minecraft_cape> api2wire_list_minecraft_cape(
-      List<MinecraftCape> raw) {
-    final ans = inner.new_list_minecraft_cape_0(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      _api_fill_to_wire_minecraft_cape(raw[i], ans.ref.ptr[i]);
-    }
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_list_minecraft_skin> api2wire_list_minecraft_skin(
-      List<MinecraftSkin> raw) {
-    final ans = inner.new_list_minecraft_skin_0(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      _api_fill_to_wire_minecraft_skin(raw[i], ans.ref.ptr[i]);
-    }
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_uint_8_list> api2wire_opt_Uuid(UuidValue? raw) {
-    return raw == null ? ffi.nullptr : api2wire_Uuid(raw);
-  }
-
-  @protected
   ffi.Pointer<wire_uint_8_list> api2wire_uint_8_list(Uint8List raw) {
     final ans = inner.new_uint_8_list_0(raw.length);
     ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
@@ -552,57 +535,14 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 
 // Section: api_fill_to_wire
 
-  void _api_fill_to_wire_account_storage_value(
-      AccountStorageValue apiObj, wire_AccountStorageValue wireObj) {
-    if (apiObj is AccountStorageValue_Accounts) {
-      var pre_field0 = api2wire_list_minecraft_account(apiObj.field0);
-      wireObj.tag = 0;
-      wireObj.kind = inner.inflate_AccountStorageValue_Accounts();
-      wireObj.kind.ref.Accounts.ref.field0 = pre_field0;
-      return;
-    }
-    if (apiObj is AccountStorageValue_MainAccount) {
-      var pre_field0 = api2wire_opt_Uuid(apiObj.field0);
-      wireObj.tag = 1;
-      wireObj.kind = inner.inflate_AccountStorageValue_MainAccount();
-      wireObj.kind.ref.MainAccount.ref.field0 = pre_field0;
-      return;
-    }
-  }
-
-  void _api_fill_to_wire_account_token(
-      AccountToken apiObj, wire_AccountToken wireObj) {
-    wireObj.token = api2wire_String(apiObj.token);
-    wireObj.expires_at = api2wire_i64(apiObj.expiresAt);
-  }
-
-  void _api_fill_to_wire_box_autoadd_account_storage_value(
-      AccountStorageValue apiObj,
-      ffi.Pointer<wire_AccountStorageValue> wireObj) {
-    _api_fill_to_wire_account_storage_value(apiObj, wireObj.ref);
+  void _api_fill_to_wire_box_autoadd_minecraft_skin(
+      MinecraftSkin apiObj, ffi.Pointer<wire_MinecraftSkin> wireObj) {
+    _api_fill_to_wire_minecraft_skin(apiObj, wireObj.ref);
   }
 
   void _api_fill_to_wire_box_autoadd_ui_layout_value(
       UILayoutValue apiObj, ffi.Pointer<wire_UILayoutValue> wireObj) {
     _api_fill_to_wire_ui_layout_value(apiObj, wireObj.ref);
-  }
-
-  void _api_fill_to_wire_minecraft_account(
-      MinecraftAccount apiObj, wire_MinecraftAccount wireObj) {
-    wireObj.username = api2wire_String(apiObj.username);
-    wireObj.uuid = api2wire_Uuid(apiObj.uuid);
-    _api_fill_to_wire_account_token(apiObj.accessToken, wireObj.access_token);
-    _api_fill_to_wire_account_token(apiObj.refreshToken, wireObj.refresh_token);
-    wireObj.skins = api2wire_list_minecraft_skin(apiObj.skins);
-    wireObj.capes = api2wire_list_minecraft_cape(apiObj.capes);
-  }
-
-  void _api_fill_to_wire_minecraft_cape(
-      MinecraftCape apiObj, wire_MinecraftCape wireObj) {
-    wireObj.id = api2wire_Uuid(apiObj.id);
-    wireObj.state = api2wire_String(apiObj.state);
-    wireObj.url = api2wire_String(apiObj.url);
-    wireObj.alias = api2wire_String(apiObj.alias);
   }
 
   void _api_fill_to_wire_minecraft_skin(
@@ -852,23 +792,37 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_get_account_storage =
       _wire_get_account_storagePtr.asFunction<WireSyncReturn Function(int)>();
 
-  void wire_set_account_storage(
-    int port_,
-    ffi.Pointer<wire_AccountStorageValue> value,
+  WireSyncReturn wire_get_skin_file_path(
+    ffi.Pointer<wire_MinecraftSkin> skin,
   ) {
-    return _wire_set_account_storage(
-      port_,
-      value,
+    return _wire_get_skin_file_path(
+      skin,
     );
   }
 
-  late final _wire_set_account_storagePtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(
-                  ffi.Int64, ffi.Pointer<wire_AccountStorageValue>)>>(
-      'wire_set_account_storage');
-  late final _wire_set_account_storage = _wire_set_account_storagePtr
-      .asFunction<void Function(int, ffi.Pointer<wire_AccountStorageValue>)>();
+  late final _wire_get_skin_file_pathPtr = _lookup<
+      ffi.NativeFunction<
+          WireSyncReturn Function(
+              ffi.Pointer<wire_MinecraftSkin>)>>('wire_get_skin_file_path');
+  late final _wire_get_skin_file_path = _wire_get_skin_file_pathPtr
+      .asFunction<WireSyncReturn Function(ffi.Pointer<wire_MinecraftSkin>)>();
+
+  void wire_remove_minecraft_account(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> uuid,
+  ) {
+    return _wire_remove_minecraft_account(
+      port_,
+      uuid,
+    );
+  }
+
+  late final _wire_remove_minecraft_accountPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_remove_minecraft_account');
+  late final _wire_remove_minecraft_account = _wire_remove_minecraft_accountPtr
+      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_minecraft_login_flow(
     int port_,
@@ -884,17 +838,16 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_minecraft_login_flow =
       _wire_minecraft_login_flowPtr.asFunction<void Function(int)>();
 
-  ffi.Pointer<wire_AccountStorageValue>
-      new_box_autoadd_account_storage_value_0() {
-    return _new_box_autoadd_account_storage_value_0();
+  ffi.Pointer<wire_MinecraftSkin> new_box_autoadd_minecraft_skin_0() {
+    return _new_box_autoadd_minecraft_skin_0();
   }
 
-  late final _new_box_autoadd_account_storage_value_0Ptr = _lookup<
-          ffi.NativeFunction<ffi.Pointer<wire_AccountStorageValue> Function()>>(
-      'new_box_autoadd_account_storage_value_0');
-  late final _new_box_autoadd_account_storage_value_0 =
-      _new_box_autoadd_account_storage_value_0Ptr
-          .asFunction<ffi.Pointer<wire_AccountStorageValue> Function()>();
+  late final _new_box_autoadd_minecraft_skin_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_MinecraftSkin> Function()>>(
+          'new_box_autoadd_minecraft_skin_0');
+  late final _new_box_autoadd_minecraft_skin_0 =
+      _new_box_autoadd_minecraft_skin_0Ptr
+          .asFunction<ffi.Pointer<wire_MinecraftSkin> Function()>();
 
   ffi.Pointer<wire_UILayoutValue> new_box_autoadd_ui_layout_value_0() {
     return _new_box_autoadd_ui_layout_value_0();
@@ -907,51 +860,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _new_box_autoadd_ui_layout_value_0Ptr
           .asFunction<ffi.Pointer<wire_UILayoutValue> Function()>();
 
-  ffi.Pointer<wire_list_minecraft_account> new_list_minecraft_account_0(
-    int len,
-  ) {
-    return _new_list_minecraft_account_0(
-      len,
-    );
-  }
-
-  late final _new_list_minecraft_account_0Ptr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<wire_list_minecraft_account> Function(
-              ffi.Int32)>>('new_list_minecraft_account_0');
-  late final _new_list_minecraft_account_0 = _new_list_minecraft_account_0Ptr
-      .asFunction<ffi.Pointer<wire_list_minecraft_account> Function(int)>();
-
-  ffi.Pointer<wire_list_minecraft_cape> new_list_minecraft_cape_0(
-    int len,
-  ) {
-    return _new_list_minecraft_cape_0(
-      len,
-    );
-  }
-
-  late final _new_list_minecraft_cape_0Ptr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<wire_list_minecraft_cape> Function(
-              ffi.Int32)>>('new_list_minecraft_cape_0');
-  late final _new_list_minecraft_cape_0 = _new_list_minecraft_cape_0Ptr
-      .asFunction<ffi.Pointer<wire_list_minecraft_cape> Function(int)>();
-
-  ffi.Pointer<wire_list_minecraft_skin> new_list_minecraft_skin_0(
-    int len,
-  ) {
-    return _new_list_minecraft_skin_0(
-      len,
-    );
-  }
-
-  late final _new_list_minecraft_skin_0Ptr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<wire_list_minecraft_skin> Function(
-              ffi.Int32)>>('new_list_minecraft_skin_0');
-  late final _new_list_minecraft_skin_0 = _new_list_minecraft_skin_0Ptr
-      .asFunction<ffi.Pointer<wire_list_minecraft_skin> Function(int)>();
-
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,
   ) {
@@ -961,34 +869,11 @@ class NativeWire implements FlutterRustBridgeWireBase {
   }
 
   late final _new_uint_8_list_0Ptr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<wire_uint_8_list> Function(
-              ffi.Int32)>>('new_uint_8_list_0');
+          ffi
+          .NativeFunction<ffi.Pointer<wire_uint_8_list> Function(ffi.Int32)>>(
+      'new_uint_8_list_0');
   late final _new_uint_8_list_0 = _new_uint_8_list_0Ptr
       .asFunction<ffi.Pointer<wire_uint_8_list> Function(int)>();
-
-  ffi.Pointer<AccountStorageValueKind> inflate_AccountStorageValue_Accounts() {
-    return _inflate_AccountStorageValue_Accounts();
-  }
-
-  late final _inflate_AccountStorageValue_AccountsPtr = _lookup<
-          ffi.NativeFunction<ffi.Pointer<AccountStorageValueKind> Function()>>(
-      'inflate_AccountStorageValue_Accounts');
-  late final _inflate_AccountStorageValue_Accounts =
-      _inflate_AccountStorageValue_AccountsPtr
-          .asFunction<ffi.Pointer<AccountStorageValueKind> Function()>();
-
-  ffi.Pointer<AccountStorageValueKind>
-      inflate_AccountStorageValue_MainAccount() {
-    return _inflate_AccountStorageValue_MainAccount();
-  }
-
-  late final _inflate_AccountStorageValue_MainAccountPtr = _lookup<
-          ffi.NativeFunction<ffi.Pointer<AccountStorageValueKind> Function()>>(
-      'inflate_AccountStorageValue_MainAccount');
-  late final _inflate_AccountStorageValue_MainAccount =
-      _inflate_AccountStorageValue_MainAccountPtr
-          .asFunction<ffi.Pointer<AccountStorageValueKind> Function()>();
 
   ffi.Pointer<UILayoutValueKind> inflate_UILayoutValue_CompletedSetup() {
     return _inflate_UILayoutValue_CompletedSetup();
@@ -1041,13 +926,6 @@ final class wire_uint_8_list extends ffi.Struct {
   external int len;
 }
 
-final class wire_AccountToken extends ffi.Struct {
-  external ffi.Pointer<wire_uint_8_list> token;
-
-  @ffi.Int64()
-  external int expires_at;
-}
-
 final class wire_MinecraftSkin extends ffi.Struct {
   external ffi.Pointer<wire_uint_8_list> id;
 
@@ -1057,72 +935,6 @@ final class wire_MinecraftSkin extends ffi.Struct {
 
   @ffi.Int32()
   external int variant;
-}
-
-final class wire_list_minecraft_skin extends ffi.Struct {
-  external ffi.Pointer<wire_MinecraftSkin> ptr;
-
-  @ffi.Int32()
-  external int len;
-}
-
-final class wire_MinecraftCape extends ffi.Struct {
-  external ffi.Pointer<wire_uint_8_list> id;
-
-  external ffi.Pointer<wire_uint_8_list> state;
-
-  external ffi.Pointer<wire_uint_8_list> url;
-
-  external ffi.Pointer<wire_uint_8_list> alias;
-}
-
-final class wire_list_minecraft_cape extends ffi.Struct {
-  external ffi.Pointer<wire_MinecraftCape> ptr;
-
-  @ffi.Int32()
-  external int len;
-}
-
-final class wire_MinecraftAccount extends ffi.Struct {
-  external ffi.Pointer<wire_uint_8_list> username;
-
-  external ffi.Pointer<wire_uint_8_list> uuid;
-
-  external wire_AccountToken access_token;
-
-  external wire_AccountToken refresh_token;
-
-  external ffi.Pointer<wire_list_minecraft_skin> skins;
-
-  external ffi.Pointer<wire_list_minecraft_cape> capes;
-}
-
-final class wire_list_minecraft_account extends ffi.Struct {
-  external ffi.Pointer<wire_MinecraftAccount> ptr;
-
-  @ffi.Int32()
-  external int len;
-}
-
-final class wire_AccountStorageValue_Accounts extends ffi.Struct {
-  external ffi.Pointer<wire_list_minecraft_account> field0;
-}
-
-final class wire_AccountStorageValue_MainAccount extends ffi.Struct {
-  external ffi.Pointer<wire_uint_8_list> field0;
-}
-
-final class AccountStorageValueKind extends ffi.Union {
-  external ffi.Pointer<wire_AccountStorageValue_Accounts> Accounts;
-
-  external ffi.Pointer<wire_AccountStorageValue_MainAccount> MainAccount;
-}
-
-final class wire_AccountStorageValue extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external ffi.Pointer<AccountStorageValueKind> kind;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<

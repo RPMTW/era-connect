@@ -41,4 +41,11 @@ impl AccountStorage {
             self.main_account = Some(uuid);
         }
     }
+
+    pub fn remove_account(&mut self, uuid: Uuid) {
+        self.accounts.retain(|a| a.uuid != uuid);
+        if self.main_account == Some(uuid) {
+            self.main_account = None;
+        }
+    }
 }

@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class LoginAccountDialog extends StatelessWidget {
-  const LoginAccountDialog({super.key});
+  final VoidCallback? successCallback;
+
+  const LoginAccountDialog({super.key, this.successCallback});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +22,8 @@ class LoginAccountDialog extends StatelessWidget {
 
         return const EraAlertDialog(
           title: '處理中......',
-          description: '正在向 Microsoft 請求資料中，請稍等約 1 ~ 3 秒鐘',
+          description: '正在向 Microsoft 請求資料中，請稍等約 1 ~ 2 秒鐘',
+          loadingIndicator: true,
         );
       },
     );
@@ -42,6 +45,7 @@ class LoginAccountDialog extends StatelessWidget {
               EraDialogButton.iconPrimary(
                 icon: const Icon(Icons.check_rounded),
                 onPressed: () {
+                  successCallback?.call();
                   Navigator.of(context).pop();
                 },
               )
@@ -64,6 +68,7 @@ class LoginAccountDialog extends StatelessWidget {
                 return const EraAlertDialog(
                   title: '正在驗證',
                   description: '我們正在為您登入帳號中，請稍等一下。',
+                  loadingIndicator: true,
                 );
               }
             }
@@ -90,7 +95,7 @@ class LoginAccountDialog extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                 decoration: BoxDecoration(
-                    color: context.theme.deepBackgroundColor,
+                    color: context.theme.dialogBarrierColor,
                     borderRadius: BorderRadius.circular(10)),
                 child: Text(
                   code,

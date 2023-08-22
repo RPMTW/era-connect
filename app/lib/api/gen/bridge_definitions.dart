@@ -49,10 +49,13 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kGetAccountStorageConstMeta;
 
-  Future<void> setAccountStorage(
-      {required AccountStorageValue value, dynamic hint});
+  String? getSkinFilePath({required MinecraftSkin skin, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kSetAccountStorageConstMeta;
+  FlutterRustBridgeTaskConstMeta get kGetSkinFilePathConstMeta;
+
+  Future<void> removeMinecraftAccount({required UuidValue uuid, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kRemoveMinecraftAccountConstMeta;
 
   Stream<LoginFlowEvent> minecraftLoginFlow({dynamic hint});
 
@@ -104,7 +107,9 @@ sealed class LoginFlowErrors with _$LoginFlowErrors {
     XstsTokenErrorType field0,
   ) = LoginFlowErrors_XstsError;
   const factory LoginFlowErrors.gameNotOwned() = LoginFlowErrors_GameNotOwned;
-  const factory LoginFlowErrors.unknownError() = LoginFlowErrors_UnknownError;
+  const factory LoginFlowErrors.unknownError(
+    String field0,
+  ) = LoginFlowErrors_UnknownError;
 }
 
 @freezed

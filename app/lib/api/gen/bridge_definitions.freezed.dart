@@ -506,21 +506,21 @@ mixin _$LoginFlowErrors {
   TResult when<TResult extends Object?>({
     required TResult Function(XstsTokenErrorType field0) xstsError,
     required TResult Function() gameNotOwned,
-    required TResult Function() unknownError,
+    required TResult Function(String field0) unknownError,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(XstsTokenErrorType field0)? xstsError,
     TResult? Function()? gameNotOwned,
-    TResult? Function()? unknownError,
+    TResult? Function(String field0)? unknownError,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(XstsTokenErrorType field0)? xstsError,
     TResult Function()? gameNotOwned,
-    TResult Function()? unknownError,
+    TResult Function(String field0)? unknownError,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -634,7 +634,7 @@ class _$LoginFlowErrors_XstsError implements LoginFlowErrors_XstsError {
   TResult when<TResult extends Object?>({
     required TResult Function(XstsTokenErrorType field0) xstsError,
     required TResult Function() gameNotOwned,
-    required TResult Function() unknownError,
+    required TResult Function(String field0) unknownError,
   }) {
     return xstsError(field0);
   }
@@ -644,7 +644,7 @@ class _$LoginFlowErrors_XstsError implements LoginFlowErrors_XstsError {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(XstsTokenErrorType field0)? xstsError,
     TResult? Function()? gameNotOwned,
-    TResult? Function()? unknownError,
+    TResult? Function(String field0)? unknownError,
   }) {
     return xstsError?.call(field0);
   }
@@ -654,7 +654,7 @@ class _$LoginFlowErrors_XstsError implements LoginFlowErrors_XstsError {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(XstsTokenErrorType field0)? xstsError,
     TResult Function()? gameNotOwned,
-    TResult Function()? unknownError,
+    TResult Function(String field0)? unknownError,
     required TResult orElse(),
   }) {
     if (xstsError != null) {
@@ -751,7 +751,7 @@ class _$LoginFlowErrors_GameNotOwned implements LoginFlowErrors_GameNotOwned {
   TResult when<TResult extends Object?>({
     required TResult Function(XstsTokenErrorType field0) xstsError,
     required TResult Function() gameNotOwned,
-    required TResult Function() unknownError,
+    required TResult Function(String field0) unknownError,
   }) {
     return gameNotOwned();
   }
@@ -761,7 +761,7 @@ class _$LoginFlowErrors_GameNotOwned implements LoginFlowErrors_GameNotOwned {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(XstsTokenErrorType field0)? xstsError,
     TResult? Function()? gameNotOwned,
-    TResult? Function()? unknownError,
+    TResult? Function(String field0)? unknownError,
   }) {
     return gameNotOwned?.call();
   }
@@ -771,7 +771,7 @@ class _$LoginFlowErrors_GameNotOwned implements LoginFlowErrors_GameNotOwned {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(XstsTokenErrorType field0)? xstsError,
     TResult Function()? gameNotOwned,
-    TResult Function()? unknownError,
+    TResult Function(String field0)? unknownError,
     required TResult orElse(),
   }) {
     if (gameNotOwned != null) {
@@ -825,6 +825,8 @@ abstract class _$$LoginFlowErrors_UnknownErrorCopyWith<$Res> {
           _$LoginFlowErrors_UnknownError value,
           $Res Function(_$LoginFlowErrors_UnknownError) then) =
       __$$LoginFlowErrors_UnknownErrorCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String field0});
 }
 
 /// @nodoc
@@ -835,36 +837,60 @@ class __$$LoginFlowErrors_UnknownErrorCopyWithImpl<$Res>
       _$LoginFlowErrors_UnknownError _value,
       $Res Function(_$LoginFlowErrors_UnknownError) _then)
       : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$LoginFlowErrors_UnknownError(
+      null == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
 }
 
 /// @nodoc
 
 class _$LoginFlowErrors_UnknownError implements LoginFlowErrors_UnknownError {
-  const _$LoginFlowErrors_UnknownError();
+  const _$LoginFlowErrors_UnknownError(this.field0);
+
+  @override
+  final String field0;
 
   @override
   String toString() {
-    return 'LoginFlowErrors.unknownError()';
+    return 'LoginFlowErrors.unknownError(field0: $field0)';
   }
 
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LoginFlowErrors_UnknownError);
+            other is _$LoginFlowErrors_UnknownError &&
+            (identical(other.field0, field0) || other.field0 == field0));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$LoginFlowErrors_UnknownErrorCopyWith<_$LoginFlowErrors_UnknownError>
+      get copyWith => __$$LoginFlowErrors_UnknownErrorCopyWithImpl<
+          _$LoginFlowErrors_UnknownError>(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(XstsTokenErrorType field0) xstsError,
     required TResult Function() gameNotOwned,
-    required TResult Function() unknownError,
+    required TResult Function(String field0) unknownError,
   }) {
-    return unknownError();
+    return unknownError(field0);
   }
 
   @override
@@ -872,9 +898,9 @@ class _$LoginFlowErrors_UnknownError implements LoginFlowErrors_UnknownError {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(XstsTokenErrorType field0)? xstsError,
     TResult? Function()? gameNotOwned,
-    TResult? Function()? unknownError,
+    TResult? Function(String field0)? unknownError,
   }) {
-    return unknownError?.call();
+    return unknownError?.call(field0);
   }
 
   @override
@@ -882,11 +908,11 @@ class _$LoginFlowErrors_UnknownError implements LoginFlowErrors_UnknownError {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(XstsTokenErrorType field0)? xstsError,
     TResult Function()? gameNotOwned,
-    TResult Function()? unknownError,
+    TResult Function(String field0)? unknownError,
     required TResult orElse(),
   }) {
     if (unknownError != null) {
-      return unknownError();
+      return unknownError(field0);
     }
     return orElse();
   }
@@ -927,7 +953,13 @@ class _$LoginFlowErrors_UnknownError implements LoginFlowErrors_UnknownError {
 }
 
 abstract class LoginFlowErrors_UnknownError implements LoginFlowErrors {
-  const factory LoginFlowErrors_UnknownError() = _$LoginFlowErrors_UnknownError;
+  const factory LoginFlowErrors_UnknownError(final String field0) =
+      _$LoginFlowErrors_UnknownError;
+
+  String get field0;
+  @JsonKey(ignore: true)
+  _$$LoginFlowErrors_UnknownErrorCopyWith<_$LoginFlowErrors_UnknownError>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc

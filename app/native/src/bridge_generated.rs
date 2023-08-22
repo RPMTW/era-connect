@@ -131,19 +131,34 @@ fn wire_get_account_storage_impl(
         },
     )
 }
-fn wire_set_account_storage_impl(
+fn wire_get_skin_file_path_impl(
+    skin: impl Wire2Api<MinecraftSkin> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "get_skin_file_path",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_skin = skin.wire2api();
+            Ok(get_skin_file_path(api_skin))
+        },
+    )
+}
+fn wire_remove_minecraft_account_impl(
     port_: MessagePort,
-    value: impl Wire2Api<AccountStorageValue> + UnwindSafe,
+    uuid: impl Wire2Api<uuid::Uuid> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
-            debug_name: "set_account_storage",
+            debug_name: "remove_minecraft_account",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
         move || {
-            let api_value = value.wire2api();
-            move |task_callback| set_account_storage(api_value)
+            let api_uuid = uuid.wire2api();
+            move |task_callback| remove_minecraft_account(api_uuid)
         },
     )
 }
@@ -193,7 +208,6 @@ impl Wire2Api<AccountStorageKey> for i32 {
         }
     }
 }
-
 impl Wire2Api<bool> for bool {
     fn wire2api(self) -> bool {
         self
@@ -215,11 +229,6 @@ impl Wire2Api<i32> for i32 {
         self
     }
 }
-impl Wire2Api<i64> for i64 {
-    fn wire2api(self) -> i64 {
-        self
-    }
-}
 
 impl Wire2Api<MinecraftSkinVariant> for i32 {
     fn wire2api(self) -> MinecraftSkinVariant {
@@ -230,7 +239,6 @@ impl Wire2Api<MinecraftSkinVariant> for i32 {
         }
     }
 }
-
 impl Wire2Api<u8> for u8 {
     fn wire2api(self) -> u8 {
         self
@@ -317,7 +325,7 @@ impl support::IntoDart for LoginFlowErrors {
         match self {
             Self::XstsError(field0) => vec![0.into_dart(), field0.into_into_dart().into_dart()],
             Self::GameNotOwned => vec![1.into_dart()],
-            Self::UnknownError => vec![2.into_dart()],
+            Self::UnknownError(field0) => vec![2.into_dart(), field0.into_into_dart().into_dart()],
         }
         .into_dart()
     }
