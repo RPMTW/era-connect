@@ -2,14 +2,12 @@ use std::fs;
 use std::path::PathBuf;
 
 use anyhow::Context;
-use flutter_rust_bridge::frb;
 use image::{imageops, DynamicImage, ImageFormat};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::api::DATA_DIR;
 
-#[frb(dart_metadata=("freezed"))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MinecraftAccount {
     pub username: String,
@@ -20,7 +18,6 @@ pub struct MinecraftAccount {
     pub capes: Vec<MinecraftCape>,
 }
 
-#[frb(dart_metadata=("freezed"))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MinecraftSkin {
     pub id: Uuid,
@@ -29,7 +26,6 @@ pub struct MinecraftSkin {
     pub variant: MinecraftSkinVariant,
 }
 
-#[frb(dart_metadata=("freezed"))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MinecraftSkinVariant {
     #[serde(rename = "CLASSIC")]
@@ -38,7 +34,6 @@ pub enum MinecraftSkinVariant {
     Slim,
 }
 
-#[frb(dart_metadata=("freezed"))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MinecraftCape {
     pub id: Uuid,
@@ -47,7 +42,6 @@ pub struct MinecraftCape {
     pub alias: String,
 }
 
-#[frb(dart_metadata=("freezed"))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountToken {
     pub token: String,
