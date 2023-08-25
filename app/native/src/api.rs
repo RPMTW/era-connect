@@ -1,9 +1,10 @@
-pub mod authentication;
 mod download;
+pub mod authentication;
 pub mod forge;
 pub mod quilt;
 pub mod storage;
 pub mod vanilla;
+pub mod collection;
 
 use std::fs::create_dir_all;
 use std::path::PathBuf;
