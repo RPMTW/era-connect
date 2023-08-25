@@ -1,4 +1,5 @@
 use std::{
+    collections::VecDeque,
     path::PathBuf,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
@@ -134,7 +135,7 @@ pub async fn run_download(
     let sink_clone = sink.clone();
     let sleep_time = 250;
     let rolling_average_window = 5000 / sleep_time;
-    let mut average_speed = Vec::with_capacity(rolling_average_window);
+    let mut average_speed = VecDeque::with_capacity(rolling_average_window);
     let output = tokio::spawn(async move {
         let mut instant = Instant::now();
         let mut prev_bytes = 0.0;
@@ -146,10 +147,10 @@ pub async fn run_download(
             let speed = (current_size - prev_bytes) / instant.elapsed().as_secs_f64() / 1_000_000.0;
 
             if average_speed.len() < rolling_average_window {
-                average_speed.push(speed);
+                average_speed.push_back(speed);
             } else {
-                average_speed.first_mut().map(|x| *x = speed);
-                average_speed.rotate_left(1);
+                average_speed.pop_front();
+                average_speed.push_back(speed);
             }
 
             let speed = average_speed.iter().sum::<f64>() / average_speed.len() as f64;
