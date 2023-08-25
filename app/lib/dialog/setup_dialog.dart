@@ -1,5 +1,4 @@
 import 'package:era_connect/api/lib.dart';
-import 'package:era_connect_ui/components/dialog/step_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
@@ -103,9 +102,14 @@ class _ImportProfiles extends StatelessWidget {
   }
 }
 
-class _LoginAccount extends StatelessWidget {
+class _LoginAccount extends StatefulWidget {
   const _LoginAccount();
 
+  @override
+  State<_LoginAccount> createState() => _LoginAccountState();
+}
+
+class _LoginAccountState extends State<_LoginAccount> {
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -135,12 +139,13 @@ class _LoginAccount extends StatelessWidget {
                 content: _buildSingleAccount(context),
               ),
               const TabItem(
-                  title: '登入多個帳號',
-                  icon: 'group',
-                  content: DialogContentBox(
-                    title: '多個帳號',
-                    content: SizedBox.shrink(),
-                  )),
+                title: '登入多個帳號',
+                icon: 'group',
+                content: DialogContentBox(
+                  title: '多個帳號',
+                  content: SizedBox.shrink(),
+                ),
+              ),
             ],
           ),
         ),
@@ -148,7 +153,7 @@ class _LoginAccount extends StatelessWidget {
     );
   }
 
-  Column _buildSingleAccount(BuildContext context) {
+  Widget _buildSingleAccount(BuildContext context) {
     final accounts = storageApi.accountStorage.accounts;
 
     return Column(
@@ -162,8 +167,8 @@ class _LoginAccount extends StatelessWidget {
               children: [
                 Expanded(
                   child: accounts.isEmpty
-                      ? _buildLoginButton(context)
-                      : _buildAccountTile(context, accounts.first),
+                      ? _buildLoginButton()
+                      : _buildAccountTile(accounts.first),
                 ),
               ],
             ),
@@ -179,58 +184,126 @@ class _LoginAccount extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountTile(BuildContext context, MinecraftAccount account) {
-    return Material(
-      child: ListTile(
-        leading: ClipRRect(
+  Widget _buildAccountTile(MinecraftAccount account) {
+    final isMainAccount = storageApi.accountStorage.mainAccount == account.uuid;
+
+    final leading = Row(
+      children: [
+        ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: account.skins.first.renderHead(size: 50),
         ),
-        title: Text(account.username),
-        subtitle: Text(
-          'Minecraft 帳號',
-          style: TextStyle(color: context.theme.tertiaryTextColor),
+        const SizedBox(width: 15),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  account.username,
+                  style:
+                      TextStyle(color: context.theme.textColor, fontSize: 18),
+                ),
+                const SizedBox(width: 5),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isMainAccount
+                        ? context.theme.accentColor
+                        : context.theme.secondarySurfaceColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    isMainAccount ? '主要' : '次要',
+                    style:
+                        TextStyle(color: context.theme.textColor, fontSize: 12),
+                  ),
+                )
+              ],
+            ),
+            Text(
+              'Minecraft 帳號',
+              style: TextStyle(
+                  color: context.theme.tertiaryTextColor, fontSize: 14),
+            )
+          ],
         ),
-        trailing: EraDialogButton.textSecondary(
-          text: '重新登入',
-          onPressed: () async {
-            await storageApi.accountStorage.removeAccount(account.uuid);
+      ],
+    );
 
-            if (!context.mounted) return;
-            _showLoginAccountDialog(context);
-          },
+    final actions = EraSecondaryButton(
+      borderRadius: 50,
+      hoverColor: context.theme.secondarySurfaceColor,
+      onPressed: () async {
+        await storageApi.accountStorage.removeAccount(account.uuid);
+
+        if (!context.mounted) return;
+        _showLoginAccountDialog();
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.restart_alt_rounded, color: context.theme.textColor),
+            const SizedBox(width: 5),
+            Text(
+              '重新登入',
+              style: TextStyle(color: context.theme.textColor, fontSize: 15),
+            )
+          ],
         ),
-        tileColor: context.theme.deepBackgroundColor,
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+      ),
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: context.theme.deepBackgroundColor,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [leading, actions],
+      ),
+    );
+  }
+
+  Widget _buildLoginButton() {
+    return EraBasicButton(
+      onPressed: () => _showLoginAccountDialog(),
+      style: EraBasicButtonStyle(
+          backgroundColor: context.theme.deepBackgroundColor,
+          hoverColor: context.theme.surfaceColor,
+          borderRadius: 15),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.person_add_alt_rounded,
+              color: context.theme.textColor,
+            ),
+            const SizedBox(width: 10),
+            Text('立即登入', style: TextStyle(color: context.theme.textColor))
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildLoginButton(BuildContext context) {
-    return TextButton.icon(
-      icon: const Icon(Icons.person_add_alt_rounded),
-      label: Text('立即登入', style: TextStyle(color: context.theme.textColor)),
-      style: TextButton.styleFrom(
-        backgroundColor: context.theme.deepBackgroundColor,
-        iconColor: context.theme.textColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 22),
-      ),
-      onPressed: () => _showLoginAccountDialog(context),
-    );
-  }
-
-  Future<void> _showLoginAccountDialog(BuildContext context) {
+  Future<void> _showLoginAccountDialog() {
     return showEraDialog(
       context: context,
       barrierDismissible: true,
-      dialog: const LoginAccountDialog(),
+      dialog: LoginAccountDialog(
+        callback: () {
+          setState(() {});
+        },
+      ),
     );
   }
 }

@@ -6,7 +6,8 @@ class AccountStorage {
   List<bridge.MinecraftAccount> get accounts =>
       _get<List<bridge.MinecraftAccount>>(bridge.AccountStorageKey.Accounts);
 
-  Uuid? get mainAccount => _get<Uuid?>(bridge.AccountStorageKey.MainAccount);
+  UuidValue? get mainAccount =>
+      _get<UuidValue?>(bridge.AccountStorageKey.MainAccount);
 
   Future<void> removeAccount(UuidValue uuid) {
     return api.removeMinecraftAccount(uuid: uuid);

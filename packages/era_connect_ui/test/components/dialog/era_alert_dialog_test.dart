@@ -44,7 +44,7 @@ void main() {
 
       // Assert
       expect(find.text('Title'), findsOneWidget);
-      expect(find.text('Description'), findsOneWidget);
+      expect(find.text('Description', findRichText: true), findsOneWidget);
       expect(find.text('Content'), findsOneWidget);
       expect(find.byIcon(Icons.add), findsOneWidget);
       expect(find.byIcon(Icons.close), findsOneWidget);

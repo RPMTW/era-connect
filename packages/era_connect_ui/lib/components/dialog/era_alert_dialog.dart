@@ -57,7 +57,7 @@ class EraAlertDialog extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
       color: context.theme.deepBackgroundColor,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

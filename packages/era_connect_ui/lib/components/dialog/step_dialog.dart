@@ -200,7 +200,7 @@ class _StepDialogState extends State<StepDialog> {
               spacing: 10,
               children: [
                 if (!_isFirstStep())
-                  EraDialogButton.iconSecondary(
+                  EraSecondaryButton.icon(
                     icon: const Icon(Icons.skip_previous_rounded,
                         size: _iconSize),
                     isWide: _isLastStep(),
@@ -208,7 +208,7 @@ class _StepDialogState extends State<StepDialog> {
                       _previousStep();
                     },
                   ),
-                EraDialogButton.iconPrimary(
+                EraPrimaryButton.icon(
                   icon: _isLastStep()
                       ? const Icon(Icons.check_rounded, size: _iconSize)
                       : const Icon(Icons.skip_next_rounded, size: _iconSize),
