@@ -3,18 +3,19 @@ import 'package:meta/meta.dart';
 
 import 'ui_layout.dart';
 
-final StorageApi storageApi = StorageApi();
+StorageApi _storageApi = const StorageApi();
+
+StorageApi get storageApi => _storageApi;
+@visibleForTesting
+set storageApi(StorageApi value) {
+  _storageApi = value;
+}
 
 class StorageApi {
-  UILayoutStorage _uiLayout = UILayoutStorage();
+  final UILayoutStorage uiLayout;
+  final AccountStorage accountStorage;
 
-  UILayoutStorage get uiLayout => _uiLayout;
-  @visibleForTesting
-  set uiLayout(UILayoutStorage value) {
-    _uiLayout = value;
-  }
-
-  final accountStorage = AccountStorage();
-
-  StorageApi();
+  const StorageApi()
+      : uiLayout = const UILayoutStorage(),
+        accountStorage = const AccountStorage();
 }

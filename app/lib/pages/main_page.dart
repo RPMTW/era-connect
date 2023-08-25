@@ -1,5 +1,5 @@
 import 'package:era_connect/api/storage/storage_api.dart';
-import 'package:era_connect/dialog/setup_dialog.dart';
+import 'package:era_connect/dialog/setup/setup_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';

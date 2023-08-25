@@ -1,115 +1,16 @@
 import 'package:era_connect/api/lib.dart';
-import 'package:era_connect_i18n/era_connect_i18n.dart';
+import 'package:era_connect/dialog/login_account_dialog.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
 
-import 'login_account_dialog.dart';
-
-class SetupDialog extends StatelessWidget {
-  const SetupDialog({super.key});
+class LoginAccountStep extends StatefulWidget {
+  const LoginAccountStep({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return StepDialog(
-      steps: [
-        StepData(
-          stepDescription: '匯入或新建設定',
-          title: context.i18n['dialog.setup.welcome'],
-          description: context.i18n['dialog.setup.01.description'],
-          hasBrandText: true,
-          contentPages: const [_ImportProfiles()],
-        ),
-        StepData(
-            stepDescription: '登入帳號',
-            title: context.i18n['dialog.setup.welcome'],
-            description: context.i18n['dialog.setup.01.description'],
-            contentPages: const [_LoginAccount()]),
-        StepData(
-            stepDescription: '建立第一個收藏',
-            title: context.i18n['dialog.setup.welcome'],
-            description: 'Test Description',
-            contentPages: [
-              const Text('Test 3 PAGE 1'),
-              const Text('Test 3 PAGE 2'),
-              const Text('Test 3 PAGE 3')
-            ]),
-        StepData(
-            stepDescription: '為您的收藏加入內容',
-            title: context.i18n['dialog.setup.welcome'],
-            description: 'Test Description',
-            contentPages: [const Text('Test 4')]),
-        StepData(
-          stepDescription: '大功告成！',
-          title: '大功告成！',
-          description: 'Test Description',
-          contentPages: [const SizedBox.shrink()],
-          onEvent: (event) {
-            if (event == StepEvent.done) {
-              storageApi.uiLayout.completedSetup = true;
-            }
-
-            return true;
-          },
-        )
-      ],
-    );
-  }
+  State<LoginAccountStep> createState() => _LoginAccountStepState();
 }
 
-class _ImportProfiles extends StatelessWidget {
-  const _ImportProfiles();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.i18n['dialog.setup.01.content.title'],
-          style: TextStyle(
-            color: context.theme.textColor,
-            fontSize: 40,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        Text(
-          context.i18n['dialog.setup.01.content.description'],
-          style:
-              TextStyle(color: context.theme.tertiaryTextColor, fontSize: 15),
-        ),
-        const SizedBox(height: 25),
-        Expanded(
-          child: DialogRectangleTab(
-            title: '選擇方式',
-            tabs: [
-              TabItem(
-                title: context.i18n['dialog.setup.01.content.tabs.empty.title'],
-                icon: 'deployed_code',
-              ),
-              TabItem(
-                  title:
-                      context.i18n['dialog.setup.01.content.tabs.import.title'],
-                  icon: 'deployed_code_update',
-                  content: const DialogContentBox(
-                    title: '匯入平台',
-                    content: SizedBox.shrink(),
-                  )),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LoginAccount extends StatefulWidget {
-  const _LoginAccount();
-
-  @override
-  State<_LoginAccount> createState() => _LoginAccountState();
-}
-
-class _LoginAccountState extends State<_LoginAccount> {
+class _LoginAccountStepState extends State<LoginAccountStep> {
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -259,6 +160,7 @@ class _LoginAccountState extends State<_LoginAccount> {
     );
 
     return Container(
+      key: const Key('account_tile'),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: context.theme.deepBackgroundColor,
@@ -273,6 +175,7 @@ class _LoginAccountState extends State<_LoginAccount> {
 
   Widget _buildLoginButton() {
     return EraBasicButton(
+      key: const Key('login_account_button'),
       onPressed: () => _showLoginAccountDialog(),
       style: EraBasicButtonStyle(
           backgroundColor: context.theme.deepBackgroundColor,

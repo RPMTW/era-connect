@@ -8,6 +8,8 @@ export 'package:era_connect/api/gen/bridge_definitions.dart'
         LoginFlowDeviceCode,
         LoginFlowStage,
         MinecraftAccount,
+        AccountToken,
+        MinecraftSkin,
         XstsTokenErrorType;
 
 Future<void> initializeAPIs() async {

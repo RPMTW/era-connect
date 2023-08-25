@@ -3,6 +3,8 @@ import 'package:era_connect/api/ffi.dart';
 import 'package:uuid/uuid.dart';
 
 class AccountStorage {
+  const AccountStorage();
+
   List<bridge.MinecraftAccount> get accounts =>
       _get<List<bridge.MinecraftAccount>>(bridge.AccountStorageKey.Accounts);
 

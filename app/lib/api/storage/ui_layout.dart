@@ -2,6 +2,8 @@ import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
 import 'package:era_connect/api/ffi.dart';
 
 class UILayoutStorage {
+  const UILayoutStorage();
+
   bool get completedSetup => _get<bool>(bridge.UILayoutKey.CompletedSetup);
   set completedSetup(bool value) =>
       _set(bridge.UILayoutValue.completedSetup(value));
