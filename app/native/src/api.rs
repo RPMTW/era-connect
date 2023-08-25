@@ -184,9 +184,8 @@ pub fn get_account_storage(key: AccountStorageKey) -> SyncReturn<AccountStorageV
     SyncReturn(value)
 }
 
-pub fn get_skin_file_path(skin: MinecraftSkin) -> SyncReturn<Option<String>> {
-    let path = skin.get_head_file_path().to_str().map(|s| s.to_string());
-    SyncReturn(path)
+pub fn get_skin_file_path(skin: MinecraftSkin) -> SyncReturn<String> {
+    SyncReturn(skin.get_head_file_path().to_string_lossy().to_string())
 }
 
 pub fn remove_minecraft_account(uuid: Uuid) -> anyhow::Result<()> {

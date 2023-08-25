@@ -1,12 +1,12 @@
-use std::fs;
 use std::path::PathBuf;
 
 use anyhow::Context;
 use image::{imageops, DynamicImage, ImageFormat};
 use serde::{Deserialize, Serialize};
+use tokio::fs;
 use uuid::Uuid;
 
-use crate::api::DATA_DIR;
+use crate::api::{download::download_file, DATA_DIR};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MinecraftAccount {
@@ -50,15 +50,18 @@ pub struct AccountToken {
 
 impl MinecraftSkin {
     pub async fn download_skin(&self) -> anyhow::Result<()> {
-        let response = reqwest::get(&self.url)
+        let raw_image = download_file(self.url.to_string(), None)
             .await
             .context("Failed to download skin")?;
 
-        let raw_image = response.bytes().await.context("Failed to get skin bytes")?;
-        let head_image = Self::obtain_player_head(&raw_image).await?;
+        let head_image = Self::obtain_player_head(&raw_image)?;
 
-        fs::create_dir_all(self.get_skin_directory()).context("Failed to create skin directory")?;
-        fs::write(self.get_raw_file_path(), raw_image).context("Failed to save raw skin")?;
+        fs::create_dir_all(self.get_skin_directory())
+            .await
+            .context("Failed to create skin directory")?;
+        fs::write(self.get_raw_file_path(), raw_image)
+            .await
+            .context("Failed to save raw skin")?;
         head_image.save_with_format(self.get_head_file_path(), ImageFormat::Png)?;
 
         Ok(())
@@ -77,11 +80,10 @@ impl MinecraftSkin {
     }
 
     /// Obtain the player head image from the raw skin buffer and return the head image.
-    async fn obtain_player_head(buffer: &[u8]) -> Result<DynamicImage, image::ImageError> {
-        let image = image::load_from_memory_with_format(buffer, ImageFormat::Png)?
-            .crop_imm(8, 8, 8, 8)
-            .resize_to_fill(50, 50, imageops::FilterType::Nearest);
-
-        Ok(image)
+    fn obtain_player_head(buffer: &[u8]) -> Result<DynamicImage, image::ImageError> {
+        image::load_from_memory_with_format(buffer, ImageFormat::Png).map(|x| {
+            x.crop_imm(8, 8, 8, 8)
+                .resize_to_fill(50, 50, imageops::FilterType::Nearest)
+        })
     }
 }
