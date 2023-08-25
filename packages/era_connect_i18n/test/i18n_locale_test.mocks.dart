@@ -70,6 +70,11 @@ class MockPlatformDispatcher extends _i1.Mock
         returnValueForMissingStub: null,
       );
   @override
+  Iterable<_i2.Display> get displays => (super.noSuchMethod(
+        Invocation.getter(#displays),
+        returnValue: <_i2.Display>[],
+      ) as Iterable<_i2.Display>);
+  @override
   Iterable<_i2.FlutterView> get views => (super.noSuchMethod(
         Invocation.getter(#views),
         returnValue: <_i2.FlutterView>[],
@@ -242,10 +247,10 @@ class MockPlatformDispatcher extends _i1.Mock
         returnValueForMissingStub: null,
       );
   @override
-  set onSemanticsAction(_i2.SemanticsActionCallback? callback) =>
+  set onSemanticsActionEvent(_i2.SemanticsActionEventCallback? callback) =>
       super.noSuchMethod(
         Invocation.setter(
-          #onSemanticsAction,
+          #onSemanticsActionEvent,
           callback,
         ),
         returnValueForMissingStub: null,
@@ -279,6 +284,13 @@ class MockPlatformDispatcher extends _i1.Mock
         Invocation.getter(#defaultRouteName),
         returnValue: '',
       ) as String);
+  @override
+  _i2.FlutterView? view({required int? id}) =>
+      (super.noSuchMethod(Invocation.method(
+        #view,
+        [],
+        {#id: id},
+      )) as _i2.FlutterView?);
   @override
   void sendPlatformMessage(
     String? name,

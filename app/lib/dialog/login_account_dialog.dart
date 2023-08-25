@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class LoginAccountDialog extends StatelessWidget {
-  const LoginAccountDialog({super.key});
+  final VoidCallback? callback;
+
+  const LoginAccountDialog({super.key, this.callback});
 
   @override
   Widget build(BuildContext context) {
@@ -15,12 +17,13 @@ class LoginAccountDialog extends StatelessWidget {
         if (snapshot.hasData) {
           return _buildWaitingAuth(snapshot.data!);
         } else if (snapshot.hasError) {
-          return _LoginErrorDialog(error: snapshot.error);
+          return _LoginErrorDialog(error: snapshot.error, callback: callback);
         }
 
         return const EraAlertDialog(
           title: '處理中......',
-          description: '正在向 Microsoft 請求資料中，請稍等約 1 ~ 3 秒鐘',
+          description: '正在向 Microsoft 請求資料中，請稍等約 1 ~ 2 秒鐘',
+          loadingIndicator: true,
         );
       },
     );
@@ -37,18 +40,19 @@ class LoginAccountDialog extends StatelessWidget {
 
           return EraAlertDialog(
             title: '登入成功！',
-            description: '帳號 ${account.username} 已成功登入！',
+            description: '您的帳號（${account.username}）已成功登入！',
             actions: [
-              EraDialogButton.iconPrimary(
+              EraPrimaryButton.icon(
                 icon: const Icon(Icons.check_rounded),
                 onPressed: () {
+                  callback?.call();
                   Navigator.of(context).pop();
                 },
               )
             ],
           );
         } else if (snapshot.hasError) {
-          return _LoginErrorDialog(error: snapshot.error);
+          return _LoginErrorDialog(error: snapshot.error, callback: callback);
         }
 
         return StreamBuilder(
@@ -64,6 +68,7 @@ class LoginAccountDialog extends StatelessWidget {
                 return const EraAlertDialog(
                   title: '正在驗證',
                   description: '我們正在為您登入帳號中，請稍等一下。',
+                  loadingIndicator: true,
                 );
               }
             }
@@ -82,6 +87,7 @@ class LoginAccountDialog extends StatelessWidget {
     return EraAlertDialog(
       title: '完成登入',
       description: '請在瀏覽器中打開 ${deviceCode.verificationUri} 並輸入下方驗證碼即可完成登入。',
+      loadingIndicator: true,
       content: Wrap(
         spacing: 10,
         children: userCode.characters
@@ -90,7 +96,7 @@ class LoginAccountDialog extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                 decoration: BoxDecoration(
-                    color: context.theme.deepBackgroundColor,
+                    color: context.theme.dialogBarrierColor,
                     borderRadius: BorderRadius.circular(10)),
                 child: Text(
                   code,
@@ -104,13 +110,13 @@ class LoginAccountDialog extends StatelessWidget {
             .toList(),
       ),
       actions: [
-        EraDialogButton.iconSecondary(
+        EraSecondaryButton.icon(
           icon: const Icon(Icons.content_copy_rounded),
           onPressed: () {
             _copyCode(userCode);
           },
         ),
-        EraDialogButton.iconPrimary(
+        EraPrimaryButton.icon(
             icon: const EraIcon(name: 'open_jam'),
             onPressed: () {
               _copyCode(userCode);
@@ -127,8 +133,9 @@ class LoginAccountDialog extends StatelessWidget {
 
 class _LoginErrorDialog extends StatelessWidget {
   final Object? error;
+  final VoidCallback? callback;
 
-  const _LoginErrorDialog({required this.error});
+  const _LoginErrorDialog({required this.error, required this.callback});
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +184,7 @@ class _LoginErrorDialog extends StatelessWidget {
       description = '執行登入作業時發生未知錯誤，請再試一次，若仍失敗請聯繫開發者協助您解決問題，原因如下：\\$error';
     }
 
-    final backgroundColor = context.theme.deepBackgroundColor;
+    final backgroundColor = context.theme.dialogBarrierColor;
     final border =
         RoundedRectangleBorder(borderRadius: BorderRadius.circular(10));
 
@@ -205,9 +212,10 @@ class _LoginErrorDialog extends StatelessWidget {
         ],
       ),
       actions: [
-        EraDialogButton.iconSecondary(
+        EraSecondaryButton.icon(
           icon: const Icon(Icons.close_rounded),
           onPressed: () {
+            callback?.call();
             Navigator.of(context).pop();
           },
         )

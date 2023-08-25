@@ -67,6 +67,8 @@ class _EraConnectAppState extends State<EraConnectApp> {
               fontFamilyFallback: const ['GenSenRounded'],
               brightness: Brightness.dark,
               colorSchemeSeed: context.theme.accentColor,
+              dialogTheme:
+                  const DialogTheme(surfaceTintColor: Colors.transparent),
               useMaterial3: true),
           builder: (context, child) {
             ErrorWidget.builder = (FlutterErrorDetails details) {

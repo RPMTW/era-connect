@@ -17,6 +17,7 @@ use log::{info, warn};
 pub use flutter_rust_bridge::StreamSink;
 pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
 pub use tokio::sync::{Mutex, RwLock};
+use uuid::Uuid;
 
 use crate::api::forge::{prepare_forge_download, process_forge};
 
@@ -183,9 +184,13 @@ pub fn get_account_storage(key: AccountStorageKey) -> SyncReturn<AccountStorageV
     SyncReturn(value)
 }
 
-pub fn set_account_storage(value: AccountStorageValue) -> anyhow::Result<()> {
+pub fn get_skin_file_path(skin: MinecraftSkin) -> SyncReturn<String> {
+    SyncReturn(skin.get_head_file_path().to_string_lossy().to_string())
+}
+
+pub fn remove_minecraft_account(uuid: Uuid) -> anyhow::Result<()> {
     let mut storage = STORAGE.account_storage.blocking_write();
-    storage.set_value(value);
+    storage.remove_account(uuid);
     storage.save()
 }
 
@@ -194,6 +199,10 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
     let result = authentication::msa_flow::login_flow(&skin).await;
     match result {
         Ok(account) => {
+            if let Some(skin) = account.skins.first() {
+                skin.download_skin().await?;
+            }
+
             let mut storage = STORAGE.account_storage.write().await;
             storage.add_account(account.clone(), true);
             storage.save()?;
@@ -202,7 +211,9 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
             info!("Successfully login minecraft account");
         }
         Err(e) => {
-            skin.add(LoginFlowEvent::Error(LoginFlowErrors::UnknownError));
+            skin.add(LoginFlowEvent::Error(LoginFlowErrors::UnknownError(
+                e.to_string(),
+            )));
             warn!("Failed to login minecraft account: {:#?}", e);
         }
     }
