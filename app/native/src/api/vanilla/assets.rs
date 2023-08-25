@@ -138,8 +138,7 @@ pub async fn parallel_assets(
                 let bytes = download_file(
                     asset_download_list_clone
                         .get(index)
-                        .context("Can't get asset download list")?
-                        .clone(),
+                        .context("Can't get asset download list")?,
                     Some(current_size_clone),
                 )
                 .await?;

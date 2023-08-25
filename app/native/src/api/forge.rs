@@ -87,7 +87,7 @@ pub async fn prepare_forge_download(
 ) -> Result<(DownloadArgs, ProcessedArguments, Value)> {
     // refactor
     let bytes = download_file(
-        "https://meta.modrinth.com/forge/v0/versions/1.20.1-forge-47.1.43.json".to_owned(),
+        "https://meta.modrinth.com/forge/v0/versions/1.20.1-forge-47.1.43.json",
         None,
     )
     .await?;
@@ -259,7 +259,7 @@ pub async fn process_forge(
                                 .context("failed to get parent dir of server jar")?,
                         )
                         .await?;
-                        let bytes = download_file(url.to_owned(), None).await?;
+                        let bytes = download_file(url, None).await?;
                         fs::write(&path, bytes).await.map_err(|err| anyhow!(err))?;
                     }
                     side = x.to_string();
