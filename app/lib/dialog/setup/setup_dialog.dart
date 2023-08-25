@@ -24,7 +24,30 @@ class SetupDialog extends StatelessWidget {
             stepDescription: '登入帳號',
             title: context.i18n['dialog.setup.welcome'],
             description: context.i18n['dialog.setup.01.description'],
-            contentPages: const [LoginAccountStep()]),
+            contentPages: const [LoginAccountStep()],
+            onEvent: (event) {
+              final hasAnyAccount =
+                  storageApi.accountStorage.accounts.isNotEmpty;
+              if (event == StepEvent.next && !hasAnyAccount) {
+                showEraDialog(
+                    context: context,
+                    dialog: EraAlertDialog(
+                      title: '提醒',
+                      description: '請您至少要先登入一個帳號才可繼續下個步驟。',
+                      actions: [
+                        EraPrimaryButton.icon(
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        )
+                      ],
+                    ));
+                return false;
+              }
+
+              return true;
+            }),
         StepData(
             stepDescription: '建立第一個收藏',
             title: context.i18n['dialog.setup.welcome'],
@@ -56,4 +79,3 @@ class SetupDialog extends StatelessWidget {
     );
   }
 }
-
