@@ -50,7 +50,7 @@ pub struct AccountToken {
 
 impl MinecraftSkin {
     pub async fn download_skin(&self) -> anyhow::Result<()> {
-        let raw_image = download_file(self.url.to_string(), None)
+        let raw_image = download_file(&self.url, None)
             .await
             .context("Failed to download skin")?;
 
