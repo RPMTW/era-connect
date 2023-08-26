@@ -26,16 +26,18 @@ pub use self::authentication::account::{
 pub use self::authentication::msa_flow::{
     LoginFlowDeviceCode, LoginFlowErrors, LoginFlowEvent, LoginFlowStage, XstsTokenErrorType,
 };
+use self::collection::{CollectionKey, CollectionValue};
 pub use self::download::Progress;
 pub use self::quilt::prepare_quilt_download;
+use self::storage::account_storage::AccountStorage;
 pub use self::storage::account_storage::{AccountStorageKey, AccountStorageValue};
+use self::storage::storage_loader::StorageInstance;
 pub use self::storage::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
 pub use self::vanilla::prepare_vanilla_download;
 pub use self::vanilla::version::{BasicVersionMetadata, VersionType};
 
 use self::download::{run_download, DownloadBias};
 use self::forge::{prepare_forge_download, process_forge};
-use self::storage::storage_loader::StorageInstance;
 use self::storage::storage_state::StorageState;
 use self::vanilla::launch_game;
 
@@ -177,7 +179,8 @@ pub fn get_ui_layout_storage(key: UILayoutKey) -> SyncReturn<UILayoutValue> {
 pub fn set_ui_layout_storage(value: UILayoutValue) -> anyhow::Result<()> {
     let mut storage = STORAGE.ui_layout.blocking_write();
     storage.set_value(value);
-    storage.save()
+    storage.save()?;
+    Ok(())
 }
 
 pub fn get_account_storage(key: AccountStorageKey) -> SyncReturn<AccountStorageValue> {
@@ -192,7 +195,8 @@ pub fn get_skin_file_path(skin: MinecraftSkin) -> SyncReturn<String> {
 pub fn remove_minecraft_account(uuid: Uuid) -> anyhow::Result<()> {
     let mut storage = STORAGE.account_storage.blocking_write();
     storage.remove_account(uuid);
-    storage.save()
+    storage.save()?;
+    Ok(())
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -220,6 +224,17 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
     }
 
     skin.close();
+    Ok(())
+}
+pub fn get_collection_storage(key: CollectionKey) -> SyncReturn<CollectionValue> {
+    let value = STORAGE.collection.blocking_read().get_value(key);
+    SyncReturn(value)
+}
+
+pub fn set_collection_storage(value: CollectionValue) -> anyhow::Result<()> {
+    let mut storage = STORAGE.collection.blocking_write();
+    storage.set_value(value);
+    storage.save()?;
     Ok(())
 }
 

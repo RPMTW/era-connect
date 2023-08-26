@@ -11,11 +11,15 @@ use crate::api::DATA_DIR;
 
 pub struct StorageLoader {
     file_name: String,
+    base_path: PathBuf,
 }
 
 impl StorageLoader {
-    pub const fn new(file_name: String) -> Self {
-        Self { file_name }
+    pub const fn new(file_name: String, base_path: PathBuf) -> Self {
+        Self {
+            file_name,
+            base_path,
+        }
     }
 
     pub fn load<T: Default + DeserializeOwned + Serialize>(&self) -> anyhow::Result<T> {
@@ -33,7 +37,7 @@ impl StorageLoader {
     }
 
     pub fn save<T: Serialize>(&self, storage: &T) -> anyhow::Result<()> {
-        create_dir_all(Self::get_storage_directory())?;
+        create_dir_all(self.get_storage_directory())?;
 
         let file = File::create(self.get_path_buf())?;
         let writer = BufWriter::new(file);
@@ -42,21 +46,23 @@ impl StorageLoader {
     }
 
     fn get_path_buf(&self) -> PathBuf {
-        Self::get_storage_directory().join(&self.file_name)
+        self.get_storage_directory().join(&self.file_name)
     }
 
-    fn get_storage_directory() -> PathBuf {
-        DATA_DIR.join("storages")
+    fn get_storage_directory(&self) -> PathBuf {
+        DATA_DIR.join(&self.base_path)
     }
 }
 
 pub trait StorageInstance<T: Default + DeserializeOwned + Serialize> {
     fn file_name() -> &'static str;
 
-    fn load() -> anyhow::Result<T> {
-        let loader = StorageLoader::new(Self::file_name().to_owned());
-        loader.load::<T>()
-    }
+    fn base_path() -> PathBuf;
 
     fn save(&self) -> anyhow::Result<()>;
+
+    fn load() -> anyhow::Result<T> {
+        let loader = StorageLoader::new(Self::file_name().to_owned(), Self::base_path());
+        loader.load::<T>()
+    }
 }

@@ -1,4 +1,8 @@
+use std::sync::Arc;
+
 use tokio::sync::RwLock;
+
+use crate::api::collection::Collection;
 
 use super::{
     account_storage::AccountStorage, storage_loader::StorageInstance, ui_layout::UILayout,
@@ -7,18 +11,21 @@ use anyhow::Error;
 use log::error;
 
 pub struct StorageState {
-    pub account_storage: RwLock<AccountStorage>,
-    pub ui_layout: RwLock<UILayout>,
+    pub account_storage: Arc<RwLock<AccountStorage>>,
+    pub ui_layout: Arc<RwLock<UILayout>>,
+    pub collection: Arc<RwLock<Collection>>,
 }
 
 impl StorageState {
     pub fn new() -> Self {
         let account_storage = Self::load_storage(AccountStorage::load());
         let ui_layout = Self::load_storage(UILayout::load());
+        let collection = Self::load_storage(Collection::load());
 
         Self {
-            account_storage: RwLock::new(account_storage),
-            ui_layout: RwLock::new(ui_layout),
+            account_storage: Arc::new(RwLock::new(account_storage)),
+            ui_layout: Arc::new(RwLock::new(ui_layout)),
+            collection: Arc::new(RwLock::new(collection)),
         }
     }
 

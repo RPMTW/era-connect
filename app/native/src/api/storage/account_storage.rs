@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 use struct_key_value_pair::VariantStruct;
 use uuid::Uuid;
@@ -20,10 +22,13 @@ impl StorageInstance<Self> for AccountStorage {
     fn file_name() -> &'static str {
         ACCOUNT_FILE_NAME
     }
-
     fn save(&self) -> anyhow::Result<()> {
-        let loader = StorageLoader::new(Self::file_name().to_owned());
-        loader.save(self)
+        let storage = StorageLoader::new(Self::file_name().to_owned(), Self::base_path());
+        storage.save(self)
+    }
+
+    fn base_path() -> std::path::PathBuf {
+        PathBuf::from("storage")
     }
 }
 
