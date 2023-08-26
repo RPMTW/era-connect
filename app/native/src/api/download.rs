@@ -1,4 +1,5 @@
 use std::{
+    collections::VecDeque,
     path::PathBuf,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
@@ -132,25 +133,38 @@ pub async fn run_download(
 
     *STATE.write().await = DownloadState::Downloading;
     let sink_clone = sink.clone();
-    let task = tokio::spawn(async move {
+    let sleep_time = 250;
+    let rolling_average_window = 5000 / sleep_time;
+    let mut average_speed = VecDeque::with_capacity(rolling_average_window);
+    let output = tokio::spawn(async move {
         let mut instant = Instant::now();
         let mut prev_bytes = 0.0;
         while !download_complete_clone.load(Ordering::Acquire) {
-            time::sleep(Duration::from_millis(500)).await;
+            time::sleep(Duration::from_millis(sleep_time.try_into().unwrap())).await;
+            let current_size = current_size_clone.load(Ordering::Relaxed) as f64;
+            let total_size = total_size_clone.load(Ordering::Relaxed) as f64;
+            let percentages = (current_size / total_size * 100.0).mul_add(multiplier, bias.start);
+            let speed = (current_size - prev_bytes) / instant.elapsed().as_secs_f64() / 1_000_000.0;
+
+            if average_speed.len() < rolling_average_window {
+                average_speed.push_back(speed);
+            } else {
+                average_speed.pop_front();
+                average_speed.push_back(speed);
+            }
+
+            let speed = average_speed.iter().sum::<f64>() / average_speed.len() as f64;
+
             let progress = Progress {
-                speed: (current_size_clone.load(Ordering::Relaxed) as f64 - prev_bytes)
-                    / instant.elapsed().as_secs_f64()
-                    / 1_000_000.0,
-                percentages: (current_size_clone.load(Ordering::Relaxed) as f64
-                    / total_size_clone.load(Ordering::Relaxed) as f64
-                    * 100.0)
-                    .mul_add(multiplier, bias.start),
-                current_size: current_size_clone.load(Ordering::Relaxed) as f64,
-                total_size: total_size_clone.load(Ordering::Relaxed) as f64,
+                speed,
+                percentages,
+                current_size,
+                total_size,
             };
-            prev_bytes = current_size_clone.load(Ordering::Relaxed) as f64;
+            prev_bytes = current_size;
             instant = Instant::now();
             sink.add(progress);
+
             let state = *STATE.read().await;
             match state {
                 DownloadState::Downloading => {}
@@ -166,7 +180,7 @@ pub async fn run_download(
     // Create a semaphore with a limit on the number of concurrent downloads
     join_futures(handles, 128).await?;
     download_complete.store(true, Ordering::Release);
-    task.await?;
+    output.await?;
     Ok(sink_clone)
 }
 
