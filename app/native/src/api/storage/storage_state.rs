@@ -5,7 +5,9 @@ use tokio::sync::RwLock;
 use crate::api::collection::Collection;
 
 use super::{
-    account_storage::AccountStorage, storage_loader::StorageInstance, ui_layout::UILayout,
+    account_storage::AccountStorage,
+    storage_loader::{StorageInstance, StorageInstanceMultiple},
+    ui_layout::UILayout,
 };
 use anyhow::Error;
 use log::error;
@@ -13,7 +15,7 @@ use log::error;
 pub struct StorageState {
     pub account_storage: Arc<RwLock<AccountStorage>>,
     pub ui_layout: Arc<RwLock<UILayout>>,
-    pub collection: Arc<RwLock<Collection>>,
+    pub collection: Arc<RwLock<Vec<Collection>>>,
 }
 
 impl StorageState {

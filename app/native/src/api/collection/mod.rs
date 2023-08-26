@@ -6,7 +6,7 @@ use serde_with::serde_as;
 use struct_key_value_pair::VariantStruct;
 
 use super::{
-    storage::storage_loader::{StorageInstance, StorageLoader},
+    storage::storage_loader::{StorageInstanceMultiple, StorageLoader},
     STORAGE,
 };
 
@@ -37,10 +37,16 @@ impl Default for Collection {
     }
 }
 
-impl StorageInstance<Self> for Collection {
-    fn file_name() -> &'static str {
+impl StorageInstanceMultiple<Self> for Collection {
+    fn file_names() -> Vec<&'static str> {
         let collection = STORAGE.collection.blocking_read();
-        Box::leak(collection.display_name.clone().into_boxed_str())
+        collection
+            .iter()
+            .map(|x| {
+                let b: &'static str = Box::leak(x.display_name.clone().into_boxed_str());
+                b
+            })
+            .collect()
     }
 
     fn base_path() -> PathBuf {
@@ -48,8 +54,11 @@ impl StorageInstance<Self> for Collection {
     }
 
     fn save(&self) -> anyhow::Result<()> {
-        let storage = StorageLoader::new(Self::file_name().to_owned(), Self::base_path());
-        storage.save(self)
+        for file_name in Self::file_names() {
+            let storage = StorageLoader::new(file_name.to_owned(), Self::base_path());
+            storage.save(self)?;
+        }
+        Ok(())
     }
 }
 

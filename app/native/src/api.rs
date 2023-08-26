@@ -26,10 +26,8 @@ pub use self::authentication::account::{
 pub use self::authentication::msa_flow::{
     LoginFlowDeviceCode, LoginFlowErrors, LoginFlowEvent, LoginFlowStage, XstsTokenErrorType,
 };
-use self::collection::{CollectionKey, CollectionValue};
 pub use self::download::Progress;
 pub use self::quilt::prepare_quilt_download;
-use self::storage::account_storage::AccountStorage;
 pub use self::storage::account_storage::{AccountStorageKey, AccountStorageValue};
 use self::storage::storage_loader::StorageInstance;
 pub use self::storage::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
@@ -226,17 +224,17 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
     skin.close();
     Ok(())
 }
-pub fn get_collection_storage(key: CollectionKey) -> SyncReturn<CollectionValue> {
-    let value = STORAGE.collection.blocking_read().get_value(key);
-    SyncReturn(value)
-}
+// pub fn get_collection_storage(key: CollectionKey) -> SyncReturn<CollectionValue> {
+//     let value = STORAGE.collection.blocking_read().get_value(key);
+//     SyncReturn(value)
+// }
 
-pub fn set_collection_storage(value: CollectionValue) -> anyhow::Result<()> {
-    let mut storage = STORAGE.collection.blocking_write();
-    storage.set_value(value);
-    storage.save()?;
-    Ok(())
-}
+// pub fn set_collection_storage(value: CollectionValue) -> anyhow::Result<()> {
+//     let mut storage = STORAGE.collection.blocking_write();
+//     storage.set_value(value);
+//     storage.save()?;
+//     Ok(())
+// }
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn get_vanilla_versions() -> anyhow::Result<Vec<BasicVersionMetadata>> {
