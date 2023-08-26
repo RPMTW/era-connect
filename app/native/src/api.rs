@@ -236,16 +236,16 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
     skin.close();
     Ok(())
 }
-pub fn get_collection_storage(key: CollectionKey, index: usize) -> SyncReturn<CollectionValue> {
-    let value = STORAGE
-        .collection
-        .blocking_read()
-        .get(index)
-        .map(|x| x.get_value(key))
-        .context("can't locate where index is")
-        .unwrap();
-    SyncReturn(value)
-}
+// pub fn get_collection_storage(key: CollectionKey, index: usize) -> SyncReturn<CollectionValue> {
+//     let value = STORAGE
+//         .collection
+//         .blocking_read()
+//         .get(index)
+//         .map(|x| x.get_value(key))
+//         .context("can't locate where index is")
+//         .unwrap();
+//     SyncReturn(value)
+// }
 
 // pub fn set_collection_storage(value: CollectionValue) -> anyhow::Result<()> {
 //     let mut storage = STORAGE.collection.blocking_write();

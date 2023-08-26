@@ -66,20 +66,3 @@ pub trait StorageInstance<T: Default + DeserializeOwned + Serialize> {
         loader.load::<T>()
     }
 }
-
-pub trait StorageInstanceMultiple<T: Default + DeserializeOwned + Serialize> {
-    fn file_names() -> Vec<String>;
-
-    fn base_path() -> PathBuf;
-
-    fn save(&self) -> anyhow::Result<()>;
-
-    fn load() -> anyhow::Result<Vec<T>> {
-        let mut p = Vec::new();
-        for file_name in Self::file_names() {
-            let loader = StorageLoader::new(file_name.to_owned(), Self::base_path());
-            p.push(loader.load::<T>()?)
-        }
-        Ok(p)
-    }
-}

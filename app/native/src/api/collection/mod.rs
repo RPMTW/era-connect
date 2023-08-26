@@ -1,14 +1,18 @@
-use std::path::PathBuf;
+use std::{
+    fs::{create_dir_all, File},
+    io::BufWriter,
+    path::PathBuf,
+    sync::Arc,
+};
 
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use serde_with::serde_as;
 use struct_key_value_pair::VariantStruct;
+use tokio::fs;
 
-use super::{
-    storage::storage_loader::{StorageInstanceMultiple, StorageLoader},
-    STORAGE,
-};
+use super::{storage::storage_loader::StorageLoader, DATA_DIR};
 
 #[serde_with::serde_as]
 #[derive(Debug, Deserialize, Serialize, VariantStruct)]
@@ -37,30 +41,50 @@ impl Default for Collection {
     }
 }
 
-const COLLECTION_BASE: &'static str = "collections";
+const COLLECTION_NAME: &str = "collections.json";
+const COLLECTION_BASE: &str = "collections";
 
 impl Collection {
-    pub fn get_path(&self) -> PathBuf {
-        PathBuf::from(COLLECTION_BASE).join(self.display_name.clone())
+    fn get_path_str(&self) -> String {
+        format!("{}_hash", self.display_name)
     }
-}
-
-impl StorageInstanceMultiple<Self> for Collection {
-    fn file_names() -> Vec<String> {
-        let collection = STORAGE.collection.blocking_read();
-        collection.iter().map(|x| x.display_name.clone()).collect()
-    }
-
-    fn base_path() -> PathBuf {
-        PathBuf::from(COLLECTION_BASE)
-    }
-
-    fn save(&self) -> anyhow::Result<()> {
-        for file_name in Self::file_names() {
-            let storage = StorageLoader::new(file_name.to_owned(), Self::base_path());
-            storage.save(self)?;
-        }
+    pub fn new(s: String) -> anyhow::Result<()> {
+        let collection_base_dir = DATA_DIR.join(COLLECTION_BASE);
+        let collection = Self {
+            display_name: s,
+            ..Default::default()
+        };
+        let base_path = collection_base_dir.join(collection.get_path_str());
+        let file = File::create(base_path)?;
+        let writer = BufWriter::new(file);
+        serde_json::to_writer(writer, &collection)?;
         Ok(())
+    }
+    pub fn scan() -> anyhow::Result<Vec<StorageLoader>> {
+        let mut loaders = Vec::new();
+        let collection_base_dir = DATA_DIR.join(COLLECTION_BASE);
+        create_dir_all(collection_base_dir);
+        let dirs = collection_base_dir.read_dir()?;
+
+        if dirs.count() == 0 {
+            return Ok(Vec::new());
+        }
+
+        for base_entry in dirs {
+            let base_entry_path = base_entry?.path();
+
+            for file in base_entry_path.read_dir()? {
+                let file_name = file?.file_name().to_string_lossy().to_string();
+
+                if file_name == COLLECTION_NAME {
+                    loaders.push(StorageLoader::new(
+                        file_name,
+                        collection_base_dir.join(base_entry_path),
+                    ));
+                }
+            }
+        }
+        Ok(loaders)
     }
 }
 

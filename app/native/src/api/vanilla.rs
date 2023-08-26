@@ -182,7 +182,7 @@ pub async fn prepare_vanilla_download(
         additional_arguments: None,
     };
 
-    let base_path = collection.get_path();
+    let base_path = PathBuf::from("downloads/");
     let game_directory = base_path.join(".minecraft");
     let asset_directory = game_directory.join("assets");
     let library_directory = base_path.join("library");
