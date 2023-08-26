@@ -24,7 +24,7 @@ use self::library::{parallel_library, Library};
 use self::rules::{get_rules, ActionType, Rule};
 
 use super::download::{download_file, extract_filename, validate_sha1, DownloadArgs};
-use super::STORAGE;
+use super::{Collection, STORAGE};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct GameFlags {
@@ -159,7 +159,9 @@ pub async fn get_game_manifest(
     Ok((contents, version))
 }
 
-pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArguments)> {
+pub async fn prepare_vanilla_download(
+    collection: Collection,
+) -> Result<(DownloadArgs, ProcessedArguments)> {
     let (game_manifest, current_version) = get_game_manifest(
         String::from("https://launchermeta.mojang.com/mc/game/version_manifest.json"),
         None,
@@ -180,12 +182,11 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
         additional_arguments: None,
     };
 
-    let game_directory = PathBuf::from("downloads/.minecraft");
-    let asset_directory = PathBuf::from("downloads/.minecraft/assets");
-    let library_directory = PathBuf::from("downloads/library");
-    let native_directory = PathBuf::from(format!(
-        "downloads/.minecraft/versions/{current_version}/natives"
-    ));
+    let base_path = collection.get_path();
+    let game_directory = base_path.join(".minecraft");
+    let asset_directory = game_directory.join("assets");
+    let library_directory = base_path.join("library");
+    let native_directory = game_directory.join(format!("versions/{current_version}/natives"));
 
     create_dir_all(&library_directory)
         .await

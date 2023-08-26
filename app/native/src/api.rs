@@ -26,6 +26,9 @@ pub use self::authentication::account::{
 pub use self::authentication::msa_flow::{
     LoginFlowDeviceCode, LoginFlowErrors, LoginFlowEvent, LoginFlowStage, XstsTokenErrorType,
 };
+pub use self::collection::{
+    AdvancedOptions, Collection, CollectionKey, CollectionValue, ModLoader, ModLoaderType,
+};
 pub use self::download::Progress;
 pub use self::quilt::prepare_quilt_download;
 pub use self::storage::account_storage::{AccountStorageKey, AccountStorageValue};
@@ -80,8 +83,11 @@ pub fn setup_logger() -> anyhow::Result<()> {
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let c = prepare_vanilla_download().await?;
+pub async fn launch_vanilla(
+    stream: StreamSink<Progress>,
+    collection: Collection,
+) -> anyhow::Result<()> {
+    let c = prepare_vanilla_download(collection).await?;
 
     let vanilla_bias = DownloadBias {
         start: 0.0,
@@ -92,8 +98,11 @@ pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> 
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let (vanilla_download_args, vanilla_arguments) = prepare_vanilla_download().await?;
+pub async fn launch_forge(
+    stream: StreamSink<Progress>,
+    collection: Collection,
+) -> anyhow::Result<()> {
+    let (vanilla_download_args, vanilla_arguments) = prepare_vanilla_download(collection).await?;
     info!("Starts Vanilla Downloading");
     let vanilla_bias = DownloadBias {
         start: 0.0,
@@ -126,8 +135,11 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let (download_args, vanilla_arguments) = prepare_vanilla_download().await?;
+pub async fn launch_quilt(
+    stream: StreamSink<Progress>,
+    collection: Collection,
+) -> anyhow::Result<()> {
+    let (download_args, vanilla_arguments) = prepare_vanilla_download(collection).await?;
     let vanilla_bias = DownloadBias {
         start: 0.0,
         end: 90.0,
@@ -224,10 +236,16 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
     skin.close();
     Ok(())
 }
-// pub fn get_collection_storage(key: CollectionKey) -> SyncReturn<CollectionValue> {
-//     let value = STORAGE.collection.blocking_read().get_value(key);
-//     SyncReturn(value)
-// }
+pub fn get_collection_storage(key: CollectionKey, index: usize) -> SyncReturn<CollectionValue> {
+    let value = STORAGE
+        .collection
+        .blocking_read()
+        .get(index)
+        .map(|x| x.get_value(key))
+        .context("can't locate where index is")
+        .unwrap();
+    SyncReturn(value)
+}
 
 // pub fn set_collection_storage(value: CollectionValue) -> anyhow::Result<()> {
 //     let mut storage = STORAGE.collection.blocking_write();

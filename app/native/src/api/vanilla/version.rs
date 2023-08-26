@@ -24,7 +24,8 @@ pub struct LatestVersion {
 pub struct BasicVersionMetadata {
     /// A unique identifier of the version, for example `1.20.1` or `23w33a`.
     pub id: String,
-    pub r#type: VersionType,
+    #[serde(rename = "type")]
+    pub version_type: VersionType,
     /// A direct link to the detailed metadata file for this version.
     pub url: String,
     #[serde(rename = "time")]

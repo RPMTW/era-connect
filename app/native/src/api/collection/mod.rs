@@ -37,6 +37,14 @@ impl Default for Collection {
     }
 }
 
+const COLLECTION_BASE: &'static str = "collections";
+
+impl Collection {
+    pub fn get_path(&self) -> PathBuf {
+        PathBuf::from(COLLECTION_BASE).join(self.display_name.clone())
+    }
+}
+
 impl StorageInstanceMultiple<Self> for Collection {
     fn file_names() -> Vec<String> {
         let collection = STORAGE.collection.blocking_read();
@@ -44,7 +52,7 @@ impl StorageInstanceMultiple<Self> for Collection {
     }
 
     fn base_path() -> PathBuf {
-        PathBuf::from("collections")
+        PathBuf::from(COLLECTION_BASE)
     }
 
     fn save(&self) -> anyhow::Result<()> {
@@ -58,7 +66,8 @@ impl StorageInstanceMultiple<Self> for Collection {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ModLoader {
-    pub r#type: ModLoaderType,
+    #[serde(rename = "type")]
+    pub modloader_type: ModLoaderType,
     pub version: String,
 }
 
