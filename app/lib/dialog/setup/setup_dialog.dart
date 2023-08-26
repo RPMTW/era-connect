@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'import_profiles.dart';
 import 'login_account.dart';
+import 'collection_game_mode.dart';
 
 class SetupDialog extends StatelessWidget {
   const SetupDialog({super.key});
@@ -36,7 +37,7 @@ class SetupDialog extends StatelessWidget {
                       description: '請您至少要先登入一個帳號才可繼續下個步驟。',
                       actions: [
                         EraPrimaryButton.icon(
-                          icon: const Icon(Icons.close_rounded),
+                          icon: EraIcon.material(Icons.close_rounded),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -53,7 +54,7 @@ class SetupDialog extends StatelessWidget {
             title: context.i18n['dialog.setup.welcome'],
             description: 'Test Description',
             contentPages: [
-              const Text('Test 3 PAGE 1'),
+              const CollectionGameMode(),
               const Text('Test 3 PAGE 2'),
               const Text('Test 3 PAGE 3')
             ]),

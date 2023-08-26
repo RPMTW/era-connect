@@ -63,6 +63,11 @@ pub extern "C" fn wire_minecraft_login_flow(port_: i64) {
     wire_minecraft_login_flow_impl(port_)
 }
 
+#[no_mangle]
+pub extern "C" fn wire_get_vanilla_versions(port_: i64) {
+    wire_get_vanilla_versions_impl(port_)
+}
+
 // Section: allocate functions
 
 #[no_mangle]

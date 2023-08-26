@@ -9,11 +9,11 @@ use serde_with::serde_as;
 pub struct Collection {
     pub display_name: String,
     pub minecraft_version: String,
-    pub mod_loader: ModLoader,
+    pub mod_loader: Option<ModLoader>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     #[serde_as(as = "serde_with::DurationSeconds<i64>")]
-    pub play_time: Duration,
+    pub played_time: Duration,
     pub advanced_options: AdvancedOptions,
 
     #[serde(skip)]
@@ -21,12 +21,18 @@ pub struct Collection {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct AdvancedOptions {}
+pub struct ModLoader {
+    pub r#type: ModLoaderType,
+    pub version: String,
+}
 
 #[derive(Debug, Deserialize, Serialize)]
-pub enum ModLoader {
-    Forge { version: String },
-    NeoForge { version: String },
-    Fabric { version: String },
-    Quilt { version: String },
+pub enum ModLoaderType {
+    Forge,
+    NeoForge,
+    Fabric,
+    Quilt,
 }
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct AdvancedOptions {}

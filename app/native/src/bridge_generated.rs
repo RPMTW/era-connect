@@ -176,6 +176,16 @@ fn wire_minecraft_login_flow_impl(port_: MessagePort) {
         },
     )
 }
+fn wire_get_vanilla_versions_impl(port_: MessagePort) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, Vec<BasicVersionMetadata>>(
+        WrapInfo {
+            debug_name: "get_vanilla_versions",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || move |task_callback| get_vanilla_versions(),
+    )
+}
 // Section: wrapper structs
 
 // Section: static checks
@@ -282,6 +292,27 @@ impl support::IntoDart for AccountToken {
 }
 impl support::IntoDartExceptPrimitive for AccountToken {}
 impl rust2dart::IntoIntoDart<AccountToken> for AccountToken {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for BasicVersionMetadata {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.id.into_into_dart().into_dart(),
+            self.r#type.into_into_dart().into_dart(),
+            self.url.into_into_dart().into_dart(),
+            self.uploaded_time.into_into_dart().into_dart(),
+            self.release_time.into_into_dart().into_dart(),
+            self.sha1.into_into_dart().into_dart(),
+            self.compliance_level.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for BasicVersionMetadata {}
+impl rust2dart::IntoIntoDart<BasicVersionMetadata> for BasicVersionMetadata {
     fn into_into_dart(self) -> Self {
         self
     }
@@ -477,6 +508,24 @@ impl support::IntoDart for UILayoutValue {
 }
 impl support::IntoDartExceptPrimitive for UILayoutValue {}
 impl rust2dart::IntoIntoDart<UILayoutValue> for UILayoutValue {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for VersionType {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::Release => 0,
+            Self::Snapshot => 1,
+            Self::OldBeta => 2,
+            Self::OldAlpha => 3,
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for VersionType {}
+impl rust2dart::IntoIntoDart<VersionType> for VersionType {
     fn into_into_dart(self) -> Self {
         self
     }

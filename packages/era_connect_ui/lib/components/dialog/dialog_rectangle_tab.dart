@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class TabItem {
   final String title;
-  final String icon;
+  final EraIcon icon;
   final Widget? content;
 
   const TabItem({required this.title, required this.icon, this.content});
@@ -89,7 +89,7 @@ class _DialogRectangleTabState extends State<DialogRectangleTab> {
 
 class _TabItemWidget extends StatelessWidget {
   final String title;
-  final String icon;
+  final Widget icon;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -117,7 +117,7 @@ class _TabItemWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            EraIcon(name: icon, size: 50),
+            IconTheme(data: const IconThemeData(size: 50), child: icon),
             const SizedBox(height: 10),
             Text(
               title,

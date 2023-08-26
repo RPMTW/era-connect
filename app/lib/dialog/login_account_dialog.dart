@@ -43,7 +43,7 @@ class LoginAccountDialog extends StatelessWidget {
             description: '您的帳號（${account.username}）已成功登入！',
             actions: [
               EraPrimaryButton.icon(
-                icon: const Icon(Icons.check_rounded),
+                icon: EraIcon.material(Icons.check_rounded),
                 onPressed: () {
                   callback?.call();
                   Navigator.of(context).pop();
@@ -111,13 +111,13 @@ class LoginAccountDialog extends StatelessWidget {
       ),
       actions: [
         EraSecondaryButton.icon(
-          icon: const Icon(Icons.content_copy_rounded),
+          icon: EraIcon.material(Icons.content_copy_rounded),
           onPressed: () {
             _copyCode(userCode);
           },
         ),
         EraPrimaryButton.icon(
-            icon: const EraIcon(name: 'open_jam'),
+            icon: EraIcon.assets('open_jam'),
             onPressed: () {
               _copyCode(userCode);
               launchUrlString(deviceCode.verificationUri);
@@ -213,7 +213,7 @@ class _LoginErrorDialog extends StatelessWidget {
       ),
       actions: [
         EraSecondaryButton.icon(
-          icon: const Icon(Icons.close_rounded),
+          icon: EraIcon.material(Icons.close_rounded),
           onPressed: () {
             callback?.call();
             Navigator.of(context).pop();

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
 class EraTitleBarAction extends StatelessWidget {
-  final String icon;
+  final Widget icon;
   final VoidCallback onPressed;
   final Color? hoverColor;
 
@@ -13,7 +13,7 @@ class EraTitleBarAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: EraIcon(name: icon, size: 20),
+      icon: IconTheme(data: const IconThemeData(size: 20), child: icon),
       hoverColor: hoverColor,
       style: IconButton.styleFrom(
         shape: RoundedRectangleBorder(
@@ -26,7 +26,7 @@ class EraTitleBarAction extends StatelessWidget {
 
   factory EraTitleBarAction.minimize() {
     return EraTitleBarAction._(
-      icon: 'drag_handle',
+      icon: EraIcon.assets('drag_handle'),
       onPressed: () {
         windowManager.minimize();
       },
@@ -35,7 +35,7 @@ class EraTitleBarAction extends StatelessWidget {
 
   factory EraTitleBarAction.maximize() {
     return EraTitleBarAction._(
-      icon: 'thumbnail_bar',
+      icon: EraIcon.assets('thumbnail_bar'),
       onPressed: () async {
         final isMaximized = await windowManager.isMaximized();
 
@@ -50,7 +50,7 @@ class EraTitleBarAction extends StatelessWidget {
 
   factory EraTitleBarAction.close() {
     return EraTitleBarAction._(
-      icon: 'close',
+      icon: EraIcon.assets('close'),
       hoverColor: const Color(0xffff0000),
       onPressed: () {
         windowManager.close();

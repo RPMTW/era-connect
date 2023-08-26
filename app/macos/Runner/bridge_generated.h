@@ -70,6 +70,8 @@ void wire_remove_minecraft_account(int64_t port_, struct wire_uint_8_list *uuid)
 
 void wire_minecraft_login_flow(int64_t port_);
 
+void wire_get_vanilla_versions(int64_t port_);
+
 struct wire_MinecraftSkin *new_box_autoadd_minecraft_skin_0(void);
 
 struct wire_UILayoutValue *new_box_autoadd_ui_layout_value_0(void);
@@ -94,6 +96,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_get_skin_file_path);
     dummy_var ^= ((int64_t) (void*) wire_remove_minecraft_account);
     dummy_var ^= ((int64_t) (void*) wire_minecraft_login_flow);
+    dummy_var ^= ((int64_t) (void*) wire_get_vanilla_versions);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_minecraft_skin_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_ui_layout_value_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);

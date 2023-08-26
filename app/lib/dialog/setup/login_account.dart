@@ -36,13 +36,13 @@ class _LoginAccountStepState extends State<LoginAccountStep> {
             tabs: [
               TabItem(
                 title: '只登入主要帳號',
-                icon: 'person',
+                icon: EraIcon.assets('person'),
                 content: _buildSingleAccount(context),
               ),
-              const TabItem(
+              TabItem(
                 title: '登入多個帳號',
-                icon: 'group',
-                content: DialogContentBox(
+                icon: EraIcon.assets('group'),
+                content: const DialogContentBox(
                   title: '多個帳號',
                   content: SizedBox.shrink(),
                 ),
@@ -148,7 +148,7 @@ class _LoginAccountStepState extends State<LoginAccountStep> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.restart_alt_rounded, color: context.theme.textColor),
+            EraIcon.material(Icons.restart_alt_rounded),
             const SizedBox(width: 5),
             Text(
               '重新登入',
@@ -186,10 +186,7 @@ class _LoginAccountStepState extends State<LoginAccountStep> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.person_add_alt_rounded,
-              color: context.theme.textColor,
-            ),
+            EraIcon.material(Icons.person_add_alt_rounded),
             const SizedBox(width: 10),
             Text('立即登入', style: TextStyle(color: context.theme.textColor))
           ],

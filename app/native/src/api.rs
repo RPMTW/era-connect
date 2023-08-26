@@ -1,10 +1,10 @@
-mod download;
 pub mod authentication;
+pub mod collection;
+mod download;
 pub mod forge;
 pub mod quilt;
 pub mod storage;
 pub mod vanilla;
-pub mod collection;
 
 use std::fs::create_dir_all;
 use std::path::PathBuf;
@@ -20,8 +20,6 @@ pub use flutter_rust_bridge::{RustOpaque, SyncReturn};
 pub use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
-use crate::api::forge::{prepare_forge_download, process_forge};
-
 pub use self::authentication::account::{
     AccountToken, MinecraftAccount, MinecraftCape, MinecraftSkin, MinecraftSkinVariant,
 };
@@ -33,8 +31,10 @@ pub use self::quilt::prepare_quilt_download;
 pub use self::storage::account_storage::{AccountStorageKey, AccountStorageValue};
 pub use self::storage::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
 pub use self::vanilla::prepare_vanilla_download;
+pub use self::vanilla::version::{BasicVersionMetadata, VersionType};
 
 use self::download::{run_download, DownloadBias};
+use self::forge::{prepare_forge_download, process_forge};
 use self::storage::storage_loader::StorageInstance;
 use self::storage::storage_state::StorageState;
 use self::vanilla::launch_game;
@@ -221,4 +221,9 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
 
     skin.close();
     Ok(())
+}
+
+#[tokio::main(flavor = "current_thread")]
+pub async fn get_vanilla_versions() -> anyhow::Result<Vec<BasicVersionMetadata>> {
+    vanilla::version::get_versions().await
 }

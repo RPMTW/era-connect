@@ -5,7 +5,7 @@ import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
 import 'package:era_connect/api/ffi.dart';
 import 'package:flutter/widgets.dart';
 
-final AuthenticationApi authenticationApi = AuthenticationApi();
+const authenticationApi = AuthenticationApi();
 
 typedef MinecraftLoginData = (
   bridge.LoginFlowDeviceCode deviceCode,
@@ -17,6 +17,8 @@ typedef LoginXstsError = bridge.LoginFlowErrors_XstsError;
 typedef LoginErrorGameNotOwn = bridge.LoginFlowErrors_GameNotOwned;
 
 class AuthenticationApi {
+  const AuthenticationApi();
+
   Future<MinecraftLoginData> loginMinecraft() async {
     final flowStream = api.minecraftLoginFlow();
 
@@ -54,10 +56,7 @@ extension MinecraftSkinExtension on bridge.MinecraftSkin {
       height: size,
     );
 
-    final path = api.getSkinFilePath(skin: this);
-    if (path == null) return defaultImage;
-
-    final file = File(path);
+    final file = File(api.getSkinFilePath(skin: this));
     if (!file.existsSync()) return defaultImage;
 
     return Image.file(

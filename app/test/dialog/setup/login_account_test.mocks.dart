@@ -333,6 +333,19 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
   @override
+  _i5.FlutterRustBridgeTaskConstMeta get kGetVanillaVersionsConstMeta =>
+      (super.noSuchMethod(
+        Invocation.getter(#kGetVanillaVersionsConstMeta),
+        returnValue: _FakeFlutterRustBridgeTaskConstMeta_3(
+          this,
+          Invocation.getter(#kGetVanillaVersionsConstMeta),
+        ),
+        returnValueForMissingStub: _FakeFlutterRustBridgeTaskConstMeta_3(
+          this,
+          Invocation.getter(#kGetVanillaVersionsConstMeta),
+        ),
+      ) as _i5.FlutterRustBridgeTaskConstMeta);
+  @override
   _i8.Future<void> setupLogger({dynamic hint}) => (super.noSuchMethod(
         Invocation.method(
           #setupLogger,
@@ -494,7 +507,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         ),
       ) as _i7.AccountStorageValue);
   @override
-  String? getSkinFilePath({
+  String getSkinFilePath({
     required _i7.MinecraftSkin? skin,
     dynamic hint,
   }) =>
@@ -507,8 +520,9 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
             #hint: hint,
           },
         ),
-        returnValueForMissingStub: null,
-      ) as String?);
+        returnValue: '',
+        returnValueForMissingStub: '',
+      ) as String);
   @override
   _i8.Future<void> removeMinecraftAccount({
     required _i4.UuidValue? uuid,
@@ -537,6 +551,21 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValue: _i8.Stream<_i7.LoginFlowEvent>.empty(),
         returnValueForMissingStub: _i8.Stream<_i7.LoginFlowEvent>.empty(),
       ) as _i8.Stream<_i7.LoginFlowEvent>);
+  @override
+  _i8.Future<List<_i7.BasicVersionMetadata>> getVanillaVersions(
+          {dynamic hint}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getVanillaVersions,
+          [],
+          {#hint: hint},
+        ),
+        returnValue: _i8.Future<List<_i7.BasicVersionMetadata>>.value(
+            <_i7.BasicVersionMetadata>[]),
+        returnValueForMissingStub:
+            _i8.Future<List<_i7.BasicVersionMetadata>>.value(
+                <_i7.BasicVersionMetadata>[]),
+      ) as _i8.Future<List<_i7.BasicVersionMetadata>>);
   @override
   void dispose() => super.noSuchMethod(
         Invocation.method(

@@ -1,6 +1,7 @@
 pub mod assets;
 pub mod library;
 pub mod rules;
+pub mod version;
 
 use anyhow::bail;
 use anyhow::{Context, Result};

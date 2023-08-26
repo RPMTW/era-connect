@@ -8,8 +8,8 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{bail, Context, Result};
-use bytes::Bytes;
+use anyhow::{bail, Context};
+use bytes::{BufMut, Bytes, BytesMut};
 use flutter_rust_bridge::StreamSink;
 use futures::StreamExt;
 use log::{error, info};
@@ -25,7 +25,7 @@ use super::{vanilla::HandlesType, DownloadState, STATE};
 pub async fn download_file(
     url: impl AsRef<str> + Send + Sync,
     current_size_clone: Option<Arc<AtomicUsize>>,
-) -> Result<Bytes> {
+) -> Result<Bytes, reqwest::Error> {
     let client = reqwest::Client::builder()
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
         .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
@@ -52,28 +52,26 @@ pub async fn download_file(
             temp
         }
     }?;
-    let mut bytes_vec = Vec::new();
-    if let Some(size) = current_size_clone {
-        while let Some(chunk) = response.chunk().await? {
+
+    let mut bytes = BytesMut::new();
+    while let Some(chunk) = response.chunk().await? {
+        if let Some(ref size) = current_size_clone {
             size.fetch_add(chunk.len(), Ordering::Relaxed);
-            bytes_vec.push(chunk);
         }
-    } else {
-        while let Some(chunk) = response.chunk().await? {
-            bytes_vec.push(chunk);
-        }
+        bytes.put(chunk);
     }
-    Ok(bytes_vec.into_iter().flatten().collect())
+
+    Ok(bytes.freeze())
 }
 
-pub fn extract_filename(url: &str) -> Result<String> {
+pub fn extract_filename(url: &str) -> anyhow::Result<String> {
     let parsed_url = Url::parse(url)?;
     let path_segments = parsed_url.path_segments().context("Invalid URL")?;
     let filename = path_segments.last().context("No filename found in URL")?;
     Ok(filename.to_owned())
 }
 
-pub async fn validate_sha1(file_path: &PathBuf, sha1: &str) -> Result<()> {
+pub async fn validate_sha1(file_path: &PathBuf, sha1: &str) -> anyhow::Result<()> {
     use sha1::{Digest, Sha1};
     let file = File::open(file_path).await?;
     let mut buffer = Vec::new();
@@ -122,7 +120,7 @@ pub async fn run_download(
     sink: StreamSink<Progress>,
     download_args: DownloadArgs,
     bias: DownloadBias,
-) -> Result<StreamSink<Progress>> {
+) -> anyhow::Result<StreamSink<Progress>> {
     let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
 

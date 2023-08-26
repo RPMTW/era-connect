@@ -172,7 +172,7 @@ class _StepDialogState extends State<StepDialog> {
             )
           ],
         ),
-        Icon(
+        EraIcon.material(
           isCurrentStep ? Icons.play_arrow_rounded : Icons.done_all_rounded,
           size: 25,
           color: context.theme.accentColor,
@@ -201,7 +201,7 @@ class _StepDialogState extends State<StepDialog> {
               children: [
                 if (!_isFirstStep())
                   EraSecondaryButton.icon(
-                    icon: const Icon(Icons.skip_previous_rounded,
+                    icon: EraIcon.material(Icons.skip_previous_rounded,
                         size: _iconSize),
                     isWide: _isLastStep(),
                     onPressed: () {
@@ -210,8 +210,9 @@ class _StepDialogState extends State<StepDialog> {
                   ),
                 EraPrimaryButton.icon(
                   icon: _isLastStep()
-                      ? const Icon(Icons.check_rounded, size: _iconSize)
-                      : const Icon(Icons.skip_next_rounded, size: _iconSize),
+                      ? EraIcon.material(Icons.check_rounded, size: _iconSize)
+                      : EraIcon.material(Icons.skip_next_rounded,
+                          size: _iconSize),
                   onPressed: () {
                     _nextStep();
                   },

@@ -33,49 +33,49 @@ class _MainPageState extends State<MainPage> {
         EraSideBar(
           topItems: SideBarCircleButton.icon(
             onPressed: () {},
-            icon: Icons.mark_chat_unread_rounded,
+            icon: EraIcon.material(Icons.mark_chat_unread_rounded),
             tooltip: context.i18n['main_page.side_bar.universe_chat'],
           ),
           menuItems: [
             SideBarCircleButton.icon(
               onPressed: () {},
-              icon: Icons.home_rounded,
+              icon: EraIcon.material(Icons.home_rounded),
               tooltip: context.i18n['main_page.side_bar.home'],
             ),
             SideBarCircleButton.icon(
               onPressed: () {},
-              icon: Icons.grid_view_rounded,
+              icon: EraIcon.material(Icons.grid_view_rounded),
               tooltip: context.i18n['main_page.side_bar.library'],
               isSelected: true,
             ),
             SideBarCircleButton.icon(
               onPressed: () {},
-              icon: Icons.wifi_tethering_rounded,
+              icon: EraIcon.material(Icons.wifi_tethering_rounded),
               tooltip: context.i18n['main_page.side_bar.multiplayer'],
             ),
           ],
           collectionItems: [
             SideBarCircleButton.roundedSquare(
               onPressed: () {},
-              icon: Icons.add_rounded,
+              icon: EraIcon.material(Icons.add_rounded),
               tooltip: context.i18n['main_page.side_bar.create_collection'],
             ),
             SideBarCircleButton.roundedSquare(
               onPressed: () {},
-              icon: Icons.explore_rounded,
+              icon: EraIcon.material(Icons.explore_rounded),
               tooltip: context.i18n['main_page.side_bar.explore'],
             ),
           ],
           bottomItems: [
             SideBarCircleButton.icon(
               onPressed: () {},
-              icon: Icons.download_rounded,
+              icon: EraIcon.material(Icons.download_rounded),
               tooltip: context.i18n['main_page.side_bar.manage_downloads'],
             ),
             const EraDivider(),
             SideBarCircleButton.icon(
               onPressed: () {},
-              icon: Icons.no_accounts_rounded,
+              icon: EraIcon.material(Icons.no_accounts_rounded),
               tooltip: context.i18n['main_page.side_bar.manage_accounts'],
             ),
           ],

@@ -40,7 +40,7 @@ void main() {
 
     when((ffi.api as MockNativeImpl)
             .getSkinFilePath(skin: anyNamed('skin'), hint: anyNamed('hint')))
-        .thenReturn(null);
+        .thenReturn('');
     when(storageApi.accountStorage).thenReturn(accountStorage);
     when(accountStorage.mainAccount).thenReturn(uuid);
     when(accountStorage.accounts).thenReturn([

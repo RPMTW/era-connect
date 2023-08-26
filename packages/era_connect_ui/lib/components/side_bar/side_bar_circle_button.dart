@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class SideBarCircleButton extends StatelessWidget {
   final VoidCallback onPressed;
-  final IconData icon;
+  final EraIcon icon;
   final OutlinedBorder shape;
   final String tooltip;
   final bool isSelected;
@@ -22,7 +22,7 @@ class SideBarCircleButton extends StatelessWidget {
       message: tooltip,
       child: IconButton(
           onPressed: onPressed,
-          icon: Icon(icon, size: 25, color: context.theme.textColor),
+          icon: IconTheme(data: const IconThemeData(size: 25), child: icon),
           style: IconButton.styleFrom(
             shape: shape,
             backgroundColor: isSelected
@@ -35,7 +35,7 @@ class SideBarCircleButton extends StatelessWidget {
 
   factory SideBarCircleButton.icon(
       {required VoidCallback onPressed,
-      required IconData icon,
+      required EraIcon icon,
       required String tooltip,
       bool isSelected = false}) {
     return SideBarCircleButton._(
@@ -48,7 +48,7 @@ class SideBarCircleButton extends StatelessWidget {
 
   factory SideBarCircleButton.roundedSquare(
       {required VoidCallback onPressed,
-      required IconData icon,
+      required EraIcon icon,
       required String tooltip}) {
     return SideBarCircleButton._(
         onPressed: onPressed,
