@@ -38,15 +38,9 @@ impl Default for Collection {
 }
 
 impl StorageInstanceMultiple<Self> for Collection {
-    fn file_names() -> Vec<&'static str> {
+    fn file_names() -> Vec<String> {
         let collection = STORAGE.collection.blocking_read();
-        collection
-            .iter()
-            .map(|x| {
-                let b: &'static str = Box::leak(x.display_name.clone().into_boxed_str());
-                b
-            })
-            .collect()
+        collection.iter().map(|x| x.display_name.clone()).collect()
     }
 
     fn base_path() -> PathBuf {

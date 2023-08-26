@@ -68,7 +68,7 @@ pub trait StorageInstance<T: Default + DeserializeOwned + Serialize> {
 }
 
 pub trait StorageInstanceMultiple<T: Default + DeserializeOwned + Serialize> {
-    fn file_names() -> Vec<&'static str>;
+    fn file_names() -> Vec<String>;
 
     fn base_path() -> PathBuf;
 
