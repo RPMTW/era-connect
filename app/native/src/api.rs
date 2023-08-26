@@ -212,9 +212,9 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
         }
         Err(e) => {
             skin.add(LoginFlowEvent::Error(LoginFlowErrors::UnknownError(
-                e.to_string(),
+                format!("{e:#}"),
             )));
-            warn!("Failed to login minecraft account: {:#?}", e);
+            warn!("Failed to login minecraft account: {:#}", e);
         }
     }
 
