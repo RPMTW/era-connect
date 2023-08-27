@@ -8,7 +8,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use flutter_rust_bridge::StreamSink;
 use futures::StreamExt;
@@ -23,22 +23,23 @@ use tokio::{
 use super::{vanilla::HandlesType, DownloadState, STATE};
 
 pub async fn download_file(
-    url: impl AsRef<str>,
+    url: impl AsRef<str> + Send + Sync,
     current_size_clone: Option<Arc<AtomicUsize>>,
 ) -> Result<Bytes> {
     let client = reqwest::Client::builder()
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
         .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|err| anyhow!("{err:?}\n{}", url.as_ref()))?;
-    let response_result = client.get(url.as_ref()).send().await;
+        .build()?;
+    let url = url.as_ref();
+    let response_result = client.get(url).send().await;
+
     let retry_amount = 3;
     let mut response = match response_result {
         Ok(x) => Ok(x),
         Err(err) => {
             let mut temp = Err(err);
             for i in 1..=retry_amount {
-                match client.get(url.as_ref()).send().await {
+                match client.get(url).send().await {
                     Ok(x) => {
                         temp = Ok(x);
                         break;
