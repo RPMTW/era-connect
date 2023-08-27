@@ -1,7 +1,8 @@
 use std::{
+    borrow::Cow,
     fs::{create_dir_all, File},
     io::{BufReader, BufWriter},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use serde::de::DeserializeOwned;
@@ -15,7 +16,11 @@ pub struct StorageLoader {
 }
 
 impl StorageLoader {
-    pub const fn new(file_name: String, base_path: PathBuf) -> Self {
+    pub fn new(file_name: String, base_path: Cow<Path>) -> Self {
+        let base_path = match base_path {
+            Cow::Borrowed(c) => c.to_path_buf(),
+            Cow::Owned(x) => x,
+        };
         Self {
             file_name,
             base_path,
@@ -62,7 +67,8 @@ pub trait StorageInstance<T: Default + DeserializeOwned + Serialize> {
     fn save(&self) -> anyhow::Result<()>;
 
     fn load() -> anyhow::Result<T> {
-        let loader = StorageLoader::new(Self::file_name().to_owned(), Self::base_path());
+        let loader =
+            StorageLoader::new(Self::file_name().to_owned(), Cow::Owned(Self::base_path()));
         loader.load::<T>()
     }
 }

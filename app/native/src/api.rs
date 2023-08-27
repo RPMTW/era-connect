@@ -82,26 +82,25 @@ pub fn setup_logger() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn launch_vanilla(
-    stream: StreamSink<Progress>,
-    collection: Collection,
-) -> anyhow::Result<()> {
-    let c = prepare_vanilla_download(collection).await?;
+// #[tokio::main(flavor = "current_thread")]
+// pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> {
+//     let c = prepare_vanilla_download(collection).await?;
 
-    let vanilla_bias = DownloadBias {
-        start: 0.0,
-        end: 100.0,
-    };
-    run_download(stream, c.0, vanilla_bias).await?;
-    launch_game(c.1.launch_args).await
-}
+//     let vanilla_bias = DownloadBias {
+//         start: 0.0,
+//         end: 100.0,
+//     };
+//     run_download(stream, c.0, vanilla_bias).await?;
+//     launch_game(c.1.launch_args).await
+// }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn launch_forge(
-    stream: StreamSink<Progress>,
-    collection: Collection,
-) -> anyhow::Result<()> {
+pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
+    let mut collections = STORAGE.collection.write().await;
+    if collections.is_empty() {
+        collections.push(Collection::add(String::from("my stuff!"))?.load()?);
+    }
+    let collection = collections.first().unwrap().clone();
     let (vanilla_download_args, vanilla_arguments) = prepare_vanilla_download(collection).await?;
     info!("Starts Vanilla Downloading");
     let vanilla_bias = DownloadBias {
@@ -134,31 +133,28 @@ pub async fn launch_forge(
     launch_game(processed_arguments).await
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn launch_quilt(
-    stream: StreamSink<Progress>,
-    collection: Collection,
-) -> anyhow::Result<()> {
-    let (download_args, vanilla_arguments) = prepare_vanilla_download(collection).await?;
-    let vanilla_bias = DownloadBias {
-        start: 0.0,
-        end: 90.0,
-    };
-    let stream = run_download(stream, download_args, vanilla_bias).await?;
-    let (download_args, quilt_processed) = prepare_quilt_download(
-        String::from("1.20.1"),
-        vanilla_arguments.launch_args,
-        vanilla_arguments.jvm_args,
-        vanilla_arguments.game_args,
-    )
-    .await?;
-    let quilt_bias = DownloadBias {
-        start: 90.0,
-        end: 100.0,
-    };
-    run_download(stream, download_args, quilt_bias).await?;
-    launch_game(quilt_processed.launch_args).await
-}
+// #[tokio::main(flavor = "current_thread")]
+// pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
+//     let (download_args, vanilla_arguments) = prepare_vanilla_download(collection).await?;
+//     let vanilla_bias = DownloadBias {
+//         start: 0.0,
+//         end: 90.0,
+//     };
+//     let stream = run_download(stream, download_args, vanilla_bias).await?;
+//     let (download_args, quilt_processed) = prepare_quilt_download(
+//         String::from("1.20.1"),
+//         vanilla_arguments.launch_args,
+//         vanilla_arguments.jvm_args,
+//         vanilla_arguments.game_args,
+//     )
+//     .await?;
+//     let quilt_bias = DownloadBias {
+//         start: 90.0,
+//         end: 100.0,
+//     };
+//     run_download(stream, download_args, quilt_bias).await?;
+//     launch_game(quilt_processed.launch_args).await
+// }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum DownloadState {

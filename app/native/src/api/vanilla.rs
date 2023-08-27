@@ -160,11 +160,12 @@ pub async fn get_game_manifest(
 }
 
 pub async fn prepare_vanilla_download(
-    collection: Collection,
+    mut collection: Collection,
 ) -> Result<(DownloadArgs, ProcessedArguments)> {
+    collection.minecraft_version = "1.20.1".to_owned();
     let (game_manifest, current_version) = get_game_manifest(
         String::from("https://launchermeta.mojang.com/mc/game/version_manifest.json"),
-        None,
+        Some(collection.minecraft_version.clone()),
     )
     .await?;
 
@@ -182,7 +183,7 @@ pub async fn prepare_vanilla_download(
         additional_arguments: None,
     };
 
-    let base_path = PathBuf::from("downloads/");
+    let base_path = collection.entry_path;
     let game_directory = base_path.join(".minecraft");
     let asset_directory = game_directory.join("assets");
     let library_directory = base_path.join("library");

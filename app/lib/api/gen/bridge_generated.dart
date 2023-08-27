@@ -42,22 +42,6 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
-  Stream<Progress> launchVanilla({dynamic hint}) {
-    return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_launch_vanilla(port_),
-      parseSuccessData: _wire2api_progress,
-      constMeta: kLaunchVanillaConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kLaunchVanillaConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "launch_vanilla",
-        argNames: [],
-      );
-
   Stream<Progress> launchForge({dynamic hint}) {
     return _platform.executeStream(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_launch_forge(port_),
@@ -71,22 +55,6 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kLaunchForgeConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "launch_forge",
-        argNames: [],
-      );
-
-  Stream<Progress> launchQuilt({dynamic hint}) {
-    return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_launch_quilt(port_),
-      parseSuccessData: _wire2api_progress,
-      constMeta: kLaunchQuiltConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kLaunchQuiltConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "launch_quilt",
         argNames: [],
       );
 
@@ -292,7 +260,7 @@ class NativeImpl implements Native {
       throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return BasicVersionMetadata(
       id: _wire2api_String(arr[0]),
-      type: _wire2api_version_type(arr[1]),
+      versionType: _wire2api_version_type(arr[1]),
       url: _wire2api_String(arr[2]),
       uploadedTime: _wire2api_Chrono_Utc(arr[3]),
       releaseTime: _wire2api_Chrono_Utc(arr[4]),
@@ -721,20 +689,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_setup_logger =
       _wire_setup_loggerPtr.asFunction<void Function(int)>();
 
-  void wire_launch_vanilla(
-    int port_,
-  ) {
-    return _wire_launch_vanilla(
-      port_,
-    );
-  }
-
-  late final _wire_launch_vanillaPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
-          'wire_launch_vanilla');
-  late final _wire_launch_vanilla =
-      _wire_launch_vanillaPtr.asFunction<void Function(int)>();
-
   void wire_launch_forge(
     int port_,
   ) {
@@ -748,20 +702,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
           'wire_launch_forge');
   late final _wire_launch_forge =
       _wire_launch_forgePtr.asFunction<void Function(int)>();
-
-  void wire_launch_quilt(
-    int port_,
-  ) {
-    return _wire_launch_quilt(
-      port_,
-    );
-  }
-
-  late final _wire_launch_quiltPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
-          'wire_launch_quilt');
-  late final _wire_launch_quilt =
-      _wire_launch_quiltPtr.asFunction<void Function(int)>();
 
   void wire_fetch_state(
     int port_,

@@ -1221,6 +1221,7 @@ dependencies = [
  "log",
  "oauth2",
  "os-version",
+ "rand",
  "reqwest",
  "serde",
  "serde_json",

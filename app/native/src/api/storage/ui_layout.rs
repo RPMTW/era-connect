@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{borrow::Cow, path::PathBuf};
 
 pub use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
@@ -22,14 +22,15 @@ impl StorageInstance<Self> for UILayout {
         PathBuf::from("storage")
     }
     fn save(&self) -> anyhow::Result<()> {
-        let storage = StorageLoader::new(Self::file_name().to_owned(), Self::base_path());
+        let storage =
+            StorageLoader::new(Self::file_name().to_owned(), Cow::Owned(Self::base_path()));
         storage.save(self)
     }
 
     fn load() -> anyhow::Result<Self> {
         let loader = super::storage_loader::StorageLoader::new(
             Self::file_name().to_owned(),
-            Self::base_path(),
+            Cow::Owned(Self::base_path()),
         );
         loader.load::<Self>()
     }

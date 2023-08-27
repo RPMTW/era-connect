@@ -1,21 +1,14 @@
-use std::{
-    fs::{create_dir_all, File},
-    io::BufWriter,
-    path::PathBuf,
-    sync::Arc,
-};
+use std::{borrow::Cow, fs::create_dir_all, path::PathBuf};
 
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use serde_with::serde_as;
 use struct_key_value_pair::VariantStruct;
-use tokio::fs;
 
 use super::{storage::storage_loader::StorageLoader, DATA_DIR};
 
 #[serde_with::serde_as]
-#[derive(Debug, Deserialize, Serialize, VariantStruct)]
+#[derive(Debug, Deserialize, Serialize, VariantStruct, Clone)]
 pub struct Collection {
     pub display_name: String,
     pub minecraft_version: String,
@@ -25,6 +18,8 @@ pub struct Collection {
     #[serde_as(as = "serde_with::DurationSeconds<i64>")]
     pub played_time: Duration,
     pub advanced_options: AdvancedOptions,
+
+    pub entry_path: PathBuf,
 }
 
 impl Default for Collection {
@@ -37,6 +32,7 @@ impl Default for Collection {
             updated_at: Utc::now(),
             played_time: Duration::seconds(0),
             advanced_options: AdvancedOptions::new(),
+            entry_path: PathBuf::new(),
         }
     }
 }
@@ -45,42 +41,52 @@ const COLLECTION_NAME: &str = "collections.json";
 const COLLECTION_BASE: &str = "collections";
 
 impl Collection {
-    fn get_path_str(&self) -> String {
-        format!("{}_hash", self.display_name)
+    fn get_entry_name(&self) -> String {
+        use rand::{distributions::Alphanumeric, Rng};
+
+        let random_string: String = rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(5)
+            .map(char::from)
+            .collect();
+        format!("{}_{random_string}", self.display_name)
     }
-    pub fn new(s: String) -> anyhow::Result<()> {
-        let collection_base_dir = DATA_DIR.join(COLLECTION_BASE);
-        let collection = Self {
-            display_name: s,
-            ..Default::default()
+    pub fn get_base_path() -> PathBuf {
+        DATA_DIR.join(COLLECTION_BASE)
+    }
+    pub fn get_entry_path(&self) -> PathBuf {
+        Self::get_base_path().join(self.get_entry_name())
+    }
+    pub fn add(display_name: String) -> anyhow::Result<StorageLoader> {
+        let mut collection = Self {
+            display_name,
+            ..Self::default()
         };
-        let base_path = collection_base_dir.join(collection.get_path_str());
-        let file = File::create(base_path)?;
-        let writer = BufWriter::new(file);
-        serde_json::to_writer(writer, &collection)?;
-        Ok(())
+        let entry_path = collection.get_entry_path();
+        let loader = StorageLoader::new(COLLECTION_NAME.to_string(), Cow::Borrowed(&entry_path));
+        create_dir_all(&entry_path)?;
+        collection.entry_path = entry_path;
+        loader.save(&collection)?;
+        Ok(loader)
     }
     pub fn scan() -> anyhow::Result<Vec<StorageLoader>> {
         let mut loaders = Vec::new();
-        let collection_base_dir = DATA_DIR.join(COLLECTION_BASE);
-        create_dir_all(collection_base_dir);
+        let collection_base_dir = Self::get_base_path();
+        create_dir_all(&collection_base_dir)?;
         let dirs = collection_base_dir.read_dir()?;
-
-        if dirs.count() == 0 {
-            return Ok(Vec::new());
-        }
 
         for base_entry in dirs {
             let base_entry_path = base_entry?.path();
-
             for file in base_entry_path.read_dir()? {
                 let file_name = file?.file_name().to_string_lossy().to_string();
 
                 if file_name == COLLECTION_NAME {
-                    loaders.push(StorageLoader::new(
-                        file_name,
-                        collection_base_dir.join(base_entry_path),
-                    ));
+                    let path = collection_base_dir.join(&base_entry_path);
+                    let loader = StorageLoader::new(file_name.clone(), Cow::Borrowed(&path));
+                    let mut a = loader.load::<Collection>()?;
+                    a.entry_path = path;
+                    loader.save(&a)?;
+                    loaders.push(loader);
                 }
             }
         }
@@ -108,6 +114,6 @@ pub struct AdvancedOptions {}
 
 impl AdvancedOptions {
     pub fn new() -> Self {
-        todo!()
+        Self {}
     }
 }

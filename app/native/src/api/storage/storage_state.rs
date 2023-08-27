@@ -5,7 +5,9 @@ use tokio::sync::RwLock;
 use crate::api::Collection;
 
 use super::{
-    account_storage::AccountStorage, storage_loader::StorageInstance, ui_layout::UILayout,
+    account_storage::AccountStorage,
+    storage_loader::{StorageInstance, StorageLoader},
+    ui_layout::UILayout,
 };
 use anyhow::Error;
 use log::error;
@@ -20,13 +22,13 @@ impl StorageState {
     pub fn new() -> Self {
         let account_storage = Self::load_storage(AccountStorage::load());
         let ui_layout = Self::load_storage(UILayout::load());
-        let mut collection = Self::load_storage(Collection::scan());
+        let collection = Self::load_storage(Collection::scan());
 
         Self {
             account_storage: Arc::new(RwLock::new(account_storage)),
             ui_layout: Arc::new(RwLock::new(ui_layout)),
             collection: Arc::new(RwLock::new(
-                collection.iter().flat_map(|x| x.load()).collect(),
+                collection.iter().flat_map(StorageLoader::load).collect(),
             )),
         }
     }

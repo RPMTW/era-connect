@@ -16,17 +16,9 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kSetupLoggerConstMeta;
 
-  Stream<Progress> launchVanilla({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kLaunchVanillaConstMeta;
-
   Stream<Progress> launchForge({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kLaunchForgeConstMeta;
-
-  Stream<Progress> launchQuilt({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kLaunchQuiltConstMeta;
 
   Future<DownloadState> fetchState({dynamic hint});
 
@@ -94,7 +86,7 @@ class AccountToken {
 class BasicVersionMetadata {
   /// A unique identifier of the version, for example `1.20.1` or `23w33a`.
   final String id;
-  final VersionType type;
+  final VersionType versionType;
 
   /// A direct link to the detailed metadata file for this version.
   final String url;
@@ -105,7 +97,7 @@ class BasicVersionMetadata {
 
   const BasicVersionMetadata({
     required this.id,
-    required this.type,
+    required this.versionType,
     required this.url,
     required this.uploadedTime,
     required this.releaseTime,
