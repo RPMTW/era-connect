@@ -42,15 +42,10 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
 
     return CompositedTransformTarget(
       link: _layerLink,
-      child: EraBasicButton(
-        onPressed: () {
-          _showOverlay();
-        },
-        style: EraBasicButtonStyle(
-            backgroundColor: context.theme.deepBackgroundColor,
-            hoverColor: context.theme.surfaceColor,
-            borderRadius: 15),
-        child: _buildItem(item, true),
+      child: _buildItem(
+        item: item,
+        isOverlay: false,
+        onTap: _showOverlay,
       ),
     );
   }
@@ -84,8 +79,11 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
     _focusScopeNode = null;
   }
 
-  Widget _buildItem(EraDropdownMenuItem item, bool showTrailingIcon) {
-    return Padding(
+  Widget _buildItem(
+      {required EraDropdownMenuItem item,
+      required bool isOverlay,
+      required VoidCallback onTap}) {
+    final child = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: IconTheme(
         data: const IconThemeData(size: 25),
@@ -97,7 +95,7 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
                 style: TextStyle(
                     fontSize: 16, fontFamily: context.theme.fontFamily),
                 child: item.label),
-            if (showTrailingIcon) ...[
+            if (!isOverlay) ...[
               const Spacer(),
               EraIcon.material(
                 Icons.drag_handle,
@@ -108,12 +106,25 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
         ),
       ),
     );
+
+    return EraBasicButton(
+      onPressed: () {
+        onTap.call();
+      },
+      style: EraBasicButtonStyle(
+          backgroundColor: isOverlay
+              ? Colors.transparent
+              : context.theme.deepBackgroundColor,
+          hoverColor: Colors.transparent,
+          borderRadius: 15),
+      child: child,
+    );
   }
 
   Widget _buildOverlay(double width) {
     final int initialIndex;
 
-    if (widget.initialIndex > 1) {
+    if (widget.initialIndex >= 1) {
       initialIndex = widget.initialIndex - 1;
     } else {
       initialIndex = widget.initialIndex;
@@ -121,52 +132,50 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
 
     final items = PageStorage(
       bucket: PageStorageBucket(),
-      child: Material(
-        color: Colors.transparent,
-        child: FocusScope(
-          node: _focusScopeNode,
-          onKey: (node, event) {
-            if (event.logicalKey == LogicalKeyboardKey.escape) {
-              _removeOverlay();
-            }
+      child: FocusScope(
+        node: _focusScopeNode,
+        onKey: (node, event) {
+          if (event.logicalKey == LogicalKeyboardKey.escape) {
+            _removeOverlay();
+          }
 
-            return KeyEventResult.ignored;
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: context.theme.surfaceColor,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: ScrollbarTheme(
-              data: ScrollbarThemeData(
-                  thumbColor:
-                      MaterialStatePropertyAll(context.theme.accentColor),
-                  crossAxisMargin: 10,
-                  mainAxisMargin: 10),
-              child: ScrollablePositionedList.builder(
-                itemCount: widget.items.length,
-                initialScrollIndex: initialIndex,
-                itemBuilder: (content, index) {
-                  final item = widget.items[index];
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(15),
-                    onTap: () {
-                      setState(() => _selectedIndex = index);
-                      _removeOverlay();
-                      item.onTap?.call();
-                    },
-                    child: _buildItem(item, false),
-                  );
-                },
+          return KeyEventResult.ignored;
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.theme.surfaceColor,
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
               ),
+            ],
+          ),
+          child: ScrollbarTheme(
+            data: ScrollbarThemeData(
+              thumbColor: MaterialStatePropertyAll(context.theme.accentColor),
+              crossAxisMargin: 10,
+              mainAxisMargin: 10,
+            ),
+            child: ScrollablePositionedList.builder(
+              padding: const EdgeInsets.only(right: 20),
+              itemCount: widget.items.length,
+              initialScrollIndex: initialIndex,
+              itemBuilder: (content, index) {
+                final item = widget.items[index];
+
+                return _buildItem(
+                  item: item,
+                  isOverlay: true,
+                  onTap: () {
+                    setState(() => _selectedIndex = index);
+                    _removeOverlay();
+                    item.onTap?.call();
+                  },
+                );
+              },
             ),
           ),
         ),

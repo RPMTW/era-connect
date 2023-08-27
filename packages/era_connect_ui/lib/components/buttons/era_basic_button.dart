@@ -21,16 +21,7 @@ class _EraBasicButtonState extends State<EraBasicButton> {
 
   @override
   Widget build(BuildContext context) {
-    var child = InkWell(
-      overlayColor: MaterialStateProperty.resolveWith((states) {
-        final accentColor = context.theme.accentColor;
-        if (states.contains(MaterialState.pressed) &&
-            accentColor != widget.style.hoverColor) {
-          return accentColor.withOpacity(0.2);
-        }
-
-        return null;
-      }),
+    final child = InkWell(
       onHover: (value) => setState(() => isHovered = value),
       borderRadius: BorderRadius.circular(widget.style.borderRadius),
       onTap: widget.onPressed,

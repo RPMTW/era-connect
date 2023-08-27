@@ -108,7 +108,22 @@ class CollectionGameMode extends StatelessWidget {
           style: TextStyle(fontSize: 16, color: context.theme.textColor),
         ),
         const SizedBox(height: 5),
-        const _GameVersionPicker(),
+        FutureBuilder(
+            future: metaApi.getVanillaVersions(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final versionType = gameMode == GameMode.snapshot
+                  ? VersionType.Snapshot
+                  : VersionType.Release;
+              final versions = snapshot.data!
+                  .where((e) => e.versionType == versionType)
+                  .toList();
+
+              return _GameVersionPicker(versions: versions);
+            }),
       ],
     );
 
@@ -137,66 +152,63 @@ class CollectionGameMode extends StatelessWidget {
 }
 
 class _GameVersionPicker extends StatefulWidget {
-  const _GameVersionPicker();
+  final List<BasicVersionMetadata> versions;
+  const _GameVersionPicker({required this.versions});
 
   @override
   State<_GameVersionPicker> createState() => _GameVersionPickerState();
 }
 
 class _GameVersionPickerState extends State<_GameVersionPicker> {
-  BasicVersionMetadata? _selectedVersion;
+  late BasicVersionMetadata _selectedVersion;
+  final List<EraDropdownMenuItem> _items = [];
+
+  @override
+  void initState() {
+    _generateItems();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: metaApi.getVanillaVersions(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return EraDropdownMenu(
+        items: _items, initialIndex: widget.versions.indexOf(_selectedVersion));
+  }
 
-          final versions = snapshot.data!
-              .where((e) => e.versionType == VersionType.Release)
-              .toList();
-          final items = <EraDropdownMenuItem>[];
-          final latestRelease = versions.first;
-          _selectedVersion ??= latestRelease;
+  void _generateItems() {
+    final latestVersion = widget.versions.first;
+    _selectedVersion = latestVersion;
 
-          items.add(EraDropdownMenuItem(
-            icon: EraIcon.assets('new_releases',
-                color: context.theme.accentColor),
-            label: Text.rich(
-              TextSpan(
-                text: '最新版本',
-                children: [
-                  TextSpan(
-                      text: '（${latestRelease.id}）',
-                      style: TextStyle(color: context.theme.tertiaryTextColor))
-                ],
-              ),
-            ),
-            onTap: () {
-              setState(() {
-                _selectedVersion = latestRelease;
-              });
-            },
-          ));
-
-          versions.skip(1).forEach((e) {
-            items.add(EraDropdownMenuItem(
-              icon: EraIcon.material(Icons.fast_forward_rounded),
-              label: Text(e.id),
-              onTap: () {
-                setState(() {
-                  _selectedVersion = e;
-                });
-              },
-            ));
-          });
-
-          return EraDropdownMenu(
-              items: items, initialIndex: versions.indexOf(_selectedVersion!));
+    _items.add(EraDropdownMenuItem(
+      icon: EraIcon.assets('new_releases', color: context.theme.accentColor),
+      label: Text.rich(
+        TextSpan(
+          text: '最新版本',
+          children: [
+            TextSpan(
+                text: '（${latestVersion.id}）',
+                style: TextStyle(color: context.theme.tertiaryTextColor))
+          ],
+        ),
+      ),
+      onTap: () {
+        setState(() {
+          _selectedVersion = latestVersion;
         });
+      },
+    ));
+
+    widget.versions.skip(1).forEach((e) {
+      _items.add(EraDropdownMenuItem(
+        icon: EraIcon.material(Icons.fast_forward_rounded),
+        label: Text(e.id),
+        onTap: () {
+          setState(() {
+            _selectedVersion = e;
+          });
+        },
+      ));
+    });
   }
 }
 
