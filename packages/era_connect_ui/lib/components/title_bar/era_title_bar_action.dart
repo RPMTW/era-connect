@@ -26,7 +26,7 @@ class EraTitleBarAction extends StatelessWidget {
 
   factory EraTitleBarAction.minimize() {
     return EraTitleBarAction._(
-      icon: EraIcon.assets('drag_handle'),
+      icon: EraIcon.material(Icons.drag_handle),
       onPressed: () {
         windowManager.minimize();
       },

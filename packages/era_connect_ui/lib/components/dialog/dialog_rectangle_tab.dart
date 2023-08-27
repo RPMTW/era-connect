@@ -5,8 +5,10 @@ class TabItem {
   final String title;
   final EraIcon icon;
   final Widget? content;
+  final VoidCallback? onTap;
 
-  const TabItem({required this.title, required this.icon, this.content});
+  const TabItem(
+      {required this.title, required this.icon, this.content, this.onTap});
 }
 
 class DialogRectangleTab extends StatefulWidget {
@@ -77,6 +79,7 @@ class _DialogRectangleTabState extends State<DialogRectangleTab> {
         icon: e.icon,
         isSelected: widget.tabs.indexOf(e) == _currentPage,
         onTap: () async {
+          e.onTap?.call();
           int page = widget.tabs.indexOf(e);
           setState(() {
             _currentPage = page;

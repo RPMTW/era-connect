@@ -1,4 +1,4 @@
-use std::{borrow::Cow, path::PathBuf};
+use std::borrow::Cow;
 
 pub use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
@@ -18,9 +18,7 @@ impl StorageInstance<Self> for UILayout {
     fn file_name() -> &'static str {
         UI_LAYOUT_FILE_NAME
     }
-    fn base_path() -> PathBuf {
-        PathBuf::from("storage")
-    }
+
     fn save(&self) -> anyhow::Result<()> {
         let storage =
             StorageLoader::new(Self::file_name().to_owned(), Cow::Owned(Self::base_path()));

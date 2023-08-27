@@ -32,6 +32,16 @@ fn wire_setup_logger_impl(port_: MessagePort) {
         move || move |task_callback| setup_logger(),
     )
 }
+fn wire_launch_vanilla_impl(port_: MessagePort) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "launch_vanilla",
+            port: Some(port_),
+            mode: FfiCallMode::Stream,
+        },
+        move || move |task_callback| launch_vanilla(task_callback.stream_sink::<_, Progress>()),
+    )
+}
 fn wire_launch_forge_impl(port_: MessagePort) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
@@ -40,6 +50,16 @@ fn wire_launch_forge_impl(port_: MessagePort) {
             mode: FfiCallMode::Stream,
         },
         move || move |task_callback| launch_forge(task_callback.stream_sink::<_, Progress>()),
+    )
+}
+fn wire_launch_quilt_impl(port_: MessagePort) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "launch_quilt",
+            port: Some(port_),
+            mode: FfiCallMode::Stream,
+        },
+        move || move |task_callback| launch_quilt(task_callback.stream_sink::<_, Progress>()),
     )
 }
 fn wire_fetch_state_impl(port_: MessagePort) {

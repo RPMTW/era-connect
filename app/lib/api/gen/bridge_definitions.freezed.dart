@@ -365,6 +365,254 @@ abstract class AccountStorageValue_MainAccount implements AccountStorageValue {
 }
 
 /// @nodoc
+mixin _$BasicVersionMetadata {
+  String get id => throw _privateConstructorUsedError;
+  VersionType get versionType => throw _privateConstructorUsedError;
+  String get url => throw _privateConstructorUsedError;
+  DateTime get uploadedTime => throw _privateConstructorUsedError;
+  DateTime get releaseTime => throw _privateConstructorUsedError;
+  String get sha1 => throw _privateConstructorUsedError;
+  int get complianceLevel => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $BasicVersionMetadataCopyWith<BasicVersionMetadata> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $BasicVersionMetadataCopyWith<$Res> {
+  factory $BasicVersionMetadataCopyWith(BasicVersionMetadata value,
+          $Res Function(BasicVersionMetadata) then) =
+      _$BasicVersionMetadataCopyWithImpl<$Res, BasicVersionMetadata>;
+  @useResult
+  $Res call(
+      {String id,
+      VersionType versionType,
+      String url,
+      DateTime uploadedTime,
+      DateTime releaseTime,
+      String sha1,
+      int complianceLevel});
+}
+
+/// @nodoc
+class _$BasicVersionMetadataCopyWithImpl<$Res,
+        $Val extends BasicVersionMetadata>
+    implements $BasicVersionMetadataCopyWith<$Res> {
+  _$BasicVersionMetadataCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? versionType = null,
+    Object? url = null,
+    Object? uploadedTime = null,
+    Object? releaseTime = null,
+    Object? sha1 = null,
+    Object? complianceLevel = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      versionType: null == versionType
+          ? _value.versionType
+          : versionType // ignore: cast_nullable_to_non_nullable
+              as VersionType,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      uploadedTime: null == uploadedTime
+          ? _value.uploadedTime
+          : uploadedTime // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      releaseTime: null == releaseTime
+          ? _value.releaseTime
+          : releaseTime // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      sha1: null == sha1
+          ? _value.sha1
+          : sha1 // ignore: cast_nullable_to_non_nullable
+              as String,
+      complianceLevel: null == complianceLevel
+          ? _value.complianceLevel
+          : complianceLevel // ignore: cast_nullable_to_non_nullable
+              as int,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$_BasicVersionMetadataCopyWith<$Res>
+    implements $BasicVersionMetadataCopyWith<$Res> {
+  factory _$$_BasicVersionMetadataCopyWith(_$_BasicVersionMetadata value,
+          $Res Function(_$_BasicVersionMetadata) then) =
+      __$$_BasicVersionMetadataCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String id,
+      VersionType versionType,
+      String url,
+      DateTime uploadedTime,
+      DateTime releaseTime,
+      String sha1,
+      int complianceLevel});
+}
+
+/// @nodoc
+class __$$_BasicVersionMetadataCopyWithImpl<$Res>
+    extends _$BasicVersionMetadataCopyWithImpl<$Res, _$_BasicVersionMetadata>
+    implements _$$_BasicVersionMetadataCopyWith<$Res> {
+  __$$_BasicVersionMetadataCopyWithImpl(_$_BasicVersionMetadata _value,
+      $Res Function(_$_BasicVersionMetadata) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? versionType = null,
+    Object? url = null,
+    Object? uploadedTime = null,
+    Object? releaseTime = null,
+    Object? sha1 = null,
+    Object? complianceLevel = null,
+  }) {
+    return _then(_$_BasicVersionMetadata(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      versionType: null == versionType
+          ? _value.versionType
+          : versionType // ignore: cast_nullable_to_non_nullable
+              as VersionType,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      uploadedTime: null == uploadedTime
+          ? _value.uploadedTime
+          : uploadedTime // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      releaseTime: null == releaseTime
+          ? _value.releaseTime
+          : releaseTime // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      sha1: null == sha1
+          ? _value.sha1
+          : sha1 // ignore: cast_nullable_to_non_nullable
+              as String,
+      complianceLevel: null == complianceLevel
+          ? _value.complianceLevel
+          : complianceLevel // ignore: cast_nullable_to_non_nullable
+              as int,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$_BasicVersionMetadata implements _BasicVersionMetadata {
+  const _$_BasicVersionMetadata(
+      {required this.id,
+      required this.versionType,
+      required this.url,
+      required this.uploadedTime,
+      required this.releaseTime,
+      required this.sha1,
+      required this.complianceLevel});
+
+  @override
+  final String id;
+  @override
+  final VersionType versionType;
+  @override
+  final String url;
+  @override
+  final DateTime uploadedTime;
+  @override
+  final DateTime releaseTime;
+  @override
+  final String sha1;
+  @override
+  final int complianceLevel;
+
+  @override
+  String toString() {
+    return 'BasicVersionMetadata(id: $id, versionType: $versionType, url: $url, uploadedTime: $uploadedTime, releaseTime: $releaseTime, sha1: $sha1, complianceLevel: $complianceLevel)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$_BasicVersionMetadata &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.versionType, versionType) ||
+                other.versionType == versionType) &&
+            (identical(other.url, url) || other.url == url) &&
+            (identical(other.uploadedTime, uploadedTime) ||
+                other.uploadedTime == uploadedTime) &&
+            (identical(other.releaseTime, releaseTime) ||
+                other.releaseTime == releaseTime) &&
+            (identical(other.sha1, sha1) || other.sha1 == sha1) &&
+            (identical(other.complianceLevel, complianceLevel) ||
+                other.complianceLevel == complianceLevel));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, id, versionType, url,
+      uploadedTime, releaseTime, sha1, complianceLevel);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$_BasicVersionMetadataCopyWith<_$_BasicVersionMetadata> get copyWith =>
+      __$$_BasicVersionMetadataCopyWithImpl<_$_BasicVersionMetadata>(
+          this, _$identity);
+}
+
+abstract class _BasicVersionMetadata implements BasicVersionMetadata {
+  const factory _BasicVersionMetadata(
+      {required final String id,
+      required final VersionType versionType,
+      required final String url,
+      required final DateTime uploadedTime,
+      required final DateTime releaseTime,
+      required final String sha1,
+      required final int complianceLevel}) = _$_BasicVersionMetadata;
+
+  @override
+  String get id;
+  @override
+  VersionType get versionType;
+  @override
+  String get url;
+  @override
+  DateTime get uploadedTime;
+  @override
+  DateTime get releaseTime;
+  @override
+  String get sha1;
+  @override
+  int get complianceLevel;
+  @override
+  @JsonKey(ignore: true)
+  _$$_BasicVersionMetadataCopyWith<_$_BasicVersionMetadata> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$LoginFlowErrors {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({

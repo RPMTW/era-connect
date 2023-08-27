@@ -1,4 +1,4 @@
-use std::{borrow::Cow, path::PathBuf};
+use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 use struct_key_value_pair::VariantStruct;
@@ -26,10 +26,6 @@ impl StorageInstance<Self> for AccountStorage {
         let storage =
             StorageLoader::new(Self::file_name().to_owned(), Cow::Owned(Self::base_path()));
         storage.save(self)
-    }
-
-    fn base_path() -> std::path::PathBuf {
-        PathBuf::from("storage")
     }
 }
 

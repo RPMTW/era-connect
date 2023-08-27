@@ -62,7 +62,9 @@ impl StorageLoader {
 pub trait StorageInstance<T: Default + DeserializeOwned + Serialize> {
     fn file_name() -> &'static str;
 
-    fn base_path() -> PathBuf;
+    fn base_path() -> PathBuf {
+        PathBuf::from("storages")
+    }
 
     fn save(&self) -> anyhow::Result<()>;
 

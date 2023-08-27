@@ -185,7 +185,7 @@ class _StepDialogState extends State<StepDialog> {
     final step = _getCurrentStep();
 
     return Padding(
-      key: ValueKey(_currentStep),
+      key: ValueKey('$_currentStep.$_contentPageIndex'),
       padding: const EdgeInsets.only(top: 45, bottom: 35, left: 45, right: 45),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -205,6 +205,7 @@ class _StepDialogState extends State<StepDialog> {
                         size: _iconSize),
                     isWide: _isLastStep(),
                     onPressed: () {
+                      if (_isFirstStep()) return;
                       _previousStep();
                     },
                   ),

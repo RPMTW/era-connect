@@ -7,8 +7,15 @@ import 'import_profiles.dart';
 import 'login_account.dart';
 import 'collection_game_mode.dart';
 
-class SetupDialog extends StatelessWidget {
+class SetupDialog extends StatefulWidget {
   const SetupDialog({super.key});
+
+  @override
+  State<SetupDialog> createState() => _SetupDialogState();
+}
+
+class _SetupDialogState extends State<SetupDialog> {
+  GameMode _gameMode = GameMode.vanilla;
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +61,14 @@ class SetupDialog extends StatelessWidget {
             title: context.i18n['dialog.setup.welcome'],
             description: 'Test Description',
             contentPages: [
-              const CollectionGameMode(),
-              const Text('Test 3 PAGE 2'),
+              CollectionGameMode(
+                onGameModeChanged: (mode) {
+                  setState(() {
+                    _gameMode = mode;
+                  });
+                },
+              ),
+              if (_gameMode == GameMode.modded) const Text('Mod'),
               const Text('Test 3 PAGE 3')
             ]),
         StepData(

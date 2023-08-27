@@ -16,9 +16,17 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kSetupLoggerConstMeta;
 
+  Stream<Progress> launchVanilla({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kLaunchVanillaConstMeta;
+
   Stream<Progress> launchForge({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kLaunchForgeConstMeta;
+
+  Stream<Progress> launchQuilt({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kLaunchQuiltConstMeta;
 
   Future<DownloadState> fetchState({dynamic hint});
 
@@ -83,27 +91,17 @@ class AccountToken {
   });
 }
 
-class BasicVersionMetadata {
-  /// A unique identifier of the version, for example `1.20.1` or `23w33a`.
-  final String id;
-  final VersionType versionType;
-
-  /// A direct link to the detailed metadata file for this version.
-  final String url;
-  final DateTime uploadedTime;
-  final DateTime releaseTime;
-  final String sha1;
-  final int complianceLevel;
-
-  const BasicVersionMetadata({
-    required this.id,
-    required this.versionType,
-    required this.url,
-    required this.uploadedTime,
-    required this.releaseTime,
-    required this.sha1,
-    required this.complianceLevel,
-  });
+@freezed
+class BasicVersionMetadata with _$BasicVersionMetadata {
+  const factory BasicVersionMetadata({
+    required String id,
+    required VersionType versionType,
+    required String url,
+    required DateTime uploadedTime,
+    required DateTime releaseTime,
+    required String sha1,
+    required int complianceLevel,
+  }) = _BasicVersionMetadata;
 }
 
 enum DownloadState {
