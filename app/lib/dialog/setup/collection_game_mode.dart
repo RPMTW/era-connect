@@ -27,35 +27,45 @@ class CollectionGameMode extends StatelessWidget {
         ),
         const SizedBox(height: 25),
         Expanded(
-          child: DialogRectangleTab(
-            title: '遊戲方式',
-            tabs: [
-              _buildTab(context, '原汁原味', '在 Era Connect 裡體驗最經典的 Minecraft 世界！',
-                  EraIcon.assets('clear_day'), GameMode.vanilla),
-              _buildTab(
-                  context,
-                  '搶先體驗',
-                  '搶先體驗到測試中的快照版 Minecraft',
-                  EraIcon.material(Icons.local_fire_department_outlined),
-                  GameMode.snapshot),
-              TabItem(
-                title: '創意模組',
-                icon: EraIcon.material(Icons.draw_outlined),
-                content: const DialogContentBox(
-                  title: '介紹',
-                  content: SizedBox.shrink(),
-                ),
-                onTap: () => onGameModeChanged(GameMode.modded),
-              ),
-            ],
-          ),
+          child: FutureBuilder(
+              future: metaApi.getVanillaVersions(),
+              builder: (context, snapshot) {
+                return DialogRectangleTab(
+                  title: '遊戲方式',
+                  tabs: [
+                    _buildTab(
+                        context,
+                        '原汁原味',
+                        '在 Era Connect 裡體驗最經典的 Minecraft 世界！',
+                        EraIcon.assets('clear_day'),
+                        GameMode.vanilla,
+                        snapshot.data),
+                    _buildTab(
+                        context,
+                        '搶先體驗',
+                        '搶先體驗到測試中的快照版 Minecraft',
+                        EraIcon.material(Icons.local_fire_department_outlined),
+                        GameMode.snapshot,
+                        snapshot.data),
+                    TabItem(
+                      title: '創意模組',
+                      icon: EraIcon.material(Icons.draw_outlined),
+                      content: const DialogContentBox(
+                        title: '介紹',
+                        content: SizedBox.shrink(),
+                      ),
+                      onTap: () => onGameModeChanged(GameMode.modded),
+                    ),
+                  ],
+                );
+              }),
         ),
       ],
     );
   }
 
   TabItem _buildTab(BuildContext context, String title, String description,
-      EraIcon icon, GameMode gameMode) {
+      EraIcon icon, GameMode gameMode, List<BasicVersionMetadata>? versions) {
     final image = ClipRRect(
       borderRadius: BorderRadius.circular(15),
       child: Stack(
@@ -85,45 +95,57 @@ class CollectionGameMode extends StatelessWidget {
     );
 
     final content = Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: context.theme.textColor,
-            fontSize: 30,
-            fontWeight: FontWeight.w700,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: context.theme.textColor,
+                fontSize: 30,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            Text(
+              description,
+              style: TextStyle(
+                color: context.theme.secondaryTextColor,
+                fontSize: 15,
+              ),
+            ),
+          ],
         ),
-        Text(
-          description,
-          style: TextStyle(
-            color: context.theme.secondaryTextColor,
-            fontSize: 15,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          '遊戲版本',
-          style: TextStyle(fontSize: 16, color: context.theme.textColor),
-        ),
-        const SizedBox(height: 5),
-        FutureBuilder(
-            future: metaApi.getVanillaVersions(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '遊戲版本',
+              style: TextStyle(fontSize: 16, color: context.theme.textColor),
+            ),
+            const SizedBox(height: 10),
+            Builder(builder: (context) {
+              if (versions == null) {
+                return EraDropdownMenu(items: [
+                  EraDropdownMenuItem(
+                    icon: EraIcon.material(Icons.hourglass_empty_rounded),
+                    label: const Text('載入中...'),
+                  ),
+                ]);
               }
 
               final versionType = gameMode == GameMode.snapshot
                   ? VersionType.Snapshot
                   : VersionType.Release;
-              final versions = snapshot.data!
-                  .where((e) => e.versionType == versionType)
-                  .toList();
+              final filteredVersions =
+                  versions.where((e) => e.versionType == versionType).toList();
 
-              return _GameVersionPicker(versions: versions);
+              return _GameVersionPicker(versions: filteredVersions);
             }),
+          ],
+        )
       ],
     );
 
@@ -161,33 +183,30 @@ class _GameVersionPicker extends StatefulWidget {
 
 class _GameVersionPickerState extends State<_GameVersionPicker> {
   late BasicVersionMetadata _selectedVersion;
-  final List<EraDropdownMenuItem> _items = [];
-
-  @override
-  void initState() {
-    _generateItems();
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
     return EraDropdownMenu(
-        items: _items, initialIndex: widget.versions.indexOf(_selectedVersion));
+        items: _generateItems(),
+        initialIndex: widget.versions.indexOf(_selectedVersion));
   }
 
-  void _generateItems() {
+  List<EraDropdownMenuItem> _generateItems() {
+    final items = <EraDropdownMenuItem>[];
+
     final latestVersion = widget.versions.first;
     _selectedVersion = latestVersion;
 
-    _items.add(EraDropdownMenuItem(
+    items.add(EraDropdownMenuItem(
       icon: EraIcon.assets('new_releases', color: context.theme.accentColor),
       label: Text.rich(
         TextSpan(
           text: '最新版本',
           children: [
             TextSpan(
-                text: '（${latestVersion.id}）',
-                style: TextStyle(color: context.theme.tertiaryTextColor))
+              text: '（${latestVersion.id}）',
+              style: TextStyle(color: context.theme.tertiaryTextColor),
+            )
           ],
         ),
       ),
@@ -199,7 +218,7 @@ class _GameVersionPickerState extends State<_GameVersionPicker> {
     ));
 
     widget.versions.skip(1).forEach((e) {
-      _items.add(EraDropdownMenuItem(
+      items.add(EraDropdownMenuItem(
         icon: EraIcon.material(Icons.fast_forward_rounded),
         label: Text(e.id),
         onTap: () {
@@ -209,6 +228,8 @@ class _GameVersionPickerState extends State<_GameVersionPicker> {
         },
       ));
     });
+
+    return items;
   }
 }
 
