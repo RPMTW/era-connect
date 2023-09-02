@@ -51,10 +51,10 @@ pub fn variants_enum(input: TokenStream) -> TokenStream {
 
     for field in input.fields {
         if let Some(x) = field.ident {
+            let identifier = x.to_string().to_pascal_case();
+            let span = x.span();
             ident.push(x);
-            let t = ident.last().unwrap();
-            let span = t.span();
-            camel.push(Ident::new(t.to_string().to_pascal_case().as_str(), span));
+            camel.push(Ident::new(identifier.as_str(), span));
         }
         types.push(field.ty);
     }
