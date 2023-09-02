@@ -42,9 +42,9 @@ use syn::{parse_macro_input, Ident, ItemStruct};
 #[proc_macro_derive(VariantStruct)]
 pub fn variants_enum(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemStruct);
-    let struct_ident = input.ident.clone();
-    let key_ident = format_ident!("{}Key", input.ident);
-    let value_ident = format_ident!("{}Value", input.ident);
+    let struct_ident = input.ident;
+    let key_ident = format_ident!("{}Key", &struct_ident);
+    let value_ident = format_ident!("{}Value", &struct_ident);
     let mut ident = Vec::new();
     let mut camel = Vec::new();
     let mut types = Vec::new();
