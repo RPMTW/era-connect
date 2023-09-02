@@ -1,5 +1,5 @@
 use std::{
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -64,8 +64,8 @@ pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bo
 }
 pub async fn parallel_library(
     library_list_arc: Arc<[Library]>,
-    folder: Arc<PathBuf>,
-    native_folder: Arc<PathBuf>,
+    folder: Arc<Path>,
+    native_folder: Arc<Path>,
     current: Arc<AtomicUsize>,
     library_download_handles: &mut HandlesType,
 ) -> Result<Arc<AtomicUsize>> {
@@ -157,7 +157,7 @@ pub async fn parallel_library(
 async fn native_download(
     url: &String,
     current_size_clone: &Arc<AtomicUsize>,
-    native_folder: Arc<PathBuf>,
+    native_folder: Arc<Path>,
     library_extension: &str,
 ) -> Result<()> {
     let bytes = download_file(url, Some(Arc::clone(current_size_clone))).await?;

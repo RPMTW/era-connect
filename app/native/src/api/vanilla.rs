@@ -79,17 +79,17 @@ pub struct JvmOptions {
     pub classpath: String,
     pub classpath_separator: String,
     pub primary_jar: String,
-    pub library_directory: Arc<PathBuf>,
-    pub game_directory: Arc<PathBuf>,
-    pub native_directory: Arc<PathBuf>,
+    pub library_directory: Arc<Path>,
+    pub game_directory: Arc<Path>,
+    pub native_directory: Arc<Path>,
 }
 
 #[derive(Clone, Debug)]
 pub struct GameOptions {
     pub auth_player_name: String,
     pub game_version_name: String,
-    pub game_directory: Arc<PathBuf>,
-    pub assets_root: Arc<PathBuf>,
+    pub game_directory: Arc<Path>,
+    pub assets_root: Arc<Path>,
     pub assets_index_name: String,
     pub auth_access_token: String,
     pub auth_uuid: String,
@@ -235,14 +235,14 @@ pub async fn prepare_vanilla_download() -> Result<(DownloadArgs, ProcessedArgume
     let current_size = Arc::new(AtomicUsize::new(0));
 
     let (library_path, native_library_path) = (
-        jvm_options.library_directory.clone(),
-        jvm_options.native_directory.clone(),
+        Arc::clone(&jvm_options.library_directory),
+        Arc::clone(&jvm_options.native_directory),
     );
 
     let total_size = parallel_library(
         Arc::clone(&library_list),
-        library_path.clone(),
-        native_library_path.clone(),
+        library_path,
+        native_library_path,
         Arc::clone(&current_size),
         &mut handles,
     )
@@ -353,19 +353,19 @@ fn setup_jvm_options(
         classpath: String::new(),
         classpath_separator: String::from(":"),
         primary_jar: client_jar.to_string_lossy().to_string(),
-        library_directory: Arc::new(
+        library_directory: Arc::from(
             library_directory
                 .as_ref()
                 .canonicalize()
                 .context("Fail to canonicalize library_directory(jvm_options)")?,
         ),
-        game_directory: Arc::new(
+        game_directory: Arc::from(
             game_directory
                 .as_ref()
                 .canonicalize()
                 .context("Fail to canonicalize game_directory(jvm_options)")?,
         ),
-        native_directory: Arc::new(
+        native_directory: Arc::from(
             native_directory
                 .as_ref()
                 .canonicalize()
@@ -427,13 +427,13 @@ async fn setup_game_option(
     let game_options = GameOptions {
         auth_player_name: minecraft_account.username.clone(),
         game_version_name: current_version,
-        game_directory: Arc::new(
+        game_directory: Arc::from(
             game_directory
                 .as_ref()
                 .canonicalize()
                 .context("Fail to canonicalize game_directory(game_options)")?,
         ),
-        assets_root: Arc::new(
+        assets_root: Arc::from(
             asset_directory
                 .as_ref()
                 .canonicalize()
