@@ -1,6 +1,6 @@
 use std::{
     collections::VecDeque,
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
         Arc,
@@ -73,8 +73,9 @@ pub fn extract_filename(url: &str) -> Result<String> {
     Ok(filename.to_owned())
 }
 
-pub async fn validate_sha1(file_path: &PathBuf, sha1: &str) -> Result<()> {
+pub async fn validate_sha1(file_path: impl AsRef<Path> + Send + Sync, sha1: &str) -> Result<()> {
     use sha1::{Digest, Sha1};
+    let file_path = file_path.as_ref();
     let file = File::open(file_path).await?;
     let mut buffer = Vec::new();
     let mut reader = BufReader::new(file);

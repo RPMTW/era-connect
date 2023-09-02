@@ -65,8 +65,8 @@ pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bo
 }
 pub async fn parallel_library(
     library_list_arc: Arc<[Library]>,
-    folder: Arc<RustOpaque<PathBuf>>,
-    native_folder: Arc<RustOpaque<PathBuf>>,
+    folder: RustOpaque<PathBuf>,
+    native_folder: RustOpaque<PathBuf>,
     current: Arc<AtomicUsize>,
     library_download_handles: &mut HandlesType,
 ) -> Result<Arc<AtomicUsize>> {
@@ -87,9 +87,9 @@ pub async fn parallel_library(
         let library_list_clone = Arc::clone(&library_list_arc);
         let counter_clone = Arc::clone(&index_counter);
         let current_size_clone = Arc::clone(&current_size);
-        let folder_clone = Arc::clone(&folder);
+        let folder_clone = folder.clone();
         let download_total_size_clone = Arc::clone(&download_total_size);
-        let native_folder_clone = Arc::clone(&native_folder);
+        let native_folder_clone = native_folder.clone();
         let handle = Box::pin(async move {
             let index = counter_clone.fetch_add(1, Ordering::SeqCst);
             if index < num_libraries {
@@ -158,7 +158,7 @@ pub async fn parallel_library(
 async fn native_download(
     url: &String,
     current_size_clone: &Arc<AtomicUsize>,
-    native_folder_clone: Arc<RustOpaque<PathBuf>>,
+    native_folder_clone: RustOpaque<PathBuf>,
     library_extension: &str,
 ) -> Result<()> {
     let bytes = download_file(url, Some(Arc::clone(current_size_clone))).await?;
