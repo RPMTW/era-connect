@@ -35,7 +35,7 @@ pub use self::storage::account_storage::{AccountStorageKey, AccountStorageValue}
 use self::storage::storage_loader::StorageInstance;
 pub use self::storage::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
 pub use self::vanilla::prepare_vanilla_download;
-pub use self::vanilla::version::{BasicVersionMetadata, VersionType};
+pub use self::vanilla::version::{VersionMetadata, VersionType};
 
 use self::download::{run_download, DownloadBias};
 use self::forge::{prepare_forge_download, process_forge};
@@ -249,6 +249,6 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
 // }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn get_vanilla_versions() -> anyhow::Result<Vec<BasicVersionMetadata>> {
+pub async fn get_vanilla_versions() -> anyhow::Result<Vec<VersionMetadata>> {
     vanilla::version::get_versions().await
 }

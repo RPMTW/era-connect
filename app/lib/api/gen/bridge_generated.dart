@@ -228,10 +228,10 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
-  Future<List<BasicVersionMetadata>> getVanillaVersions({dynamic hint}) {
+  Future<List<VersionMetadata>> getVanillaVersions({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_get_vanilla_versions(port_),
-      parseSuccessData: _wire2api_list_basic_version_metadata,
+      parseSuccessData: _wire2api_list_version_metadata,
       constMeta: kGetVanillaVersionsConstMeta,
       argValues: [],
       hint: hint,
@@ -286,21 +286,6 @@ class NativeImpl implements Native {
     );
   }
 
-  BasicVersionMetadata _wire2api_basic_version_metadata(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
-    return BasicVersionMetadata(
-      id: _wire2api_String(arr[0]),
-      versionType: _wire2api_version_type(arr[1]),
-      url: _wire2api_String(arr[2]),
-      uploadedTime: _wire2api_Chrono_Utc(arr[3]),
-      releaseTime: _wire2api_Chrono_Utc(arr[4]),
-      sha1: _wire2api_String(arr[5]),
-      complianceLevel: _wire2api_u32(arr[6]),
-    );
-  }
-
   bool _wire2api_bool(dynamic raw) {
     return raw as bool;
   }
@@ -334,13 +319,6 @@ class NativeImpl implements Native {
     return castInt(raw);
   }
 
-  List<BasicVersionMetadata> _wire2api_list_basic_version_metadata(
-      dynamic raw) {
-    return (raw as List<dynamic>)
-        .map(_wire2api_basic_version_metadata)
-        .toList();
-  }
-
   List<MinecraftAccount> _wire2api_list_minecraft_account(dynamic raw) {
     return (raw as List<dynamic>).map(_wire2api_minecraft_account).toList();
   }
@@ -351,6 +329,10 @@ class NativeImpl implements Native {
 
   List<MinecraftSkin> _wire2api_list_minecraft_skin(dynamic raw) {
     return (raw as List<dynamic>).map(_wire2api_minecraft_skin).toList();
+  }
+
+  List<VersionMetadata> _wire2api_list_version_metadata(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_version_metadata).toList();
   }
 
   LoginFlowDeviceCode _wire2api_login_flow_device_code(dynamic raw) {
@@ -490,6 +472,21 @@ class NativeImpl implements Native {
 
   void _wire2api_unit(dynamic raw) {
     return;
+  }
+
+  VersionMetadata _wire2api_version_metadata(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return VersionMetadata(
+      id: _wire2api_String(arr[0]),
+      versionType: _wire2api_version_type(arr[1]),
+      url: _wire2api_String(arr[2]),
+      uploadedTime: _wire2api_Chrono_Utc(arr[3]),
+      releaseTime: _wire2api_Chrono_Utc(arr[4]),
+      sha1: _wire2api_String(arr[5]),
+      complianceLevel: _wire2api_u32(arr[6]),
+    );
   }
 
   VersionType _wire2api_version_type(dynamic raw) {

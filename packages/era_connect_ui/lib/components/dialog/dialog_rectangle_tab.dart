@@ -14,8 +14,13 @@ class TabItem {
 class DialogRectangleTab extends StatefulWidget {
   final String title;
   final List<TabItem> tabs;
+  final int initialPage;
 
-  const DialogRectangleTab({super.key, required this.title, required this.tabs})
+  const DialogRectangleTab(
+      {super.key,
+      required this.title,
+      this.initialPage = 0,
+      required this.tabs})
       : assert(tabs.length > 1);
 
   @override
@@ -23,7 +28,13 @@ class DialogRectangleTab extends StatefulWidget {
 }
 
 class _DialogRectangleTabState extends State<DialogRectangleTab> {
-  int _currentPage = 0;
+  late int _currentPage;
+
+  @override
+  void initState() {
+    _currentPage = widget.initialPage;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

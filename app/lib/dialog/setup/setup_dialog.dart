@@ -16,6 +16,7 @@ class SetupDialog extends StatefulWidget {
 
 class _SetupDialogState extends State<SetupDialog> {
   GameMode _gameMode = GameMode.vanilla;
+  VersionMetadata? _version;
 
   @override
   Widget build(BuildContext context) {
@@ -57,20 +58,33 @@ class _SetupDialogState extends State<SetupDialog> {
               return true;
             }),
         StepData(
-            stepDescription: '建立第一個收藏',
-            title: context.i18n['dialog.setup.welcome'],
-            description: 'Test Description',
-            contentPages: [
-              CollectionGameMode(
-                onGameModeChanged: (mode) {
+          stepDescription: '建立第一個收藏',
+          title: context.i18n['dialog.setup.welcome'],
+          description: 'Test Description',
+          contentPages: [
+            NotificationListener<GameModeNotification>(
+              onNotification: (notification) {
+                if (notification.gameMode != null) {
                   setState(() {
-                    _gameMode = mode;
+                    _gameMode = notification.gameMode!;
                   });
-                },
-              ),
-              if (_gameMode == GameMode.modded) const Text('Mod'),
-              const Text('Test 3 PAGE 3')
-            ]),
+                }
+
+                if (notification.version != null) {
+                  setState(() {
+                    _version = notification.version!;
+                  });
+                }
+
+                return true;
+              },
+              child: CollectionGameMode(
+                  initialGameMode: _gameMode, initialVersion: _version),
+            ),
+            if (_gameMode == GameMode.modded) const Text('Mod'),
+            const Text('Test 3 PAGE 3')
+          ],
+        ),
         StepData(
             stepDescription: '為您的收藏加入內容',
             title: context.i18n['dialog.setup.welcome'],

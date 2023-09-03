@@ -9,9 +9,9 @@ const VERSION_MANIFEST_URL: &str =
     "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
 #[derive(Debug, Deserialize)]
-pub struct VersionManifest {
+pub struct VersionsManifest {
     pub latest: LatestVersion,
-    pub versions: Vec<BasicVersionMetadata>,
+    pub versions: Vec<VersionMetadata>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -23,7 +23,7 @@ pub struct LatestVersion {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[frb[dart_metadata = ("freezed")]]
-pub struct BasicVersionMetadata {
+pub struct VersionMetadata {
     /// A unique identifier of the version, for example `1.20.1` or `23w33a`.
     pub id: String,
     #[serde(rename = "type")]
@@ -46,11 +46,11 @@ pub enum VersionType {
     OldAlpha,
 }
 
-pub async fn get_versions() -> anyhow::Result<Vec<BasicVersionMetadata>> {
+pub async fn get_versions() -> anyhow::Result<Vec<VersionMetadata>> {
     let response = download_file(VERSION_MANIFEST_URL, None)
         .await
         .context("Failed to download version manifest")?;
-    let version_manifest: VersionManifest =
+    let version_manifest: VersionsManifest =
         serde_json::from_slice(&response).context("Failed to parse version manifest")?;
 
     Ok(version_manifest.versions)

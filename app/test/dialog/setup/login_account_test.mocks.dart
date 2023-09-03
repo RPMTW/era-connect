@@ -552,20 +552,18 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValueForMissingStub: _i8.Stream<_i7.LoginFlowEvent>.empty(),
       ) as _i8.Stream<_i7.LoginFlowEvent>);
   @override
-  _i8.Future<List<_i7.BasicVersionMetadata>> getVanillaVersions(
-          {dynamic hint}) =>
+  _i8.Future<List<_i7.VersionMetadata>> getVanillaVersions({dynamic hint}) =>
       (super.noSuchMethod(
         Invocation.method(
           #getVanillaVersions,
           [],
           {#hint: hint},
         ),
-        returnValue: _i8.Future<List<_i7.BasicVersionMetadata>>.value(
-            <_i7.BasicVersionMetadata>[]),
-        returnValueForMissingStub:
-            _i8.Future<List<_i7.BasicVersionMetadata>>.value(
-                <_i7.BasicVersionMetadata>[]),
-      ) as _i8.Future<List<_i7.BasicVersionMetadata>>);
+        returnValue: _i8.Future<List<_i7.VersionMetadata>>.value(
+            <_i7.VersionMetadata>[]),
+        returnValueForMissingStub: _i8.Future<List<_i7.VersionMetadata>>.value(
+            <_i7.VersionMetadata>[]),
+      ) as _i8.Future<List<_i7.VersionMetadata>>);
   @override
   void dispose() => super.noSuchMethod(
         Invocation.method(

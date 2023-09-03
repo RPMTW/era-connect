@@ -6,6 +6,6 @@ const metaApi = MetaApi();
 class MetaApi {
   const MetaApi();
 
-  Future<List<bridge.BasicVersionMetadata>> getVanillaVersions() =>
+  Future<List<bridge.VersionMetadata>> getVanillaVersions() =>
       api.getVanillaVersions();
 }

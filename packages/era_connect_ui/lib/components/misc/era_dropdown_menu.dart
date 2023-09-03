@@ -11,7 +11,9 @@ class EraDropdownMenu extends StatefulWidget {
   final int initialIndex;
 
   const EraDropdownMenu({super.key, required this.items, this.initialIndex = 0})
-      : assert(items.length > 0);
+      : assert(items.length > 0 &&
+            initialIndex >= 0 &&
+            initialIndex < items.length);
 
   @override
   State<EraDropdownMenu> createState() => _EraDropdownMenuState();
@@ -22,12 +24,13 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
   final LayerLink _layerLink = LayerLink();
   late final AnimationController _animationController;
 
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   FocusScopeNode? _focusScopeNode;
   OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
+    _selectedIndex = widget.initialIndex;
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 100),
@@ -59,6 +62,8 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
   }
 
   void _showOverlay() {
+    if (widget.items.length == 1) return;
+
     final renderBox = context.findRenderObject();
     if (renderBox is! RenderBox) return;
 
@@ -123,7 +128,6 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
 
   Widget _buildOverlay(double width) {
     final int initialIndex;
-
     if (widget.initialIndex >= 1) {
       initialIndex = widget.initialIndex - 1;
     } else {

@@ -61,7 +61,7 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kMinecraftLoginFlowConstMeta;
 
-  Future<List<BasicVersionMetadata>> getVanillaVersions({dynamic hint});
+  Future<List<VersionMetadata>> getVanillaVersions({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetVanillaVersionsConstMeta;
 }
@@ -89,19 +89,6 @@ class AccountToken {
     required this.token,
     required this.expiresAt,
   });
-}
-
-@freezed
-class BasicVersionMetadata with _$BasicVersionMetadata {
-  const factory BasicVersionMetadata({
-    required String id,
-    required VersionType versionType,
-    required String url,
-    required DateTime uploadedTime,
-    required DateTime releaseTime,
-    required String sha1,
-    required int complianceLevel,
-  }) = _BasicVersionMetadata;
 }
 
 enum DownloadState {
@@ -230,6 +217,19 @@ sealed class UILayoutValue with _$UILayoutValue {
   const factory UILayoutValue.completedSetup(
     bool field0,
   ) = UILayoutValue_CompletedSetup;
+}
+
+@freezed
+class VersionMetadata with _$VersionMetadata {
+  const factory VersionMetadata({
+    required String id,
+    required VersionType versionType,
+    required String url,
+    required DateTime uploadedTime,
+    required DateTime releaseTime,
+    required String sha1,
+    required int complianceLevel,
+  }) = _VersionMetadata;
 }
 
 enum VersionType {
