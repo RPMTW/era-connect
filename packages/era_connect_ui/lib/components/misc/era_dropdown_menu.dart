@@ -9,8 +9,13 @@ import 'era_icon.dart';
 class EraDropdownMenu extends StatefulWidget {
   final List<EraDropdownMenuItem> items;
   final int initialIndex;
+  final Color? backgroundColor;
 
-  const EraDropdownMenu({super.key, required this.items, this.initialIndex = 0})
+  const EraDropdownMenu(
+      {super.key,
+      required this.items,
+      this.initialIndex = 0,
+      this.backgroundColor})
       : assert(items.length > 0 &&
             initialIndex >= 0 &&
             initialIndex < items.length);
@@ -89,7 +94,7 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
       required bool isOverlay,
       required VoidCallback onTap}) {
     final child = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       child: IconTheme(
         data: const IconThemeData(size: 25),
         child: Row(
@@ -119,8 +124,9 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
       style: EraBasicButtonStyle(
           backgroundColor: isOverlay
               ? Colors.transparent
-              : context.theme.deepBackgroundColor,
-          hoverColor: Colors.transparent,
+              : widget.backgroundColor ?? context.theme.deepBackgroundColor,
+          hoverColor:
+              isOverlay ? Colors.transparent : context.theme.backgroundColor,
           borderRadius: 15),
       child: child,
     );
@@ -201,7 +207,7 @@ class _EraDropdownMenuState extends State<EraDropdownMenu>
           children: [
             Container(color: context.theme.primaryColor.withOpacity(0.3)),
             Positioned(
-              height: 200,
+              height: 220,
               width: width + 50,
               child: CompositedTransformFollower(
                 link: _layerLink,

@@ -4,18 +4,18 @@ import 'package:era_connect/api/lib.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
 
-class CollectionGameMode extends StatefulWidget {
+class CollectionGameModeStep extends StatefulWidget {
   final GameMode initialGameMode;
   final VersionMetadata? initialVersion;
 
-  const CollectionGameMode(
+  const CollectionGameModeStep(
       {super.key, required this.initialGameMode, this.initialVersion});
 
   @override
-  State<CollectionGameMode> createState() => _CollectionGameModeState();
+  State<CollectionGameModeStep> createState() => _CollectionGameModeStepState();
 }
 
-class _CollectionGameModeState extends State<CollectionGameMode> {
+class _CollectionGameModeStepState extends State<CollectionGameModeStep> {
   final Completer<List<VersionMetadata>> _versions = Completer();
 
   @override
@@ -134,37 +134,31 @@ class _CollectionGameModeState extends State<CollectionGameMode> {
             ),
           ],
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '遊戲版本',
-              style: TextStyle(fontSize: 16, color: context.theme.textColor),
-            ),
-            const SizedBox(height: 10),
-            Builder(builder: (context) {
-              if (versions == null) {
-                return EraDropdownMenu(
-                  items: [
-                    EraDropdownMenuItem(
-                      icon: EraIcon.material(Icons.hourglass_empty_rounded),
-                      label: const Text('載入中...'),
-                    ),
-                  ],
-                );
-              }
+        EraField(
+          title: '遊戲版本',
+          tooltip: '選擇您想要的遊玩的 Minecraft 版本',
+          child: Builder(builder: (context) {
+            if (versions == null) {
+              return EraDropdownMenu(
+                items: [
+                  EraDropdownMenuItem(
+                    icon: EraIcon.material(Icons.hourglass_empty_rounded),
+                    label: const Text('載入中...'),
+                  ),
+                ],
+              );
+            }
 
-              final versionType = gameMode == GameMode.snapshot
-                  ? VersionType.Snapshot
-                  : VersionType.Release;
-              final filteredVersions =
-                  versions.where((e) => e.versionType == versionType).toList();
+            final versionType = gameMode == GameMode.snapshot
+                ? VersionType.Snapshot
+                : VersionType.Release;
+            final filteredVersions =
+                versions.where((e) => e.versionType == versionType).toList();
 
-              return _GameVersionPicker(
-                  versions: filteredVersions,
-                  initialVersion: widget.initialVersion);
-            }),
-          ],
+            return _GameVersionPicker(
+                versions: filteredVersions,
+                initialVersion: widget.initialVersion);
+          }),
         )
       ],
     );

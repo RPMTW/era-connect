@@ -21,7 +21,7 @@ class _StepDialogState extends State<StepDialog> {
   /// Calls the event handler of the current step and if it returns true, calls the callback.
   void _callEvent(StepData step, StepEvent event, VoidCallback callback) {
     final eventHandler = step.onEvent;
-    final success = eventHandler == null ? true : eventHandler(event);
+    final success = eventHandler?.call(event, _contentPageIndex) ?? true;
 
     if (success) {
       callback();
@@ -39,8 +39,10 @@ class _StepDialogState extends State<StepDialog> {
     final step = _getCurrentStep();
 
     if (_contentPageIndex < step.contentPages.length - 1) {
-      setState(() {
-        _contentPageIndex++;
+      _callEvent(step, StepEvent.next, () {
+        setState(() {
+          _contentPageIndex++;
+        });
       });
       return;
     }
@@ -58,14 +60,17 @@ class _StepDialogState extends State<StepDialog> {
   }
 
   void _previousStep() {
+    final step = _getCurrentStep();
+
     if (_contentPageIndex > 0) {
-      setState(() {
-        _contentPageIndex--;
+      _callEvent(step, StepEvent.previous, () {
+        setState(() {
+          _contentPageIndex--;
+        });
       });
       return;
     }
 
-    final step = _getCurrentStep();
     _callEvent(step, StepEvent.previous, () {
       final previousStep = widget.steps[_currentStep - 1];
       _moveToStep(_currentStep - 1, previousStep.contentPages.length - 1);
@@ -235,7 +240,7 @@ class StepData {
   final String? logoBoxText;
   final bool hasBrandText;
   final List<Widget> contentPages;
-  final bool Function(StepEvent event)? onEvent;
+  final bool Function(StepEvent event, int contentPageIndex)? onEvent;
 
   const StepData(
       {this.stepName,
