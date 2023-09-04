@@ -21,13 +21,24 @@ impl StorageLoader {
             Cow::Borrowed(c) => c.to_path_buf(),
             Cow::Owned(x) => x,
         };
+
         Self {
             file_name,
             base_path,
         }
     }
 
-    pub fn load<T: Default + DeserializeOwned + Serialize>(&self) -> anyhow::Result<T> {
+    pub fn load<T: DeserializeOwned + Serialize>(&self) -> anyhow::Result<T> {
+        let file = File::open(self.get_path_buf())?;
+        let reader = BufReader::new(file);
+        let storage = serde_json::from_reader(reader)?;
+
+        Ok(storage)
+    }
+
+    pub fn load_with_default<T: Default + DeserializeOwned + Serialize>(
+        &self,
+    ) -> anyhow::Result<T> {
         let path = self.get_path_buf();
         if !path.exists() {
             let storage = T::default();
@@ -35,10 +46,7 @@ impl StorageLoader {
             return Ok(storage);
         }
 
-        let file = File::open(path)?;
-        let reader = BufReader::new(file);
-        let storage = serde_json::from_reader(reader)?;
-        Ok(storage)
+        self.load()
     }
 
     pub fn save<T: Serialize>(&self, storage: &T) -> anyhow::Result<()> {
@@ -71,6 +79,6 @@ pub trait StorageInstance<T: Default + DeserializeOwned + Serialize> {
     fn load() -> anyhow::Result<T> {
         let loader =
             StorageLoader::new(Self::file_name().to_owned(), Cow::Owned(Self::base_path()));
-        loader.load::<T>()
+        loader.load_with_default::<T>()
     }
 }

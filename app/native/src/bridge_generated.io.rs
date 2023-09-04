@@ -68,7 +68,29 @@ pub extern "C" fn wire_get_vanilla_versions(port_: i64) {
     wire_get_vanilla_versions_impl(port_)
 }
 
+#[no_mangle]
+pub extern "C" fn wire_create_collection(
+    port_: i64,
+    display_name: *mut wire_uint_8_list,
+    version_metadata: *mut wire_VersionMetadata,
+    mod_loader: *mut wire_ModLoader,
+    advanced_options: *mut wire_AdvancedOptions,
+) {
+    wire_create_collection_impl(
+        port_,
+        display_name,
+        version_metadata,
+        mod_loader,
+        advanced_options,
+    )
+}
+
 // Section: allocate functions
+
+#[no_mangle]
+pub extern "C" fn new_box_autoadd_advanced_options_0() -> *mut wire_AdvancedOptions {
+    support::new_leak_box_ptr(wire_AdvancedOptions::new_with_null_ptr())
+}
 
 #[no_mangle]
 pub extern "C" fn new_box_autoadd_minecraft_skin_0() -> *mut wire_MinecraftSkin {
@@ -76,8 +98,23 @@ pub extern "C" fn new_box_autoadd_minecraft_skin_0() -> *mut wire_MinecraftSkin 
 }
 
 #[no_mangle]
+pub extern "C" fn new_box_autoadd_mod_loader_0() -> *mut wire_ModLoader {
+    support::new_leak_box_ptr(wire_ModLoader::new_with_null_ptr())
+}
+
+#[no_mangle]
 pub extern "C" fn new_box_autoadd_ui_layout_value_0() -> *mut wire_UILayoutValue {
     support::new_leak_box_ptr(wire_UILayoutValue::new_with_null_ptr())
+}
+
+#[no_mangle]
+pub extern "C" fn new_box_autoadd_usize_0(value: usize) -> *mut usize {
+    support::new_leak_box_ptr(value)
+}
+
+#[no_mangle]
+pub extern "C" fn new_box_autoadd_version_metadata_0() -> *mut wire_VersionMetadata {
+    support::new_leak_box_ptr(wire_VersionMetadata::new_with_null_ptr())
 }
 
 #[no_mangle]
@@ -106,16 +143,47 @@ impl Wire2Api<uuid::Uuid> for *mut wire_uint_8_list {
     }
 }
 
+impl Wire2Api<AdvancedOptions> for wire_AdvancedOptions {
+    fn wire2api(self) -> AdvancedOptions {
+        AdvancedOptions {
+            jvm_max_memory: self.jvm_max_memory.wire2api(),
+        }
+    }
+}
+
+impl Wire2Api<AdvancedOptions> for *mut wire_AdvancedOptions {
+    fn wire2api(self) -> AdvancedOptions {
+        let wrap = unsafe { support::box_from_leak_ptr(self) };
+        Wire2Api::<AdvancedOptions>::wire2api(*wrap).into()
+    }
+}
 impl Wire2Api<MinecraftSkin> for *mut wire_MinecraftSkin {
     fn wire2api(self) -> MinecraftSkin {
         let wrap = unsafe { support::box_from_leak_ptr(self) };
         Wire2Api::<MinecraftSkin>::wire2api(*wrap).into()
     }
 }
+impl Wire2Api<ModLoader> for *mut wire_ModLoader {
+    fn wire2api(self) -> ModLoader {
+        let wrap = unsafe { support::box_from_leak_ptr(self) };
+        Wire2Api::<ModLoader>::wire2api(*wrap).into()
+    }
+}
 impl Wire2Api<UILayoutValue> for *mut wire_UILayoutValue {
     fn wire2api(self) -> UILayoutValue {
         let wrap = unsafe { support::box_from_leak_ptr(self) };
         Wire2Api::<UILayoutValue>::wire2api(*wrap).into()
+    }
+}
+impl Wire2Api<usize> for *mut usize {
+    fn wire2api(self) -> usize {
+        unsafe { *support::box_from_leak_ptr(self) }
+    }
+}
+impl Wire2Api<VersionMetadata> for *mut wire_VersionMetadata {
+    fn wire2api(self) -> VersionMetadata {
+        let wrap = unsafe { support::box_from_leak_ptr(self) };
+        Wire2Api::<VersionMetadata>::wire2api(*wrap).into()
     }
 }
 
@@ -126,6 +194,15 @@ impl Wire2Api<MinecraftSkin> for wire_MinecraftSkin {
             state: self.state.wire2api(),
             url: self.url.wire2api(),
             variant: self.variant.wire2api(),
+        }
+    }
+}
+
+impl Wire2Api<ModLoader> for wire_ModLoader {
+    fn wire2api(self) -> ModLoader {
+        ModLoader {
+            mod_loader_type: self.mod_loader_type.wire2api(),
+            version: self.version.wire2api(),
         }
     }
 }
@@ -150,7 +227,28 @@ impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
         }
     }
 }
+
+impl Wire2Api<VersionMetadata> for wire_VersionMetadata {
+    fn wire2api(self) -> VersionMetadata {
+        VersionMetadata {
+            id: self.id.wire2api(),
+            version_type: self.version_type.wire2api(),
+            url: self.url.wire2api(),
+            uploaded_time: self.uploaded_time.wire2api(),
+            release_time: self.release_time.wire2api(),
+            sha1: self.sha1.wire2api(),
+            compliance_level: self.compliance_level.wire2api(),
+        }
+    }
+}
+
 // Section: wire structs
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_AdvancedOptions {
+    jvm_max_memory: *mut usize,
+}
 
 #[repr(C)]
 #[derive(Clone)]
@@ -163,9 +261,28 @@ pub struct wire_MinecraftSkin {
 
 #[repr(C)]
 #[derive(Clone)]
+pub struct wire_ModLoader {
+    mod_loader_type: i32,
+    version: *mut wire_uint_8_list,
+}
+
+#[repr(C)]
+#[derive(Clone)]
 pub struct wire_uint_8_list {
     ptr: *mut u8,
     len: i32,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_VersionMetadata {
+    id: *mut wire_uint_8_list,
+    version_type: i32,
+    url: *mut wire_uint_8_list,
+    uploaded_time: i64,
+    release_time: i64,
+    sha1: *mut wire_uint_8_list,
+    compliance_level: u32,
 }
 
 #[repr(C)]
@@ -198,6 +315,20 @@ impl<T> NewWithNullPtr for *mut T {
     }
 }
 
+impl NewWithNullPtr for wire_AdvancedOptions {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            jvm_max_memory: core::ptr::null_mut(),
+        }
+    }
+}
+
+impl Default for wire_AdvancedOptions {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+
 impl NewWithNullPtr for wire_MinecraftSkin {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -210,6 +341,21 @@ impl NewWithNullPtr for wire_MinecraftSkin {
 }
 
 impl Default for wire_MinecraftSkin {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+
+impl NewWithNullPtr for wire_ModLoader {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            mod_loader_type: Default::default(),
+            version: core::ptr::null_mut(),
+        }
+    }
+}
+
+impl Default for wire_ModLoader {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -237,6 +383,26 @@ pub extern "C" fn inflate_UILayoutValue_CompletedSetup() -> *mut UILayoutValueKi
             field0: Default::default(),
         }),
     })
+}
+
+impl NewWithNullPtr for wire_VersionMetadata {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            id: core::ptr::null_mut(),
+            version_type: Default::default(),
+            url: core::ptr::null_mut(),
+            uploaded_time: Default::default(),
+            release_time: Default::default(),
+            sha1: core::ptr::null_mut(),
+            compliance_level: Default::default(),
+        }
+    }
+}
+
+impl Default for wire_VersionMetadata {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
 }
 
 // Section: sync execution mode utility

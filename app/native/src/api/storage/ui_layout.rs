@@ -24,12 +24,4 @@ impl StorageInstance<Self> for UILayout {
             StorageLoader::new(Self::file_name().to_owned(), Cow::Owned(Self::base_path()));
         storage.save(self)
     }
-
-    fn load() -> anyhow::Result<Self> {
-        let loader = super::storage_loader::StorageLoader::new(
-            Self::file_name().to_owned(),
-            Cow::Owned(Self::base_path()),
-        );
-        loader.load::<Self>()
-    }
 }

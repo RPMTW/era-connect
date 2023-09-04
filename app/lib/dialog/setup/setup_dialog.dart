@@ -131,8 +131,13 @@ class _SetupDialogState extends State<SetupDialog> {
           description: '恭喜你完成了所有設定並建立了第一個收藏，現在就開始在豐富多元的 Minecraft 世界中盡情探索吧！',
           contentPages: [const SizedBox.shrink()],
           onEvent: (event, _) {
-            if (event == StepEvent.done) {
-              storageApi.uiLayout.completedSetup = true;
+            if (event == StepEvent.done && _version != null) {
+              print('done');
+              collectionApi.create(
+                displayName: _displayName ?? '新的收藏',
+                versionMetadata: _version!,
+              );
+              // storageApi.uiLayout.completedSetup = true;
             }
 
             return true;

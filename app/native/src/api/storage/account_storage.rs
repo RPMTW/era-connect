@@ -22,6 +22,7 @@ impl StorageInstance<Self> for AccountStorage {
     fn file_name() -> &'static str {
         ACCOUNT_FILE_NAME
     }
+
     fn save(&self) -> anyhow::Result<()> {
         let storage =
             StorageLoader::new(Self::file_name().to_owned(), Cow::Owned(Self::base_path()));

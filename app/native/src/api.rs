@@ -12,7 +12,6 @@ pub use std::sync::mpsc;
 pub use std::sync::mpsc::{Receiver, Sender};
 
 use anyhow::Context;
-use chrono::Local;
 use log::{info, warn};
 
 pub use flutter_rust_bridge::StreamSink;
@@ -49,6 +48,8 @@ lazy_static::lazy_static! {
 }
 
 pub fn setup_logger() -> anyhow::Result<()> {
+    use chrono::Local;
+
     let file_name = format!("{}.log", Local::now().format("%Y-%m-%d-%H-%M-%S"));
     let file_path = DATA_DIR.join("logs").join(file_name);
     let parent = file_path
@@ -84,20 +85,23 @@ pub fn setup_logger() -> anyhow::Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let collection = Collection::default();
-    let c = prepare_vanilla_download(&collection).await?;
+    // HACK: This is a temporary solution to get the collection
+    let collection = STORAGE.collections.read().await.get(0).unwrap().clone();
+    let (vanilla_download_args, vanilla_arguments) = prepare_vanilla_download(&collection).await?;
 
     let vanilla_bias = DownloadBias {
         start: 0.0,
         end: 100.0,
     };
-    run_download(stream, c.0, vanilla_bias).await?;
-    launch_game(c.1.launch_args).await
+    run_download(stream, vanilla_download_args, vanilla_bias).await?;
+    launch_game(vanilla_arguments.launch_args).await
 }
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let collection = Collection::default();
+    // HACK: This is a temporary solution to get the collection
+    let collection = STORAGE.collections.read().await.get(0).unwrap().clone();
+
     let (vanilla_download_args, vanilla_arguments) = prepare_vanilla_download(&collection).await?;
     info!("Starts Vanilla Downloading");
     let vanilla_bias = DownloadBias {
@@ -132,7 +136,9 @@ pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-    let collection = Collection::default();
+    // HACK: This is a temporary solution to get the collection
+    let collection = STORAGE.collections.read().await.get(0).unwrap().clone();
+
     let (download_args, vanilla_arguments) = prepare_vanilla_download(&collection).await?;
     let vanilla_bias = DownloadBias {
         start: 0.0,
@@ -230,6 +236,12 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
     skin.close();
     Ok(())
 }
+
+#[tokio::main(flavor = "current_thread")]
+pub async fn get_vanilla_versions() -> anyhow::Result<Vec<VersionMetadata>> {
+    vanilla::version::get_versions().await
+}
+
 // pub fn get_collection_storage(key: CollectionKey, index: usize) -> SyncReturn<CollectionValue> {
 //     let value = STORAGE
 //         .collection
@@ -248,7 +260,29 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
 //     Ok(())
 // }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn get_vanilla_versions() -> anyhow::Result<Vec<VersionMetadata>> {
-    vanilla::version::get_versions().await
+pub fn create_collection(
+    display_name: String,
+    version_metadata: VersionMetadata,
+    mod_loader: Option<ModLoader>,
+    advanced_options: Option<AdvancedOptions>,
+) -> anyhow::Result<()> {
+    use chrono::{Duration, Utc};
+
+    let (loader, entry_path) = Collection::create(&display_name)?;
+    let now_time = Utc::now();
+
+    let collection = Collection {
+        display_name,
+        minecraft_version: version_metadata.id,
+        mod_loader,
+        created_at: now_time,
+        updated_at: now_time,
+        played_time: Duration::seconds(0),
+        advanced_options,
+        entry_path,
+    };
+
+    loader.save(&collection)?;
+
+    Ok(())
 }

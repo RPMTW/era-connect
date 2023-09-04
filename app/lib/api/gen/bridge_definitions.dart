@@ -64,6 +64,15 @@ abstract class Native {
   Future<List<VersionMetadata>> getVanillaVersions({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetVanillaVersionsConstMeta;
+
+  Future<void> createCollection(
+      {required String displayName,
+      required VersionMetadata versionMetadata,
+      ModLoader? modLoader,
+      AdvancedOptions? advancedOptions,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kCreateCollectionConstMeta;
 }
 
 enum AccountStorageKey {
@@ -88,6 +97,14 @@ class AccountToken {
   const AccountToken({
     required this.token,
     required this.expiresAt,
+  });
+}
+
+class AdvancedOptions {
+  final int? jvmMaxMemory;
+
+  const AdvancedOptions({
+    this.jvmMaxMemory,
   });
 }
 
@@ -192,6 +209,23 @@ class MinecraftSkin {
 enum MinecraftSkinVariant {
   Classic,
   Slim,
+}
+
+class ModLoader {
+  final ModLoaderType modLoaderType;
+  final String version;
+
+  const ModLoader({
+    required this.modLoaderType,
+    required this.version,
+  });
+}
+
+enum ModLoaderType {
+  Forge,
+  NeoForge,
+  Fabric,
+  Quilt,
 }
 
 class Progress {

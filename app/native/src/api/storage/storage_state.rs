@@ -15,20 +15,23 @@ use log::error;
 pub struct StorageState {
     pub account_storage: Arc<RwLock<AccountStorage>>,
     pub ui_layout: Arc<RwLock<UILayout>>,
-    pub collection: Arc<RwLock<Vec<Collection>>>,
+    pub collections: Arc<RwLock<Vec<Collection>>>,
 }
 
 impl StorageState {
     pub fn new() -> Self {
         let account_storage = Self::load_storage(AccountStorage::load());
         let ui_layout = Self::load_storage(UILayout::load());
-        let collection = Self::load_storage(Collection::scan());
+        let collection_loaders = Self::load_storage(Collection::scan());
 
         Self {
             account_storage: Arc::new(RwLock::new(account_storage)),
             ui_layout: Arc::new(RwLock::new(ui_layout)),
-            collection: Arc::new(RwLock::new(
-                collection.iter().flat_map(StorageLoader::load).collect(),
+            collections: Arc::new(RwLock::new(
+                collection_loaders
+                    .iter()
+                    .flat_map(StorageLoader::load)
+                    .collect(),
             )),
         }
     }

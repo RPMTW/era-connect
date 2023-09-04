@@ -244,6 +244,38 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
+  Future<void> createCollection(
+      {required String displayName,
+      required VersionMetadata versionMetadata,
+      ModLoader? modLoader,
+      AdvancedOptions? advancedOptions,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_String(displayName);
+    var arg1 = _platform.api2wire_box_autoadd_version_metadata(versionMetadata);
+    var arg2 = _platform.api2wire_opt_box_autoadd_mod_loader(modLoader);
+    var arg3 =
+        _platform.api2wire_opt_box_autoadd_advanced_options(advancedOptions);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_create_collection(port_, arg0, arg1, arg2, arg3),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kCreateCollectionConstMeta,
+      argValues: [displayName, versionMetadata, modLoader, advancedOptions],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kCreateCollectionConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "create_collection",
+        argNames: [
+          "displayName",
+          "versionMetadata",
+          "modLoader",
+          "advancedOptions"
+        ],
+      );
+
   void dispose() {
     _platform.dispose();
   }
@@ -526,6 +558,16 @@ int api2wire_minecraft_skin_variant(MinecraftSkinVariant raw) {
 }
 
 @protected
+int api2wire_mod_loader_type(ModLoaderType raw) {
+  return api2wire_i32(raw.index);
+}
+
+@protected
+int api2wire_u32(int raw) {
+  return raw;
+}
+
+@protected
 int api2wire_u8(int raw) {
   return raw;
 }
@@ -535,12 +577,26 @@ int api2wire_ui_layout_key(UILayoutKey raw) {
   return api2wire_i32(raw.index);
 }
 
+@protected
+int api2wire_usize(int raw) {
+  return raw;
+}
+
+@protected
+int api2wire_version_type(VersionType raw) {
+  return api2wire_i32(raw.index);
+}
 // Section: finalizer
 
 class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   NativePlatform(ffi.DynamicLibrary dylib) : super(NativeWire(dylib));
 
 // Section: api2wire
+
+  @protected
+  int api2wire_Chrono_Utc(DateTime raw) {
+    return api2wire_i64(raw.microsecondsSinceEpoch);
+  }
 
   @protected
   ffi.Pointer<wire_uint_8_list> api2wire_String(String raw) {
@@ -553,10 +609,25 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
+  ffi.Pointer<wire_AdvancedOptions> api2wire_box_autoadd_advanced_options(
+      AdvancedOptions raw) {
+    final ptr = inner.new_box_autoadd_advanced_options_0();
+    _api_fill_to_wire_advanced_options(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_MinecraftSkin> api2wire_box_autoadd_minecraft_skin(
       MinecraftSkin raw) {
     final ptr = inner.new_box_autoadd_minecraft_skin_0();
     _api_fill_to_wire_minecraft_skin(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_ModLoader> api2wire_box_autoadd_mod_loader(ModLoader raw) {
+    final ptr = inner.new_box_autoadd_mod_loader_0();
+    _api_fill_to_wire_mod_loader(raw, ptr.ref);
     return ptr;
   }
 
@@ -569,23 +640,82 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
+  ffi.Pointer<ffi.UintPtr> api2wire_box_autoadd_usize(int raw) {
+    return inner.new_box_autoadd_usize_0(api2wire_usize(raw));
+  }
+
+  @protected
+  ffi.Pointer<wire_VersionMetadata> api2wire_box_autoadd_version_metadata(
+      VersionMetadata raw) {
+    final ptr = inner.new_box_autoadd_version_metadata_0();
+    _api_fill_to_wire_version_metadata(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  int api2wire_i64(int raw) {
+    return raw;
+  }
+
+  @protected
+  ffi.Pointer<wire_AdvancedOptions> api2wire_opt_box_autoadd_advanced_options(
+      AdvancedOptions? raw) {
+    return raw == null
+        ? ffi.nullptr
+        : api2wire_box_autoadd_advanced_options(raw);
+  }
+
+  @protected
+  ffi.Pointer<wire_ModLoader> api2wire_opt_box_autoadd_mod_loader(
+      ModLoader? raw) {
+    return raw == null ? ffi.nullptr : api2wire_box_autoadd_mod_loader(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.UintPtr> api2wire_opt_box_autoadd_usize(int? raw) {
+    return raw == null ? ffi.nullptr : api2wire_box_autoadd_usize(raw);
+  }
+
+  @protected
   ffi.Pointer<wire_uint_8_list> api2wire_uint_8_list(Uint8List raw) {
     final ans = inner.new_uint_8_list_0(raw.length);
     ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
     return ans;
   }
+
 // Section: finalizer
 
 // Section: api_fill_to_wire
+
+  void _api_fill_to_wire_advanced_options(
+      AdvancedOptions apiObj, wire_AdvancedOptions wireObj) {
+    wireObj.jvm_max_memory =
+        api2wire_opt_box_autoadd_usize(apiObj.jvmMaxMemory);
+  }
+
+  void _api_fill_to_wire_box_autoadd_advanced_options(
+      AdvancedOptions apiObj, ffi.Pointer<wire_AdvancedOptions> wireObj) {
+    _api_fill_to_wire_advanced_options(apiObj, wireObj.ref);
+  }
 
   void _api_fill_to_wire_box_autoadd_minecraft_skin(
       MinecraftSkin apiObj, ffi.Pointer<wire_MinecraftSkin> wireObj) {
     _api_fill_to_wire_minecraft_skin(apiObj, wireObj.ref);
   }
 
+  void _api_fill_to_wire_box_autoadd_mod_loader(
+      ModLoader apiObj, ffi.Pointer<wire_ModLoader> wireObj) {
+    _api_fill_to_wire_mod_loader(apiObj, wireObj.ref);
+  }
+
   void _api_fill_to_wire_box_autoadd_ui_layout_value(
       UILayoutValue apiObj, ffi.Pointer<wire_UILayoutValue> wireObj) {
     _api_fill_to_wire_ui_layout_value(apiObj, wireObj.ref);
+  }
+
+  void _api_fill_to_wire_box_autoadd_version_metadata(
+      VersionMetadata apiObj, ffi.Pointer<wire_VersionMetadata> wireObj) {
+    _api_fill_to_wire_version_metadata(apiObj, wireObj.ref);
   }
 
   void _api_fill_to_wire_minecraft_skin(
@@ -594,6 +724,23 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     wireObj.state = api2wire_String(apiObj.state);
     wireObj.url = api2wire_String(apiObj.url);
     wireObj.variant = api2wire_minecraft_skin_variant(apiObj.variant);
+  }
+
+  void _api_fill_to_wire_mod_loader(ModLoader apiObj, wire_ModLoader wireObj) {
+    wireObj.mod_loader_type = api2wire_mod_loader_type(apiObj.modLoaderType);
+    wireObj.version = api2wire_String(apiObj.version);
+  }
+
+  void _api_fill_to_wire_opt_box_autoadd_advanced_options(
+      AdvancedOptions? apiObj, ffi.Pointer<wire_AdvancedOptions> wireObj) {
+    if (apiObj != null)
+      _api_fill_to_wire_box_autoadd_advanced_options(apiObj, wireObj);
+  }
+
+  void _api_fill_to_wire_opt_box_autoadd_mod_loader(
+      ModLoader? apiObj, ffi.Pointer<wire_ModLoader> wireObj) {
+    if (apiObj != null)
+      _api_fill_to_wire_box_autoadd_mod_loader(apiObj, wireObj);
   }
 
   void _api_fill_to_wire_ui_layout_value(
@@ -605,6 +752,17 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
       wireObj.kind.ref.CompletedSetup.ref.field0 = pre_field0;
       return;
     }
+  }
+
+  void _api_fill_to_wire_version_metadata(
+      VersionMetadata apiObj, wire_VersionMetadata wireObj) {
+    wireObj.id = api2wire_String(apiObj.id);
+    wireObj.version_type = api2wire_version_type(apiObj.versionType);
+    wireObj.url = api2wire_String(apiObj.url);
+    wireObj.uploaded_time = api2wire_Chrono_Utc(apiObj.uploadedTime);
+    wireObj.release_time = api2wire_Chrono_Utc(apiObj.releaseTime);
+    wireObj.sha1 = api2wire_String(apiObj.sha1);
+    wireObj.compliance_level = api2wire_u32(apiObj.complianceLevel);
   }
 }
 
@@ -895,6 +1053,49 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_get_vanilla_versions =
       _wire_get_vanilla_versionsPtr.asFunction<void Function(int)>();
 
+  void wire_create_collection(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> display_name,
+    ffi.Pointer<wire_VersionMetadata> version_metadata,
+    ffi.Pointer<wire_ModLoader> mod_loader,
+    ffi.Pointer<wire_AdvancedOptions> advanced_options,
+  ) {
+    return _wire_create_collection(
+      port_,
+      display_name,
+      version_metadata,
+      mod_loader,
+      advanced_options,
+    );
+  }
+
+  late final _wire_create_collectionPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Int64,
+              ffi.Pointer<wire_uint_8_list>,
+              ffi.Pointer<wire_VersionMetadata>,
+              ffi.Pointer<wire_ModLoader>,
+              ffi.Pointer<wire_AdvancedOptions>)>>('wire_create_collection');
+  late final _wire_create_collection = _wire_create_collectionPtr.asFunction<
+      void Function(
+          int,
+          ffi.Pointer<wire_uint_8_list>,
+          ffi.Pointer<wire_VersionMetadata>,
+          ffi.Pointer<wire_ModLoader>,
+          ffi.Pointer<wire_AdvancedOptions>)>();
+
+  ffi.Pointer<wire_AdvancedOptions> new_box_autoadd_advanced_options_0() {
+    return _new_box_autoadd_advanced_options_0();
+  }
+
+  late final _new_box_autoadd_advanced_options_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_AdvancedOptions> Function()>>(
+          'new_box_autoadd_advanced_options_0');
+  late final _new_box_autoadd_advanced_options_0 =
+      _new_box_autoadd_advanced_options_0Ptr
+          .asFunction<ffi.Pointer<wire_AdvancedOptions> Function()>();
+
   ffi.Pointer<wire_MinecraftSkin> new_box_autoadd_minecraft_skin_0() {
     return _new_box_autoadd_minecraft_skin_0();
   }
@@ -906,6 +1107,16 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _new_box_autoadd_minecraft_skin_0Ptr
           .asFunction<ffi.Pointer<wire_MinecraftSkin> Function()>();
 
+  ffi.Pointer<wire_ModLoader> new_box_autoadd_mod_loader_0() {
+    return _new_box_autoadd_mod_loader_0();
+  }
+
+  late final _new_box_autoadd_mod_loader_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_ModLoader> Function()>>(
+          'new_box_autoadd_mod_loader_0');
+  late final _new_box_autoadd_mod_loader_0 = _new_box_autoadd_mod_loader_0Ptr
+      .asFunction<ffi.Pointer<wire_ModLoader> Function()>();
+
   ffi.Pointer<wire_UILayoutValue> new_box_autoadd_ui_layout_value_0() {
     return _new_box_autoadd_ui_layout_value_0();
   }
@@ -916,6 +1127,31 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_ui_layout_value_0 =
       _new_box_autoadd_ui_layout_value_0Ptr
           .asFunction<ffi.Pointer<wire_UILayoutValue> Function()>();
+
+  ffi.Pointer<ffi.UintPtr> new_box_autoadd_usize_0(
+    int value,
+  ) {
+    return _new_box_autoadd_usize_0(
+      value,
+    );
+  }
+
+  late final _new_box_autoadd_usize_0Ptr = _lookup<
+          ffi.NativeFunction<ffi.Pointer<ffi.UintPtr> Function(ffi.UintPtr)>>(
+      'new_box_autoadd_usize_0');
+  late final _new_box_autoadd_usize_0 = _new_box_autoadd_usize_0Ptr
+      .asFunction<ffi.Pointer<ffi.UintPtr> Function(int)>();
+
+  ffi.Pointer<wire_VersionMetadata> new_box_autoadd_version_metadata_0() {
+    return _new_box_autoadd_version_metadata_0();
+  }
+
+  late final _new_box_autoadd_version_metadata_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_VersionMetadata> Function()>>(
+          'new_box_autoadd_version_metadata_0');
+  late final _new_box_autoadd_version_metadata_0 =
+      _new_box_autoadd_version_metadata_0Ptr
+          .asFunction<ffi.Pointer<wire_VersionMetadata> Function()>();
 
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,
@@ -992,6 +1228,37 @@ final class wire_MinecraftSkin extends ffi.Struct {
 
   @ffi.Int32()
   external int variant;
+}
+
+final class wire_VersionMetadata extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> id;
+
+  @ffi.Int32()
+  external int version_type;
+
+  external ffi.Pointer<wire_uint_8_list> url;
+
+  @ffi.Int64()
+  external int uploaded_time;
+
+  @ffi.Int64()
+  external int release_time;
+
+  external ffi.Pointer<wire_uint_8_list> sha1;
+
+  @ffi.Uint32()
+  external int compliance_level;
+}
+
+final class wire_ModLoader extends ffi.Struct {
+  @ffi.Int32()
+  external int mod_loader_type;
+
+  external ffi.Pointer<wire_uint_8_list> version;
+}
+
+final class wire_AdvancedOptions extends ffi.Struct {
+  external ffi.Pointer<ffi.UintPtr> jvm_max_memory;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<

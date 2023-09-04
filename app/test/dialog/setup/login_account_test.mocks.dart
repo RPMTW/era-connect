@@ -346,6 +346,19 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
   @override
+  _i5.FlutterRustBridgeTaskConstMeta get kCreateCollectionConstMeta =>
+      (super.noSuchMethod(
+        Invocation.getter(#kCreateCollectionConstMeta),
+        returnValue: _FakeFlutterRustBridgeTaskConstMeta_3(
+          this,
+          Invocation.getter(#kCreateCollectionConstMeta),
+        ),
+        returnValueForMissingStub: _FakeFlutterRustBridgeTaskConstMeta_3(
+          this,
+          Invocation.getter(#kCreateCollectionConstMeta),
+        ),
+      ) as _i5.FlutterRustBridgeTaskConstMeta);
+  @override
   _i8.Future<void> setupLogger({dynamic hint}) => (super.noSuchMethod(
         Invocation.method(
           #setupLogger,
@@ -564,6 +577,29 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValueForMissingStub: _i8.Future<List<_i7.VersionMetadata>>.value(
             <_i7.VersionMetadata>[]),
       ) as _i8.Future<List<_i7.VersionMetadata>>);
+  @override
+  _i8.Future<void> createCollection({
+    required String? displayName,
+    required _i7.VersionMetadata? versionMetadata,
+    _i7.ModLoader? modLoader,
+    _i7.AdvancedOptions? advancedOptions,
+    dynamic hint,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #createCollection,
+          [],
+          {
+            #displayName: displayName,
+            #versionMetadata: versionMetadata,
+            #modLoader: modLoader,
+            #advancedOptions: advancedOptions,
+            #hint: hint,
+          },
+        ),
+        returnValue: _i8.Future<void>.value(),
+        returnValueForMissingStub: _i8.Future<void>.value(),
+      ) as _i8.Future<void>);
   @override
   void dispose() => super.noSuchMethod(
         Invocation.method(

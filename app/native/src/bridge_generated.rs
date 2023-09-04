@@ -186,6 +186,35 @@ fn wire_get_vanilla_versions_impl(port_: MessagePort) {
         move || move |task_callback| get_vanilla_versions(),
     )
 }
+fn wire_create_collection_impl(
+    port_: MessagePort,
+    display_name: impl Wire2Api<String> + UnwindSafe,
+    version_metadata: impl Wire2Api<VersionMetadata> + UnwindSafe,
+    mod_loader: impl Wire2Api<Option<ModLoader>> + UnwindSafe,
+    advanced_options: impl Wire2Api<Option<AdvancedOptions>> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "create_collection",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_display_name = display_name.wire2api();
+            let api_version_metadata = version_metadata.wire2api();
+            let api_mod_loader = mod_loader.wire2api();
+            let api_advanced_options = advanced_options.wire2api();
+            move |task_callback| {
+                create_collection(
+                    api_display_name,
+                    api_version_metadata,
+                    api_mod_loader,
+                    api_advanced_options,
+                )
+            }
+        },
+    )
+}
 // Section: wrapper structs
 
 // Section: static checks
@@ -208,6 +237,16 @@ where
         (!self.is_null()).then(|| self.wire2api())
     }
 }
+impl Wire2Api<chrono::DateTime<chrono::Utc>> for i64 {
+    fn wire2api(self) -> chrono::DateTime<chrono::Utc> {
+        let Timestamp { s, ns } = wire2api_timestamp(self);
+        chrono::DateTime::<chrono::Utc>::from_utc(
+            chrono::NaiveDateTime::from_timestamp_opt(s, ns)
+                .expect("invalid or out-of-range datetime"),
+            chrono::Utc,
+        )
+    }
+}
 
 impl Wire2Api<AccountStorageKey> for i32 {
     fn wire2api(self) -> AccountStorageKey {
@@ -218,6 +257,7 @@ impl Wire2Api<AccountStorageKey> for i32 {
         }
     }
 }
+
 impl Wire2Api<bool> for bool {
     fn wire2api(self) -> bool {
         self
@@ -239,6 +279,11 @@ impl Wire2Api<i32> for i32 {
         self
     }
 }
+impl Wire2Api<i64> for i64 {
+    fn wire2api(self) -> i64 {
+        self
+    }
+}
 
 impl Wire2Api<MinecraftSkinVariant> for i32 {
     fn wire2api(self) -> MinecraftSkinVariant {
@@ -247,6 +292,24 @@ impl Wire2Api<MinecraftSkinVariant> for i32 {
             1 => MinecraftSkinVariant::Slim,
             _ => unreachable!("Invalid variant for MinecraftSkinVariant: {}", self),
         }
+    }
+}
+
+impl Wire2Api<ModLoaderType> for i32 {
+    fn wire2api(self) -> ModLoaderType {
+        match self {
+            0 => ModLoaderType::Forge,
+            1 => ModLoaderType::NeoForge,
+            2 => ModLoaderType::Fabric,
+            3 => ModLoaderType::Quilt,
+            _ => unreachable!("Invalid variant for ModLoaderType: {}", self),
+        }
+    }
+}
+
+impl Wire2Api<u32> for u32 {
+    fn wire2api(self) -> u32 {
+        self
     }
 }
 impl Wire2Api<u8> for u8 {
@@ -263,6 +326,23 @@ impl Wire2Api<UILayoutKey> for i32 {
     }
 }
 
+impl Wire2Api<usize> for usize {
+    fn wire2api(self) -> usize {
+        self
+    }
+}
+
+impl Wire2Api<VersionType> for i32 {
+    fn wire2api(self) -> VersionType {
+        match self {
+            0 => VersionType::Release,
+            1 => VersionType::Snapshot,
+            2 => VersionType::OldBeta,
+            3 => VersionType::OldAlpha,
+            _ => unreachable!("Invalid variant for VersionType: {}", self),
+        }
+    }
+}
 // Section: impl IntoDart
 
 impl support::IntoDart for AccountStorageValue {

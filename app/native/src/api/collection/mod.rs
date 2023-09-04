@@ -1,6 +1,7 @@
 use std::{borrow::Cow, fs::create_dir_all, path::PathBuf};
 
 use chrono::{DateTime, Duration, Utc};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use struct_key_value_pair::VariantStruct;
@@ -17,58 +18,67 @@ pub struct Collection {
     pub updated_at: DateTime<Utc>,
     #[serde_as(as = "serde_with::DurationSeconds<i64>")]
     pub played_time: Duration,
-    pub advanced_options: AdvancedOptions,
+    pub advanced_options: Option<AdvancedOptions>,
 
+    #[serde(skip)]
     pub entry_path: PathBuf,
 }
 
-impl Default for Collection {
-    fn default() -> Self {
-        Self {
-            display_name: String::new(),
-            minecraft_version: String::new(),
-            mod_loader: None,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            played_time: Duration::seconds(0),
-            advanced_options: AdvancedOptions::new(),
-            entry_path: PathBuf::new(),
-        }
-    }
-}
-
-const COLLECTION_NAME: &str = "collections.json";
+const COLLECTION_FILE_NAME: &str = "collection.json";
 const COLLECTION_BASE: &str = "collections";
 
 impl Collection {
-    fn get_entry_name(&self) -> String {
-        use rand::{distributions::Alphanumeric, Rng};
-
-        let random_string: String = rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(5)
-            .map(char::from)
-            .collect();
-        format!("{}_{random_string}", self.display_name)
-    }
     pub fn get_base_path() -> PathBuf {
         DATA_DIR.join(COLLECTION_BASE)
     }
-    pub fn get_entry_path(&self) -> PathBuf {
-        Self::get_base_path().join(self.get_entry_name())
-    }
-    pub fn add(display_name: String) -> anyhow::Result<StorageLoader> {
-        let mut collection = Self {
-            display_name,
-            ..Self::default()
-        };
-        let entry_path = collection.get_entry_path();
-        let loader = StorageLoader::new(COLLECTION_NAME.to_string(), Cow::Borrowed(&entry_path));
+
+    pub fn create(display_name: &str) -> std::io::Result<(StorageLoader, PathBuf)> {
+        // Windows file and directory name restrictions.
+        let invalid_chars_regex = Regex::new(r#"[\\/:*?\"<>|]"#).unwrap();
+        let reserved_names = vec![
+            "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7",
+            "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+        ];
+
+        let mut dir_name = invalid_chars_regex
+            .replace_all(display_name, "")
+            .to_string();
+        if reserved_names.contains(&dir_name.to_uppercase().as_str()) {
+            dir_name = format!("{}_", dir_name);
+        }
+        if dir_name.is_empty() {
+            dir_name = Self::gen_random_string();
+        }
+
+        let entry_path = Self::handle_duplicate_dir(Collection::get_base_path(), &dir_name);
         create_dir_all(&entry_path)?;
-        collection.entry_path = entry_path;
-        loader.save(&collection)?;
-        Ok(loader)
+        let loader =
+            StorageLoader::new(COLLECTION_FILE_NAME.to_string(), Cow::Borrowed(&entry_path));
+
+        Ok((loader, entry_path))
     }
+
+    fn handle_duplicate_dir(base_dir: PathBuf, dir_name: &str) -> PathBuf {
+        let path = base_dir.join(dir_name);
+        if !path.exists() {
+            return path;
+        }
+
+        let new_dir_name = format!("{dir_name}_{}", Self::gen_random_string());
+
+        Self::handle_duplicate_dir(base_dir, &new_dir_name)
+    }
+
+    fn gen_random_string() -> String {
+        use rand::{distributions::Alphanumeric, Rng};
+
+        rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(5)
+            .map(char::from)
+            .collect()
+    }
+
     pub fn scan() -> anyhow::Result<Vec<StorageLoader>> {
         let mut loaders = Vec::new();
         let collection_base_dir = Self::get_base_path();
@@ -80,7 +90,7 @@ impl Collection {
             for file in base_entry_path.read_dir()? {
                 let file_name = file?.file_name().to_string_lossy().to_string();
 
-                if file_name == COLLECTION_NAME {
+                if file_name == COLLECTION_FILE_NAME {
                     let path = collection_base_dir.join(&base_entry_path);
                     let loader = StorageLoader::new(file_name.clone(), Cow::Borrowed(&path));
                     let mut a = loader.load::<Collection>()?;
@@ -97,7 +107,7 @@ impl Collection {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ModLoader {
     #[serde(rename = "type")]
-    pub modloader_type: ModLoaderType,
+    pub mod_loader_type: ModLoaderType,
     pub version: String,
 }
 
@@ -110,10 +120,6 @@ pub enum ModLoaderType {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct AdvancedOptions {}
-
-impl AdvancedOptions {
-    pub fn new() -> Self {
-        Self {}
-    }
+pub struct AdvancedOptions {
+    pub jvm_max_memory: Option<usize>,
 }
