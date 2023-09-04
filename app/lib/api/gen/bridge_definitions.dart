@@ -16,18 +16,6 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kSetupLoggerConstMeta;
 
-  Stream<Progress> launchVanilla({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kLaunchVanillaConstMeta;
-
-  Stream<Progress> launchForge({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kLaunchForgeConstMeta;
-
-  Stream<Progress> launchQuilt({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kLaunchQuiltConstMeta;
-
   Future<DownloadState> fetchState({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kFetchStateConstMeta;
@@ -226,20 +214,6 @@ enum ModLoaderType {
   NeoForge,
   Fabric,
   Quilt,
-}
-
-class Progress {
-  final double speed;
-  final double percentages;
-  final double currentSize;
-  final double totalSize;
-
-  const Progress({
-    required this.speed,
-    required this.percentages,
-    required this.currentSize,
-    required this.totalSize,
-  });
 }
 
 enum UILayoutKey {

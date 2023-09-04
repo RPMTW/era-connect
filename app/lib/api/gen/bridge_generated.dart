@@ -42,54 +42,6 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
-  Stream<Progress> launchVanilla({dynamic hint}) {
-    return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_launch_vanilla(port_),
-      parseSuccessData: _wire2api_progress,
-      constMeta: kLaunchVanillaConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kLaunchVanillaConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "launch_vanilla",
-        argNames: [],
-      );
-
-  Stream<Progress> launchForge({dynamic hint}) {
-    return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_launch_forge(port_),
-      parseSuccessData: _wire2api_progress,
-      constMeta: kLaunchForgeConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kLaunchForgeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "launch_forge",
-        argNames: [],
-      );
-
-  Stream<Progress> launchQuilt({dynamic hint}) {
-    return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_launch_quilt(port_),
-      parseSuccessData: _wire2api_progress,
-      constMeta: kLaunchQuiltConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kLaunchQuiltConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "launch_quilt",
-        argNames: [],
-      );
-
   Future<DownloadState> fetchState({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_fetch_state(port_),
@@ -339,10 +291,6 @@ class NativeImpl implements Native {
     return DownloadState.values[raw as int];
   }
 
-  double _wire2api_f64(dynamic raw) {
-    return raw as double;
-  }
-
   int _wire2api_i32(dynamic raw) {
     return raw as int;
   }
@@ -465,18 +413,6 @@ class NativeImpl implements Native {
 
   UuidValue? _wire2api_opt_Uuid(dynamic raw) {
     return raw == null ? null : _wire2api_Uuid(raw);
-  }
-
-  Progress _wire2api_progress(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-    return Progress(
-      speed: _wire2api_f64(arr[0]),
-      percentages: _wire2api_f64(arr[1]),
-      currentSize: _wire2api_f64(arr[2]),
-      totalSize: _wire2api_f64(arr[3]),
-    );
   }
 
   int _wire2api_u32(dynamic raw) {
@@ -875,48 +811,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
           'wire_setup_logger');
   late final _wire_setup_logger =
       _wire_setup_loggerPtr.asFunction<void Function(int)>();
-
-  void wire_launch_vanilla(
-    int port_,
-  ) {
-    return _wire_launch_vanilla(
-      port_,
-    );
-  }
-
-  late final _wire_launch_vanillaPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
-          'wire_launch_vanilla');
-  late final _wire_launch_vanilla =
-      _wire_launch_vanillaPtr.asFunction<void Function(int)>();
-
-  void wire_launch_forge(
-    int port_,
-  ) {
-    return _wire_launch_forge(
-      port_,
-    );
-  }
-
-  late final _wire_launch_forgePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
-          'wire_launch_forge');
-  late final _wire_launch_forge =
-      _wire_launch_forgePtr.asFunction<void Function(int)>();
-
-  void wire_launch_quilt(
-    int port_,
-  ) {
-    return _wire_launch_quilt(
-      port_,
-    );
-  }
-
-  late final _wire_launch_quiltPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
-          'wire_launch_quilt');
-  late final _wire_launch_quilt =
-      _wire_launch_quiltPtr.asFunction<void Function(int)>();
 
   void wire_fetch_state(
     int port_,

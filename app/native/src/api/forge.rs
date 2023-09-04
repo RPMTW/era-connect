@@ -17,7 +17,8 @@ use tokio::{fs, io::AsyncBufReadExt};
 use super::{
     download::{download_file, extract_filename, validate_sha1, DownloadArgs},
     vanilla::{
-        get_game_manifest, GameOptions, HandlesType, JvmOptions, LaunchArgs, ProcessedArguments,
+        manifest::GameManifest, GameOptions, HandlesType, JvmOptions, LaunchArgs,
+        ProcessedArguments,
     },
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -185,6 +186,7 @@ pub async fn process_forge(
     mut launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     _game_options: GameOptions,
+    game_manifest: GameManifest,
     manifest: Value,
 ) -> Result<LaunchArgs> {
     let mut data = ProcessorData::deserialize(
@@ -219,11 +221,7 @@ pub async fn process_forge(
     data.mojmaps.convert_maven_to_path(&folder)?;
     data.patched.convert_maven_to_path(&folder)?;
     data.binpatch.convert_maven_to_path(&folder)?;
-    let (game_manifest, _) = get_game_manifest(
-        "https://launchermeta.mojang.com/mc/game/version_manifest.json".to_owned(),
-        None,
-    )
-    .await?;
+
     for processor in processors {
         let jar = convert_maven_to_path(&processor.jar, Some(&folder))?;
         let processor_main_class = get_processor_main_class(jar.clone())
@@ -243,15 +241,7 @@ pub async fn process_forge(
         if let Some(sides) = processor.sides {
             match sides.get(0) {
                 Some(x) if x == "server" => {
-                    let url = game_manifest
-                        .get("downloads")
-                        .and_then(|x| {
-                            x.get("server").and_then(|x| {
-                                x.get("url")
-                                    .map(|x| x.as_str().expect("game url is not string???"))
-                            })
-                        })
-                        .context("failed to acquire server url")?;
+                    let url = &game_manifest.downloads.server.url;
                     let path = std::env::current_dir()?.join(extract_filename(url)?);
                     if !path.exists() {
                         fs::create_dir_all(

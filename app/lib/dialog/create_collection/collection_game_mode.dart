@@ -7,9 +7,14 @@ import 'package:flutter/material.dart';
 class CollectionGameModeStep extends StatefulWidget {
   final GameMode initialGameMode;
   final VersionMetadata? initialVersion;
+  final void Function(GameMode? gameMode, VersionMetadata? version)?
+      onNotification;
 
   const CollectionGameModeStep(
-      {super.key, required this.initialGameMode, this.initialVersion});
+      {super.key,
+      required this.initialGameMode,
+      this.initialVersion,
+      this.onNotification});
 
   @override
   State<CollectionGameModeStep> createState() => _CollectionGameModeStepState();
@@ -26,62 +31,77 @@ class _CollectionGameModeStepState extends State<CollectionGameModeStep> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '遊戲方式',
-          style: TextStyle(
-            color: context.theme.textColor,
-            fontSize: 40,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        Text(
-          '選擇您想建立的收藏遊戲模式',
-          style:
-              TextStyle(color: context.theme.tertiaryTextColor, fontSize: 15),
-        ),
-        const SizedBox(height: 25),
-        Expanded(
-          child: FutureBuilder(
-              future: _versions.future,
-              builder: (context, snapshot) {
-                final data = snapshot.data;
+    return NotificationListener<GameModeNotification>(
+      onNotification: (notification) {
+        widget.onNotification
+            ?.call(notification.gameMode, notification.version);
 
-                return DialogRectangleTab(
-                  title: '遊戲方式',
-                  initialPage: widget.initialGameMode.index,
-                  tabs: [
-                    _buildTab('原汁原味', '在 Era Connect 裡體驗最經典的 Minecraft 世界！',
-                        EraIcon.assets('clear_day'), GameMode.vanilla, data),
-                    _buildTab(
-                        '搶先體驗',
-                        '搶先體驗到測試中的快照版 Minecraft',
-                        EraIcon.material(Icons.local_fire_department_outlined),
-                        GameMode.snapshot,
-                        data),
-                    TabItem(
-                      title: '創意模組',
-                      icon: EraIcon.material(Icons.draw_outlined),
-                      content: const DialogContentBox(
-                        title: '介紹',
-                        content: SizedBox.shrink(),
+        return true;
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '遊戲方式',
+            style: TextStyle(
+              color: context.theme.textColor,
+              fontSize: 40,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            '選擇您想建立的收藏遊戲模式',
+            style:
+                TextStyle(color: context.theme.tertiaryTextColor, fontSize: 15),
+          ),
+          const SizedBox(height: 25),
+          Expanded(
+            child: FutureBuilder(
+                future: _versions.future,
+                builder: (context, snapshot) {
+                  final data = snapshot.data;
+
+                  return DialogRectangleTab(
+                    title: '遊戲方式',
+                    initialPage: widget.initialGameMode.index,
+                    tabs: [
+                      _buildTab(
+                          context,
+                          '原汁原味',
+                          '在 Era Connect 裡體驗最經典的 Minecraft 世界！',
+                          EraIcon.assets('clear_day'),
+                          GameMode.vanilla,
+                          data),
+                      _buildTab(
+                          context,
+                          '搶先體驗',
+                          '搶先體驗到測試中的快照版 Minecraft',
+                          EraIcon.material(
+                              Icons.local_fire_department_outlined),
+                          GameMode.snapshot,
+                          data),
+                      TabItem(
+                        title: '創意模組',
+                        icon: EraIcon.material(Icons.draw_outlined),
+                        content: const DialogContentBox(
+                          title: '介紹',
+                          content: SizedBox.shrink(),
+                        ),
+                        onTap: () => const GameModeNotification(
+                                gameMode: GameMode.modded)
+                            .dispatch(context),
                       ),
-                      onTap: () =>
-                          const GameModeNotification(gameMode: GameMode.modded)
-                              .dispatch(context),
-                    ),
-                  ],
-                );
-              }),
-        ),
-      ],
+                    ],
+                  );
+                }),
+          ),
+        ],
+      ),
     );
   }
 
-  TabItem _buildTab(String title, String description, EraIcon icon,
-      GameMode gameMode, List<VersionMetadata>? versions) {
+  TabItem _buildTab(BuildContext context, String title, String description,
+      EraIcon icon, GameMode gameMode, List<VersionMetadata>? versions) {
     final image = ClipRRect(
       borderRadius: BorderRadius.circular(15),
       child: Stack(

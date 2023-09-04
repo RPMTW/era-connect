@@ -23,17 +23,8 @@ void main() async {
     await windowManager.setMinimumSize(const Size(1350, 820));
     await initializeAPIs();
     runApp(const EraConnectApp());
-    // testRust();
   });
 }
-
-// void testRust() async {
-//   final forge = api.launchForge();
-//   forge.listen((event) {
-//     print("speed: ${event.speed}");
-//     print("percentages: ${event.percentages}");
-//   });
-// }
 
 class EraConnectApp extends StatefulWidget {
   const EraConnectApp({Key? key}) : super(key: key);

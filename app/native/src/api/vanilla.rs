@@ -1,5 +1,6 @@
 pub mod assets;
 pub mod library;
+pub mod manifest;
 pub mod rules;
 pub mod version;
 
@@ -8,61 +9,31 @@ use anyhow::{Context, Result};
 use futures::Future;
 use log::error;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::path::Path;
 pub use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::{atomic::AtomicUsize, atomic::Ordering, Arc};
 use tokio::fs::{self, create_dir_all};
 
-use crate::api::vanilla::library::os_match;
-use crate::api::vanilla::rules::OsName;
+use crate::api::collection::Collection;
 
-use self::assets::{extract_assets, parallel_assets, AssetIndex};
-use self::library::{parallel_library, Library};
-use self::rules::{get_rules, ActionType, Rule};
-
+use self::assets::{extract_assets, parallel_assets};
+use self::library::{os_match, parallel_library, Library};
+use self::manifest::{Argument, Downloads, GameManifest};
+use self::rules::OsName;
 use super::download::{download_file, extract_filename, validate_sha1, DownloadArgs};
-use super::{Collection, STORAGE};
+use super::{DATA_DIR, STORAGE};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Deserialize)]
 struct GameFlags {
-    rules: Vec<Rule>,
     arguments: Vec<String>,
     additional_arguments: Option<Vec<String>>,
 }
+
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct JvmFlags {
-    rules: Vec<Rule>,
     arguments: Vec<String>,
     additional_arguments: Option<Vec<String>>,
-}
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct DownloadMetadata {
-    sha1: String,
-    size: usize,
-    url: String,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct Downloads {
-    client: DownloadMetadata,
-    client_mappings: DownloadMetadata,
-    server: DownloadMetadata,
-    server_mappings: DownloadMetadata,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct LoggingConfig {
-    client: ClientConfig,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct ClientConfig {
-    argument: String,
-    file: LogFile,
-    #[serde(rename = "type")]
-    log_type: String,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -131,107 +102,51 @@ pub struct ProcessedArguments {
 
 pub type HandlesType = Vec<Pin<Box<dyn Future<Output = Result<()>> + Send>>>;
 
-pub async fn get_game_manifest(
-    download_target: String,
-    version: Option<String>,
-) -> Result<(Value, String)> {
-    let bytes = download_file(download_target, None).await?;
-    let version_manifest: Value = serde_json::from_slice(&bytes)?;
-    let version = version.map_or_else(
-        || {
-            version_manifest["latest"]["release"]
-                .as_str()
-                .expect("latest release doesn't exist")
-                .to_owned()
-        },
-        |x| x,
-    );
-    let release_url = version_manifest["versions"]
-        .as_array()
-        .context("minecraft version is not array")?
-        .iter()
-        .find(|x| x["id"].as_str().expect("failed to parse game id to str") == version)
-        .and_then(|x| x["url"].as_str())
-        .context("version url doesn't exist")?;
-    let bytes = download_file(release_url, None).await?;
-    let contents: Value = serde_json::from_slice(&bytes)?;
-    Ok((contents, version))
-}
-
 pub async fn prepare_vanilla_download(
     collection: &Collection,
+    game_manifest: &GameManifest,
 ) -> Result<(DownloadArgs, ProcessedArguments)> {
-    let (game_manifest, current_version) = get_game_manifest(
-        String::from("https://launchermeta.mojang.com/mc/game/version_manifest.json"),
-        Some(&collection.minecraft_version).cloned(),
-    )
-    .await?;
+    let version_id = collection.minecraft_version.id.clone();
+    let entry_path = &collection.entry_path;
+    let shared_path = get_global_shared_path();
 
-    let game_argument = game_manifest["arguments"]["game"]
-        .as_array()
-        .context("Failure to parse contents[\"arguments\"][\"game\"]")?;
-
-    let mut game_flags = GameFlags {
-        rules: get_rules(game_argument)?,
-        arguments: game_argument
-            .iter()
-            .filter_map(Value::as_str)
-            .map(std::string::ToString::to_string)
-            .collect::<Vec<_>>(),
-        additional_arguments: None,
-    };
-
-    let base_path = &collection.entry_path;
-    let game_directory = base_path.join(".minecraft");
-    let asset_directory = game_directory.join("assets");
-    let library_directory = base_path.join("library");
-    let native_directory = game_directory.join(format!("versions/{current_version}/natives"));
+    let game_directory = entry_path.join("game");
+    let asset_directory = shared_path.join("assets");
+    let library_directory = shared_path.join("libraries");
+    let version_directory = shared_path.join(format!("versions/{version_id}"));
+    let native_directory = version_directory.join("natives");
 
     create_dir_all(&library_directory)
         .await
-        .context("fail to create library_directory(vanilla)")?;
+        .context("fail to create library directory (vanilla)")?;
     create_dir_all(&asset_directory)
         .await
-        .context("fail to create asset_directory(vanilla)")?;
+        .context("fail to create asset directory (vanilla)")?;
     create_dir_all(&game_directory)
         .await
-        .context("fail to create game_directory(vanilla)")?;
+        .context("fail to create game directory (vanilla)")?;
     create_dir_all(&native_directory)
         .await
-        .context("fail to create native_directory(vanilla)")?;
+        .context("fail to create native directory (vanilla)")?;
 
-    let game_flags = setup_game_flags(&game_manifest)?;
-
-    let jvm_flags = setup_jvm_flags(&game_manifest)?;
+    let game_flags = setup_game_flags(&game_manifest.arguments.game)?;
+    let jvm_flags = setup_jvm_flags(&game_manifest.arguments.jvm)?;
 
     let (game_options, game_flags) = setup_game_option(
-        current_version,
+        version_id,
         &game_directory,
         &asset_directory,
-        &game_manifest,
+        game_manifest.asset_index.id.clone(),
         game_flags,
     )
     .await?;
 
-    let asset_index = AssetIndex::deserialize(&game_manifest["assetIndex"])
-        .context("Failed to Serialize assetIndex")?;
-
-    let downloads_list: Downloads = Downloads::deserialize(&game_manifest["downloads"])
-        .context("Failed to Serialize Downloads")?;
-
-    let library_list: Arc<[Library]> = Vec::<Library>::deserialize(&game_manifest["libraries"])
-        .context("Failed to Serialize contents[\"libraries\"]")?
-        .into();
-
-    let _logging: LoggingConfig = LoggingConfig::deserialize(&game_manifest["logging"])
-        .context("Failed to Serialize logging")?;
-
-    let main_class: String =
-        String::deserialize(&game_manifest["mainClass"]).context("Failed to get MainClass")?;
+    let downloads_list = &game_manifest.downloads;
+    let library_list: Arc<[Library]> = game_manifest.libraries.clone().into();
 
     let (client_jar, jvm_options) = setup_jvm_options(
-        &base_path,
-        &downloads_list,
+        entry_path,
+        downloads_list,
         &library_directory,
         &game_directory,
         &native_directory,
@@ -265,28 +180,27 @@ pub async fn prepare_vanilla_download(
     )
     .await?;
 
-    let client_jar_filename = PathBuf::from(extract_filename(&downloads_list.client.url)?);
+    let client_jar_filename = version_directory.join(extract_filename(&downloads_list.client.url)?);
 
     if !client_jar_filename.exists() {
         let bytes =
-            download_file(downloads_list.client.url, Some(Arc::clone(&current_size))).await?;
+            download_file(&downloads_list.client.url, Some(Arc::clone(&current_size))).await?;
         fs::write(client_jar_filename, &bytes).await?;
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     } else if let Err(x) = validate_sha1(&client_jar_filename, &downloads_list.client.sha1).await {
         error!("{x}\n redownloading.");
         let bytes =
-            download_file(downloads_list.client.url, Some(Arc::clone(&current_size))).await?;
+            download_file(&downloads_list.client.url, Some(Arc::clone(&current_size))).await?;
         fs::write(client_jar_filename, &bytes).await?;
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     }
 
-    let asset_settings = extract_assets(asset_index, asset_directory).await?;
-
+    let asset_settings = extract_assets(&game_manifest.asset_index, asset_directory).await?;
     parallel_assets(asset_settings, &current_size, &total_size, &mut handles).await?;
 
     let launch_args = LaunchArgs {
         jvm_args: jvm_flags.arguments,
-        main_class,
+        main_class: game_manifest.main_class.clone(),
         game_args: game_flags.arguments,
     };
 
@@ -309,7 +223,7 @@ fn add_jvm_rules(
     library_path: impl AsRef<Path>,
     client_jar: impl AsRef<Path>,
     mut jvm_options: JvmOptions,
-    mut jvm_flags: JvmFlags,
+    jvm_flags: JvmFlags,
 ) -> Result<(JvmOptions, JvmFlags), anyhow::Error> {
     let current_os = os_version::detect()?;
     let current_os_type = match current_os {
@@ -340,28 +254,28 @@ fn add_jvm_rules(
 
     classpath_list.push(client_jar.as_ref().to_string_lossy().to_string());
     jvm_options.classpath = classpath_list.join(":");
-    for x in &jvm_flags.rules {
-        if x.action == ActionType::Allow
-            && x.os
-                .as_ref()
-                .map_or(false, |os| os.name == Some(current_os_type))
-        {
-            jvm_flags
-                .arguments
-                .extend_from_slice(x.value.as_ref().context("rules value doesn't exist")?);
-        }
-    }
+    // for x in &jvm_flags.rules {
+    //     if x.action == ActionType::Allow
+    //         && x.os
+    //             .as_ref()
+    //             .map_or(false, |os| os.name == Some(current_os_type))
+    //     {
+    //         jvm_flags
+    //             .arguments
+    //             .extend_from_slice(x.value.as_ref().context("rules value doesn't exist")?);
+    //     }
+    // }
     Ok((jvm_options, jvm_flags))
 }
 
 fn setup_jvm_options(
-    base_path: impl AsRef<Path>,
+    entry_path: impl AsRef<Path>,
     downloads_list: &Downloads,
     library_directory: impl AsRef<Path>,
     game_directory: impl AsRef<Path>,
     native_directory: impl AsRef<Path>,
 ) -> Result<(PathBuf, JvmOptions), anyhow::Error> {
-    let client_jar = base_path
+    let client_jar = entry_path
         .as_ref()
         .join(extract_filename(&downloads_list.client.url)?);
     let jvm_options = JvmOptions {
@@ -392,34 +306,29 @@ fn setup_jvm_options(
     Ok((client_jar, jvm_options))
 }
 
-fn setup_jvm_flags(game_manifest: &Value) -> Result<JvmFlags, anyhow::Error> {
-    let jvm_argument = game_manifest["arguments"]["jvm"]
-        .as_array()
-        .context("Failure to parse contents[\"arguments\"][\"jvm\"]")?;
-
+fn setup_jvm_flags(jvm_argument: &Vec<Argument>) -> Result<JvmFlags, anyhow::Error> {
     let jvm_flags = JvmFlags {
-        rules: get_rules(jvm_argument)?,
-        arguments: jvm_argument
-            .iter()
-            .filter_map(Value::as_str)
-            .map(ToString::to_string)
-            .collect::<Vec<_>>(),
+        // rules: get_rules(jvm_argument)?,
+        // arguments: jvm_argument
+        //     .iter()
+        //     .filter_map(Value::as_str)
+        //     .map(ToString::to_string)
+        //     .collect::<Vec<_>>(),
+        arguments: vec![],
         additional_arguments: None,
     };
     Ok(jvm_flags)
 }
 
-fn setup_game_flags(game_manifest: &Value) -> Result<GameFlags, anyhow::Error> {
-    let game_argument = game_manifest["arguments"]["game"]
-        .as_array()
-        .context("Failure to parse contents[\"arguments\"][\"game\"]")?;
+fn setup_game_flags(game_arguments: &Vec<Argument>) -> Result<GameFlags, anyhow::Error> {
     let game_flags = GameFlags {
-        rules: get_rules(game_argument)?,
-        arguments: game_argument
-            .iter()
-            .filter_map(Value::as_str)
-            .map(ToString::to_string)
-            .collect::<Vec<_>>(),
+        // rules: get_rules(game_argument)?,
+        // arguments: game_argument
+        //     .iter()
+        //     .filter_map(Value::as_str)
+        //     .map(ToString::to_string)
+        //     .collect::<Vec<_>>(),
+        arguments: vec![],
         additional_arguments: None,
     };
     Ok(game_flags)
@@ -429,7 +338,7 @@ async fn setup_game_option(
     current_version: String,
     game_directory: impl AsRef<Path> + Send + Sync,
     asset_directory: impl AsRef<Path> + Send + Sync,
-    game_manifest: &Value,
+    asset_index_id: String,
     mut game_flags: GameFlags,
 ) -> Result<(GameOptions, GameFlags), anyhow::Error> {
     let storage = STORAGE.account_storage.read().await;
@@ -456,10 +365,7 @@ async fn setup_game_option(
                 .canonicalize()
                 .context("Fail to canonicalize asset_directory(game_options)")?,
         ),
-        assets_index_name: game_manifest["assetIndex"]["id"]
-            .as_str()
-            .context("assetindex id doesn't exist")?
-            .to_owned(),
+        assets_index_name: asset_index_id,
         auth_access_token: minecraft_account.access_token.token.clone(),
         auth_uuid: uuid.to_string(),
         user_type: String::from("mojang"),
@@ -539,4 +445,8 @@ fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameOptions) -> Vec<
         modified_arguments.push(buf);
     }
     modified_arguments
+}
+
+fn get_global_shared_path() -> PathBuf {
+    DATA_DIR.join("shared")
 }

@@ -1,12 +1,12 @@
 import 'package:era_connect/api/lib.dart';
+import 'package:era_connect/dialog/create_collection/collection_game_mode.dart';
+import 'package:era_connect/dialog/create_collection/collection_information.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
 
 import 'import_profiles.dart';
 import 'login_account.dart';
-import 'collection_game_mode.dart';
-import 'collection_information.dart';
 import 'collection_addition.dart';
 
 class SetupDialog extends StatefulWidget {
@@ -58,6 +58,7 @@ class _SetupDialogState extends State<SetupDialog> {
                 return false;
               }
 
+              _updateState(event);
               return true;
             }),
         StepData(
@@ -65,47 +66,39 @@ class _SetupDialogState extends State<SetupDialog> {
           title: context.i18n['dialog.setup.welcome'],
           description: context.i18n['dialog.setup.01.description'],
           contentPages: [
-            NotificationListener<GameModeNotification>(
-              onNotification: (notification) {
-                if (notification.gameMode != null) {
-                  _gameMode = notification.gameMode!;
+            CollectionGameModeStep(
+              initialGameMode: _gameMode,
+              initialVersion: _version,
+              onNotification: (gameMode, version) {
+                if (gameMode != null) {
+                  _gameMode = gameMode;
                 }
 
-                if (notification.version != null) {
-                  _version = notification.version!;
+                if (version != null) {
+                  _version = version;
                 }
-
-                return true;
               },
-              child: CollectionGameModeStep(
-                  initialGameMode: _gameMode, initialVersion: _version),
             ),
             if (_gameMode == GameMode.modded)
               const Text('choose mod loader and loader version'),
-            NotificationListener<InformationNotification>(
-              onNotification: (notification) {
-                final information = notification.information;
-                if (information.displayName != null) {
-                  _displayName = information.displayName!;
+            CollectionInformationStep(
+              initialInformation:
+                  CollectionInformation(displayName: _displayName),
+              gameMode: _gameMode,
+              onNotification: (displayName) {
+                if (displayName != null) {
+                  _displayName = displayName;
                 }
-
-                return true;
               },
-              child: CollectionInformationStep(
-                initialInformation:
-                    CollectionInformation(displayName: _displayName),
-                gameMode: _gameMode,
-              ),
             )
           ],
           onEvent: (event, contentPageIndex) {
-            if (event == StepEvent.previous || event == StepEvent.next) {
-              setState(() {});
-            }
-            if (event != StepEvent.next) return true;
+            _updateState(event);
 
             final bool hasChosenVersion = _version != null;
-            if (contentPageIndex == 0 && !hasChosenVersion) {
+            if (event == StepEvent.next &&
+                contentPageIndex == 0 &&
+                !hasChosenVersion) {
               return false;
             }
 
@@ -118,10 +111,7 @@ class _SetupDialogState extends State<SetupDialog> {
           description: context.i18n['dialog.setup.01.description'],
           contentPages: [const CollectionAdditionStep()],
           onEvent: (event, _) {
-            if (event == StepEvent.previous) {
-              setState(() {});
-            }
-
+            _updateState(event);
             return true;
           },
         ),
@@ -145,5 +135,11 @@ class _SetupDialogState extends State<SetupDialog> {
         )
       ],
     );
+  }
+
+  void _updateState(StepEvent event) {
+    if (event == StepEvent.next) {
+      setState(() {});
+    }
   }
 }

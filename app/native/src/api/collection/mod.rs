@@ -6,13 +6,14 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use struct_key_value_pair::VariantStruct;
 
+use super::vanilla::version::VersionMetadata;
 use super::{storage::storage_loader::StorageLoader, DATA_DIR};
 
 #[serde_with::serde_as]
 #[derive(Debug, Deserialize, Serialize, VariantStruct, Clone)]
 pub struct Collection {
     pub display_name: String,
-    pub minecraft_version: String,
+    pub minecraft_version: VersionMetadata,
     pub mod_loader: Option<ModLoader>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

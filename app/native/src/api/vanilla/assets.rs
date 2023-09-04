@@ -14,12 +14,12 @@ use std::{
 use tokio::fs;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct AssetIndex {
     pub url: String,
-    id: String,
+    pub id: String,
     sha1: String,
     size: usize,
-    #[serde(rename = "totalSize")]
     total_size: usize,
 }
 
@@ -30,8 +30,8 @@ pub struct AssetSettings {
     pub asset_download_size: Vec<usize>,
 }
 
-pub async fn extract_assets(asset_index: AssetIndex, folder: PathBuf) -> Result<AssetSettings> {
-    let asset_index_path = folder.join(PathBuf::from(format!("indexes/{}.json", asset_index.id)));
+pub async fn extract_assets(asset_index: &AssetIndex, folder: PathBuf) -> Result<AssetSettings> {
+    let asset_index_path = folder.join(PathBuf::from(format!("indexes/{}.json", &asset_index.id)));
     let asset_index_content: Value = if asset_index_path.exists()
         && validate_sha1(&asset_index_path, asset_index.sha1.as_str())
             .await
@@ -40,7 +40,7 @@ pub async fn extract_assets(asset_index: AssetIndex, folder: PathBuf) -> Result<
         let b: &[u8] = &fs::read(asset_index_path).await?;
         serde_json::from_slice(b)?
     } else {
-        let asset_response_bytes = download_file(asset_index.url, None).await?;
+        let asset_response_bytes = download_file(&asset_index.url, None).await?;
         fs::create_dir_all(
             asset_index_path
                 .parent()

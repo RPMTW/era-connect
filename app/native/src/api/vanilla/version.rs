@@ -1,7 +1,7 @@
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use flutter_rust_bridge::frb;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::api::download::download_file;
 
@@ -20,7 +20,7 @@ pub struct LatestVersion {
     pub snapshot: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[frb[dart_metadata = ("freezed")]]
 pub struct VersionMetadata {
@@ -37,7 +37,7 @@ pub struct VersionMetadata {
     pub compliance_level: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum VersionType {
     Release,

@@ -67,12 +67,6 @@ intptr_t init_frb_dart_api_dl(void *obj);
 
 void wire_setup_logger(int64_t port_);
 
-void wire_launch_vanilla(int64_t port_);
-
-void wire_launch_forge(int64_t port_);
-
-void wire_launch_quilt(int64_t port_);
-
 void wire_fetch_state(int64_t port_);
 
 void wire_write_state(int64_t port_, int32_t s);
@@ -118,9 +112,6 @@ void free_WireSyncReturn(WireSyncReturn ptr);
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
     dummy_var ^= ((int64_t) (void*) wire_setup_logger);
-    dummy_var ^= ((int64_t) (void*) wire_launch_vanilla);
-    dummy_var ^= ((int64_t) (void*) wire_launch_forge);
-    dummy_var ^= ((int64_t) (void*) wire_launch_quilt);
     dummy_var ^= ((int64_t) (void*) wire_fetch_state);
     dummy_var ^= ((int64_t) (void*) wire_write_state);
     dummy_var ^= ((int64_t) (void*) wire_get_ui_layout_storage);

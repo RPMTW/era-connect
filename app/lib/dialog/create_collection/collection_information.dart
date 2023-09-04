@@ -7,9 +7,13 @@ import 'collection_game_mode.dart';
 class CollectionInformationStep extends StatefulWidget {
   final CollectionInformation initialInformation;
   final GameMode gameMode;
+  final void Function(String? displayName)? onNotification;
 
   const CollectionInformationStep(
-      {super.key, required this.initialInformation, required this.gameMode});
+      {super.key,
+      required this.initialInformation,
+      required this.gameMode,
+      this.onNotification});
 
   @override
   State<CollectionInformationStep> createState() =>
@@ -19,71 +23,47 @@ class CollectionInformationStep extends StatefulWidget {
 class _CollectionInformationStepState extends State<CollectionInformationStep> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '收藏設定',
-          style: TextStyle(
-            color: context.theme.textColor,
-            fontSize: 40,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        Text(
-          '設定這個收藏的詳細資訊',
-          style:
-              TextStyle(color: context.theme.tertiaryTextColor, fontSize: 15),
-        ),
-        const SizedBox(height: 25),
-        Expanded(
-          child: DialogContentBox(
-            title: '收藏資訊',
-            content: Column(
-              children: [
-                Expanded(child: _buildBackground()),
-                const SizedBox(height: 15),
-                _buildAdvancedOptionButton(context)
-              ],
-            ),
-          ),
-        )
-      ],
-    );
-  }
+    return NotificationListener<InformationNotification>(
+      onNotification: (notification) {
+        widget.onNotification?.call(notification.information.displayName);
 
-  EraBasicButton _buildAdvancedOptionButton(BuildContext context) {
-    return EraBasicButton(
-      onPressed: () {},
-      style: EraBasicButtonStyle(
-          backgroundColor: context.theme.deepBackgroundColor,
-          hoverColor: Colors.transparent,
-          borderRadius: 15),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                EraIcon.material(Icons.settings_applications_rounded),
-                const SizedBox(width: 15),
-                Text(
-                  '進階選項',
-                  style:
-                      TextStyle(fontSize: 16, color: context.theme.textColor),
-                ),
-              ],
+        return true;
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '收藏設定',
+            style: TextStyle(
+              color: context.theme.textColor,
+              fontSize: 40,
+              fontWeight: FontWeight.w700,
             ),
-            EraIcon.material(Icons.density_large_rounded,
-                color: context.theme.tertiaryTextColor),
-          ],
-        ),
+          ),
+          Text(
+            '設定這個收藏的詳細資訊',
+            style:
+                TextStyle(color: context.theme.tertiaryTextColor, fontSize: 15),
+          ),
+          const SizedBox(height: 25),
+          Expanded(
+            child: DialogContentBox(
+              title: '收藏資訊',
+              content: Column(
+                children: [
+                  Expanded(child: _buildMainContent()),
+                  const SizedBox(height: 15),
+                  _buildAdvancedOptionButton()
+                ],
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
 
-  ClipRRect _buildBackground() {
+  Widget _buildMainContent() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(15),
       child: Stack(
@@ -106,14 +86,16 @@ class _CollectionInformationStepState extends State<CollectionInformationStep> {
           ),
           Padding(
             padding: const EdgeInsets.all(20),
-            child: _buildTopArea(),
+            child: Builder(builder: (context) {
+              return _buildOverlay(context);
+            }),
           )
         ],
       ),
     );
   }
 
-  Widget _buildTopArea() {
+  Widget _buildOverlay(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -169,6 +151,37 @@ class _CollectionInformationStepState extends State<CollectionInformationStep> {
           ),
         )
       ],
+    );
+  }
+
+  Widget _buildAdvancedOptionButton() {
+    return EraBasicButton(
+      onPressed: () {},
+      style: EraBasicButtonStyle(
+          backgroundColor: context.theme.deepBackgroundColor,
+          hoverColor: Colors.transparent,
+          borderRadius: 15),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                EraIcon.material(Icons.settings_applications_rounded),
+                const SizedBox(width: 15),
+                Text(
+                  '進階選項',
+                  style:
+                      TextStyle(fontSize: 16, color: context.theme.textColor),
+                ),
+              ],
+            ),
+            EraIcon.material(Icons.density_large_rounded,
+                color: context.theme.tertiaryTextColor),
+          ],
+        ),
+      ),
     );
   }
 }

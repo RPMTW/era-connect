@@ -1,4 +1,5 @@
 import 'package:era_connect/api/storage/storage_api.dart';
+import 'package:era_connect/dialog/create_collection/create_collection_dialog.dart';
 import 'package:era_connect/dialog/setup/setup_dialog.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
@@ -56,7 +57,13 @@ class _MainPageState extends State<MainPage> {
           ],
           collectionItems: [
             SideBarCircleButton.roundedSquare(
-              onPressed: () {},
+              onPressed: () {
+                showEraDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  dialog: const CreateCollectionDialog(),
+                );
+              },
               icon: EraIcon.material(Icons.add_rounded),
               tooltip: context.i18n['main_page.side_bar.create_collection'],
             ),

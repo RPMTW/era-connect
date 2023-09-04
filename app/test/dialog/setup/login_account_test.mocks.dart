@@ -190,45 +190,6 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
   @override
-  _i5.FlutterRustBridgeTaskConstMeta get kLaunchVanillaConstMeta =>
-      (super.noSuchMethod(
-        Invocation.getter(#kLaunchVanillaConstMeta),
-        returnValue: _FakeFlutterRustBridgeTaskConstMeta_3(
-          this,
-          Invocation.getter(#kLaunchVanillaConstMeta),
-        ),
-        returnValueForMissingStub: _FakeFlutterRustBridgeTaskConstMeta_3(
-          this,
-          Invocation.getter(#kLaunchVanillaConstMeta),
-        ),
-      ) as _i5.FlutterRustBridgeTaskConstMeta);
-  @override
-  _i5.FlutterRustBridgeTaskConstMeta get kLaunchForgeConstMeta =>
-      (super.noSuchMethod(
-        Invocation.getter(#kLaunchForgeConstMeta),
-        returnValue: _FakeFlutterRustBridgeTaskConstMeta_3(
-          this,
-          Invocation.getter(#kLaunchForgeConstMeta),
-        ),
-        returnValueForMissingStub: _FakeFlutterRustBridgeTaskConstMeta_3(
-          this,
-          Invocation.getter(#kLaunchForgeConstMeta),
-        ),
-      ) as _i5.FlutterRustBridgeTaskConstMeta);
-  @override
-  _i5.FlutterRustBridgeTaskConstMeta get kLaunchQuiltConstMeta =>
-      (super.noSuchMethod(
-        Invocation.getter(#kLaunchQuiltConstMeta),
-        returnValue: _FakeFlutterRustBridgeTaskConstMeta_3(
-          this,
-          Invocation.getter(#kLaunchQuiltConstMeta),
-        ),
-        returnValueForMissingStub: _FakeFlutterRustBridgeTaskConstMeta_3(
-          this,
-          Invocation.getter(#kLaunchQuiltConstMeta),
-        ),
-      ) as _i5.FlutterRustBridgeTaskConstMeta);
-  @override
   _i5.FlutterRustBridgeTaskConstMeta get kFetchStateConstMeta =>
       (super.noSuchMethod(
         Invocation.getter(#kFetchStateConstMeta),
@@ -368,36 +329,6 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
       ) as _i8.Future<void>);
-  @override
-  _i8.Stream<_i7.Progress> launchVanilla({dynamic hint}) => (super.noSuchMethod(
-        Invocation.method(
-          #launchVanilla,
-          [],
-          {#hint: hint},
-        ),
-        returnValue: _i8.Stream<_i7.Progress>.empty(),
-        returnValueForMissingStub: _i8.Stream<_i7.Progress>.empty(),
-      ) as _i8.Stream<_i7.Progress>);
-  @override
-  _i8.Stream<_i7.Progress> launchForge({dynamic hint}) => (super.noSuchMethod(
-        Invocation.method(
-          #launchForge,
-          [],
-          {#hint: hint},
-        ),
-        returnValue: _i8.Stream<_i7.Progress>.empty(),
-        returnValueForMissingStub: _i8.Stream<_i7.Progress>.empty(),
-      ) as _i8.Stream<_i7.Progress>);
-  @override
-  _i8.Stream<_i7.Progress> launchQuilt({dynamic hint}) => (super.noSuchMethod(
-        Invocation.method(
-          #launchQuilt,
-          [],
-          {#hint: hint},
-        ),
-        returnValue: _i8.Stream<_i7.Progress>.empty(),
-        returnValueForMissingStub: _i8.Stream<_i7.Progress>.empty(),
-      ) as _i8.Stream<_i7.Progress>);
   @override
   _i8.Future<_i7.DownloadState> fetchState({dynamic hint}) =>
       (super.noSuchMethod(

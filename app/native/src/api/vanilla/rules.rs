@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub enum ActionType {
     #[serde(rename = "allow")]
     Allow,
@@ -33,18 +33,18 @@ impl fmt::Display for OsName {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct Os {
     pub name: Option<OsName>,
     pub version: Option<String>,
     pub arch: Option<String>,
 }
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct Rule {
     pub action: ActionType,
     pub features: Option<HashMap<String, bool>>,
     pub os: Option<Os>,
-    pub value: Option<Vec<String>>,
 }
 
 pub fn get_rules(argument: &[Value]) -> Result<Vec<Rule>> {

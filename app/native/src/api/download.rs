@@ -10,10 +10,10 @@ use std::{
 
 use anyhow::{bail, Context};
 use bytes::{BufMut, Bytes, BytesMut};
-use flutter_rust_bridge::StreamSink;
 use futures::StreamExt;
 use log::{error, info};
 use reqwest::Url;
+use std::sync::mpsc;
 use tokio::{
     fs::File,
     io::{AsyncReadExt, BufReader},
@@ -39,6 +39,8 @@ pub async fn download_file(
         Err(err) => {
             let mut temp = Err(err);
             for i in 1..=retry_amount {
+                // Wait 0.5s before retry.
+                time::sleep(Duration::from_millis(500)).await;
                 match client.get(url).send().await {
                     Ok(x) => {
                         temp = Ok(x);
@@ -99,7 +101,7 @@ expected: {}
     Ok(())
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Progress {
     pub speed: f64,
     pub percentages: f64,
@@ -118,10 +120,11 @@ pub struct DownloadBias {
 
 // get progress and and launch download
 pub async fn run_download(
-    sink: StreamSink<Progress>,
+    sender: mpsc::Sender<Progress>,
     download_args: DownloadArgs,
     bias: DownloadBias,
-) -> anyhow::Result<StreamSink<Progress>> {
+) -> anyhow::Result<()> {
+    println!("run_download");
     let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
 
@@ -132,7 +135,6 @@ pub async fn run_download(
     let multiplier = (bias.end - bias.start) / 100.0;
 
     *STATE.write().await = DownloadState::Downloading;
-    let sink_clone = sink.clone();
     let sleep_time = 250;
     let rolling_average_window = 5000 / sleep_time;
     let mut average_speed = VecDeque::with_capacity(rolling_average_window);
@@ -163,7 +165,8 @@ pub async fn run_download(
             };
             prev_bytes = current_size;
             instant = Instant::now();
-            sink.add(progress);
+            info!("{:?}", progress);
+            sender.send(progress).unwrap();
 
             let state = *STATE.read().await;
             match state {
@@ -181,7 +184,8 @@ pub async fn run_download(
     join_futures(handles, 128).await?;
     download_complete.store(true, Ordering::Release);
     output.await?;
-    Ok(sink_clone)
+
+    Ok(())
 }
 
 pub async fn join_futures(

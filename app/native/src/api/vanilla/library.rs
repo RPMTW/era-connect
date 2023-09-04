@@ -19,14 +19,14 @@ use anyhow::anyhow;
 
 use super::rules::{ActionType, OsName, Rule};
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct Library {
     pub downloads: LibraryArtifact,
     pub name: String,
     pub rules: Option<Vec<Rule>>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct Metadata {
     pub path: String,
     pub sha1: String,
@@ -34,7 +34,7 @@ pub struct Metadata {
     pub url: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct LibraryArtifact {
     pub artifact: Metadata,
 }
