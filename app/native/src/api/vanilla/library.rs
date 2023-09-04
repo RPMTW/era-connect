@@ -1,5 +1,5 @@
 use std::{
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -7,7 +7,6 @@ use std::{
 };
 
 use anyhow::{bail, Context, Result};
-use flutter_rust_bridge::RustOpaque;
 use log::error;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
@@ -65,8 +64,8 @@ pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bo
 }
 pub async fn parallel_library(
     library_list_arc: Arc<[Library]>,
-    folder: Arc<RustOpaque<PathBuf>>,
-    native_folder: Arc<RustOpaque<PathBuf>>,
+    folder: Arc<Path>,
+    native_folder: Arc<Path>,
     current: Arc<AtomicUsize>,
     library_download_handles: &mut HandlesType,
 ) -> Result<Arc<AtomicUsize>> {
@@ -158,26 +157,26 @@ pub async fn parallel_library(
 async fn native_download(
     url: &String,
     current_size_clone: &Arc<AtomicUsize>,
-    native_folder_clone: Arc<RustOpaque<PathBuf>>,
+    native_folder: Arc<Path>,
     library_extension: &str,
 ) -> Result<()> {
     let bytes = download_file(url, Some(Arc::clone(current_size_clone))).await?;
     let reader = std::io::Cursor::new(bytes);
     if let Ok(mut archive) = zip::ZipArchive::new(reader) {
-        let native_temp_dir = native_folder_clone.join("temp");
+        let native_temp_dir = native_folder.join("temp");
         archive.extract(native_temp_dir.as_path())?;
         for x in archive.file_names() {
             if (x.contains(library_extension) || x.contains(".sha1")) && !x.contains(".git") {
                 tokio::fs::rename(
                     native_temp_dir.join(x),
-                    native_folder_clone.join(
+                    native_folder.join(
                         PathBuf::from(x)
                             .file_name()
                             .context("can't find file name of native archive")?,
                     ),
                 )
                 .await
-                .context("Fail to move from native_temp_dir -> native_folder_clone")?;
+                .context("Fail to move from native_temp_dir -> native_folder")?;
             }
         }
     }
