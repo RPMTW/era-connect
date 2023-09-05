@@ -39,7 +39,7 @@ tokio = { version = "1.31.0", features = [
 tokio-stream = "0.1.14"
 zip = "0.6.6"
 log = "0.4"
-chrono = "0.4.26"
+chrono = "0.4.29"
 fern = "0.6.2"
 oauth2 = "4.4.1"
 uuid = { version = "1.4.1", features = ["serde", "v4"] }
