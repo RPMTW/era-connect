@@ -67,7 +67,7 @@ pub async fn parallel_library(
     folder: Arc<Path>,
     native_folder: Arc<Path>,
     current: Arc<AtomicUsize>,
-    library_download_handles: &mut HandlesType,
+    library_download_handles: &mut HandlesType<'_>,
 ) -> Result<Arc<AtomicUsize>> {
     let index_counter = Arc::new(AtomicUsize::new(0));
     let current_size = current;

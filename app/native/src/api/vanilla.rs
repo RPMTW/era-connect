@@ -6,12 +6,11 @@ pub mod version;
 
 use anyhow::bail;
 use anyhow::{Context, Result};
-use futures::Future;
+use futures::future::BoxFuture;
 use log::error;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 pub use std::path::PathBuf;
-use std::pin::Pin;
 use std::sync::{atomic::AtomicUsize, atomic::Ordering, Arc};
 use tokio::fs::{self, create_dir_all};
 
@@ -100,7 +99,7 @@ pub struct ProcessedArguments {
     pub game_args: GameOptions,
 }
 
-pub type HandlesType = Vec<Pin<Box<dyn Future<Output = Result<()>> + Send>>>;
+pub type HandlesType<'a> = Vec<BoxFuture<'a, Result<()>>>;
 
 pub async fn prepare_vanilla_download<'a>(
     collection: Collection,

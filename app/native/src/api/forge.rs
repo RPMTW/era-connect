@@ -81,11 +81,11 @@ struct ForgeLibraryArtifact {
     url: String,
 }
 
-pub async fn prepare_forge_download(
+pub async fn prepare_forge_download<'a>(
     mut launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
-) -> Result<(DownloadArgs, ProcessedArguments, Value)> {
+) -> Result<(DownloadArgs<'a>, ProcessedArguments, Value)> {
     // refactor
     let bytes = download_file(
         "https://meta.modrinth.com/forge/v0/versions/1.20.1-forge-47.1.43.json",

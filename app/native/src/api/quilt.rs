@@ -18,12 +18,12 @@ pub struct QuiltLibrary {
     url: String,
 }
 
-pub async fn prepare_quilt_download(
+pub async fn prepare_quilt_download<'a>(
     game_version: String,
     launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
-) -> Result<(DownloadArgs, ProcessedArguments)> {
+) -> Result<(DownloadArgs<'a>, ProcessedArguments)> {
     let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
     let bytes = download_file(meta_url, None).await?;
     let version_manifest: Value = serde_json::from_slice(&bytes)?;

@@ -91,7 +91,7 @@ pub async fn parallel_assets(
     assets: AssetSettings,
     current_size: &Arc<AtomicUsize>,
     total_size: &Arc<AtomicUsize>,
-    handles: &mut HandlesType,
+    handles: &mut HandlesType<'_>,
 ) -> Result<()> {
     let asset_download_list_arc = Arc::new(assets.asset_download_list);
     let asset_download_hash_arc = Arc::new(assets.asset_download_hash);

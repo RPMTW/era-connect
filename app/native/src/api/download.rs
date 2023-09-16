@@ -73,7 +73,10 @@ pub fn extract_filename(url: &str) -> anyhow::Result<String> {
     Ok(filename.to_owned())
 }
 
-pub async fn validate_sha1(file_path: impl AsRef<Path> + Send + Sync, sha1: &str) -> anyhow::Result<()> {
+pub async fn validate_sha1(
+    file_path: impl AsRef<Path> + Send + Sync,
+    sha1: &str,
+) -> anyhow::Result<()> {
     use sha1::{Digest, Sha1};
     let file_path = file_path.as_ref();
     let file = File::open(file_path).await?;
@@ -121,7 +124,7 @@ pub struct DownloadBias {
 // get progress and and launch download
 pub async fn run_download(
     sender: mpsc::Sender<Progress>,
-    download_args: DownloadArgs,
+    download_args: DownloadArgs<'_>,
     bias: DownloadBias,
 ) -> anyhow::Result<()> {
     println!("run_download");
@@ -189,7 +192,7 @@ pub async fn run_download(
 }
 
 pub async fn join_futures(
-    handles: HandlesType,
+    handles: HandlesType<'_>,
     concurrency_limit: usize,
 ) -> Result<(), anyhow::Error> {
     let mut download_stream = tokio_stream::iter(handles).buffer_unordered(concurrency_limit);
@@ -209,8 +212,8 @@ pub async fn join_futures(
     Ok(())
 }
 
-pub struct DownloadArgs {
+pub struct DownloadArgs<'a> {
     pub current_size: Arc<AtomicUsize>,
     pub total_size: Arc<AtomicUsize>,
-    pub handles: HandlesType,
+    pub handles: HandlesType<'a>,
 }
