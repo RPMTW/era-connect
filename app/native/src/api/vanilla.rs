@@ -102,11 +102,11 @@ pub struct ProcessedArguments {
 
 pub type HandlesType = Vec<Pin<Box<dyn Future<Output = Result<()>> + Send>>>;
 
-pub async fn prepare_vanilla_download(
-    collection: &Collection,
-    game_manifest: &GameManifest,
-) -> Result<(DownloadArgs, ProcessedArguments)> {
-    let version_id = collection.minecraft_version.id.clone();
+pub async fn prepare_vanilla_download<'a>(
+    collection: Collection,
+    game_manifest: GameManifest,
+) -> Result<(DownloadArgs<'a>, ProcessedArguments)> {
+    let version_id = collection.minecraft_version.id;
     let entry_path = &collection.entry_path;
     let shared_path = get_global_shared_path();
 
@@ -141,19 +141,19 @@ pub async fn prepare_vanilla_download(
     )
     .await?;
 
-    let downloads_list = &game_manifest.downloads;
-    let library_list: Arc<[Library]> = game_manifest.libraries.clone().into();
+    let downloads_list = game_manifest.downloads;
+    let library_list: Arc<[Library]> = game_manifest.libraries.into();
 
     let (client_jar, jvm_options) = setup_jvm_options(
         entry_path,
-        downloads_list,
+        &downloads_list,
         &library_directory,
         &game_directory,
         &native_directory,
     )?;
 
     let (jvm_options, mut jvm_flags) = add_jvm_rules(
-        &library_list,
+        Arc::clone(&library_list),
         &library_directory,
         &client_jar,
         jvm_options,
@@ -198,9 +198,15 @@ pub async fn prepare_vanilla_download(
     let asset_settings = extract_assets(&game_manifest.asset_index, asset_directory).await?;
     parallel_assets(asset_settings, &current_size, &total_size, &mut handles).await?;
 
+    if let Some(advanced_option) = collection.advanced_options {
+        if let Some(max_memory) = advanced_option.jvm_max_memory {
+            jvm_flags.arguments.push(format!("-Xmx{}M", max_memory))
+        }
+    }
+
     let launch_args = LaunchArgs {
         jvm_args: jvm_flags.arguments,
-        main_class: game_manifest.main_class.clone(),
+        main_class: game_manifest.main_class,
         game_args: game_flags.arguments,
     };
 
@@ -219,7 +225,7 @@ pub async fn prepare_vanilla_download(
 }
 
 fn add_jvm_rules(
-    library_list: &Arc<[Library]>,
+    library_list: Arc<[Library]>,
     library_path: impl AsRef<Path>,
     client_jar: impl AsRef<Path>,
     mut jvm_options: JvmOptions,

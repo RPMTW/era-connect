@@ -282,7 +282,7 @@ pub async fn create_collection(
                 .await
                 .unwrap();
         let (vanilla_download_args, vanilla_arguments) =
-            prepare_vanilla_download(&collection, &game_manifest)
+            prepare_vanilla_download(collection, game_manifest)
                 .await
                 .unwrap();
 
