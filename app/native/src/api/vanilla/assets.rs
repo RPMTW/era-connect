@@ -3,7 +3,8 @@ use crate::api::{
     vanilla::HandlesType,
 };
 
-use anyhow::{anyhow, Context, Result};
+use color_eyre::eyre::{eyre, Context, ContextCompat};
+use color_eyre::Result;
 use log::error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -149,7 +150,7 @@ pub async fn parallel_assets(
                     bytes,
                 )
                 .await
-                .map_err(|err| anyhow!(err))
+                .map_err(|err| eyre!(err))
             }));
         }
     }

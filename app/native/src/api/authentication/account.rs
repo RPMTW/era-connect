@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::Context;
+use chrono::{DateTime, Utc};
 use image::{imageops, DynamicImage, ImageFormat};
 use serde::{Deserialize, Serialize};
 use tokio::fs;
@@ -45,7 +46,7 @@ pub struct MinecraftCape {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountToken {
     pub token: String,
-    pub expires_at: i64,
+    pub expires_at: DateTime<Utc>,
 }
 
 impl MinecraftSkin {

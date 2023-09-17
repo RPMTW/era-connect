@@ -8,9 +8,11 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{bail, Context};
 use bytes::{BufMut, Bytes, BytesMut};
+use color_eyre::eyre::ContextCompat;
+use color_eyre::Result;
 use futures::StreamExt;
+use hex::FromHexError;
 use log::{error, info};
 use reqwest::Url;
 use std::sync::mpsc;
@@ -20,16 +22,67 @@ use tokio::{
     time::{self, Instant},
 };
 
-use super::{vanilla::HandlesType, DownloadState, STATE};
+use super::{
+    vanilla::{CustomIoErrorKind, HandlesType},
+    DownloadState, STATE,
+};
+
+use thiserror::Error;
+#[derive(Error, Debug)]
+pub enum DownloadError {
+    #[error("{0}")]
+    ReqwestBuilder(String),
+    #[error("{0}")]
+    ResponseFail(String),
+    #[error("Io error")]
+    Io {
+        msg: String,
+        error: CustomIoErrorKind,
+    },
+}
+
+#[derive(Error, Debug)]
+pub enum ShasumValidationError {
+    #[error("failed to turn sha1 binary into string")]
+    FailToDecode,
+    #[error("Io error")]
+    Io(CustomIoErrorKind),
+    #[error(r#"
+{} hash don't fit!
+get: {}
+expected: {}
+"#, .path, .found, .expected)]
+    FailToValidate {
+        path: String,
+        found: String,
+        expected: String,
+    },
+}
+impl From<FromHexError> for ShasumValidationError {
+    fn from(value: FromHexError) -> Self {
+        Self::FailToDecode
+    }
+}
+impl From<std::io::Error> for ShasumValidationError {
+    fn from(value: std::io::Error) -> Self {
+        let error = match value.kind() {
+            std::io::ErrorKind::NotFound => CustomIoErrorKind::NotFound,
+            std::io::ErrorKind::PermissionDenied => CustomIoErrorKind::PermissionDenied,
+            _ => CustomIoErrorKind::Other,
+        };
+        ShasumValidationError::Io(error)
+    }
+}
 
 pub async fn download_file(
     url: impl AsRef<str> + Send + Sync,
     current_size_clone: Option<Arc<AtomicUsize>>,
-) -> Result<Bytes, reqwest::Error> {
+) -> Result<Bytes, DownloadError> {
     let client = reqwest::Client::builder()
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
         .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
-        .build()?;
+        .build()
+        .map_err(|x| DownloadError::ReqwestBuilder(format!("{x:?}")))?;
     let url = url.as_ref();
     let response_result = client.get(url).send().await;
 
@@ -53,10 +106,15 @@ pub async fn download_file(
             }
             temp
         }
-    }?;
+    }
+    .map_err(|_| DownloadError::ResponseFail(url.to_string()))?;
 
     let mut bytes = BytesMut::new();
-    while let Some(chunk) = response.chunk().await? {
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|_| DownloadError::ResponseFail(url.to_string()))?
+    {
         if let Some(ref size) = current_size_clone {
             size.fetch_add(chunk.len(), Ordering::Relaxed);
         }
@@ -66,7 +124,7 @@ pub async fn download_file(
     Ok(bytes.freeze())
 }
 
-pub fn extract_filename(url: &str) -> anyhow::Result<String> {
+pub fn extract_filename(url: &str) -> color_eyre::Result<String> {
     let parsed_url = Url::parse(url)?;
     let path_segments = parsed_url.path_segments().context("Invalid URL")?;
     let filename = path_segments.last().context("No filename found in URL")?;
@@ -76,7 +134,7 @@ pub fn extract_filename(url: &str) -> anyhow::Result<String> {
 pub async fn validate_sha1(
     file_path: impl AsRef<Path> + Send + Sync,
     sha1: &str,
-) -> anyhow::Result<()> {
+) -> Result<(), ShasumValidationError> {
     use sha1::{Digest, Sha1};
     let file_path = file_path.as_ref();
     let file = File::open(file_path).await?;
@@ -89,16 +147,11 @@ pub async fn validate_sha1(
     let result = &hasher.finalize()[..];
 
     if result != hex::decode(sha1)? {
-        bail!(
-            r#"
-{} hash don't fit!
-get: {}
-expected: {}
-"#,
-            file_path.to_string_lossy(),
-            hex::encode(result),
-            sha1
-        );
+        return Err(ShasumValidationError::FailToValidate {
+            path: file_path.to_string_lossy().to_string(),
+            found: hex::encode(result),
+            expected: sha1.to_string(),
+        });
     }
 
     Ok(())
@@ -126,7 +179,7 @@ pub async fn run_download(
     sender: mpsc::Sender<Progress>,
     download_args: DownloadArgs<'_>,
     bias: DownloadBias,
-) -> anyhow::Result<()> {
+) -> color_eyre::Result<()> {
     println!("run_download");
     let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
@@ -191,10 +244,7 @@ pub async fn run_download(
     Ok(())
 }
 
-pub async fn join_futures(
-    handles: HandlesType<'_>,
-    concurrency_limit: usize,
-) -> Result<(), anyhow::Error> {
+pub async fn join_futures(handles: HandlesType<'_>, concurrency_limit: usize) -> Result<()> {
     let mut download_stream = tokio_stream::iter(handles).buffer_unordered(concurrency_limit);
     while let Some(x) = download_stream.next().await {
         let state = *STATE.read().await;

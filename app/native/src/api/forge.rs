@@ -8,7 +8,8 @@ use std::{
     },
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use color_eyre::eyre::{bail, eyre, Context, ContextCompat};
+use color_eyre::Result;
 use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -124,12 +125,12 @@ pub async fn prepare_forge_download<'a>(
                         .await?;
                     total_size_clone.fetch_add(artifact.size, Ordering::Relaxed);
                     let bytes = download_file(url, Some(current_size_clone)).await?;
-                    fs::write(path, bytes).await.map_err(|err| anyhow!(err))
+                    fs::write(path, bytes).await.map_err(|err| eyre!(err))
                 } else if let Err(err) = validate_sha1(&path, &sha1).await {
                     total_size_clone.fetch_add(artifact.size, Ordering::Relaxed);
                     error!("{err}\n redownloading");
                     let bytes = download_file(url, Some(current_size_clone)).await?;
-                    fs::write(path, bytes).await.map_err(|err| anyhow!(err))
+                    fs::write(path, bytes).await.map_err(|err| eyre!(err))
                 } else {
                     debug!("hash verified");
                     Ok(())
@@ -151,7 +152,7 @@ pub async fn prepare_forge_download<'a>(
                     fs::create_dir_all(path.parent().context("library parent dir doesn't exist")?)
                         .await?;
                     let bytes = download_file(url, None).await?;
-                    fs::write(path, bytes).await.map_err(|err| anyhow!(err))
+                    fs::write(path, bytes).await.map_err(|err| eyre!(err))
                 }
             }));
         }
@@ -250,7 +251,7 @@ pub async fn process_forge(
                         )
                         .await?;
                         let bytes = download_file(url, None).await?;
-                        fs::write(&path, bytes).await.map_err(|err| anyhow!(err))?;
+                        fs::write(&path, bytes).await.map_err(|err| eyre!(err))?;
                     }
                     side = x.to_string();
                     minecraft_jar = path.to_string_lossy().to_string();

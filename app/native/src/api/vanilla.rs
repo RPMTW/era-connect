@@ -4,8 +4,9 @@ pub mod manifest;
 pub mod rules;
 pub mod version;
 
-use anyhow::bail;
-use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
+use color_eyre::eyre::{bail, eyre, Context, ContextCompat};
+use color_eyre::Result;
 use futures::future::BoxFuture;
 use log::error;
 use serde::{Deserialize, Serialize};
@@ -75,6 +76,47 @@ pub struct LaunchArgs {
     pub game_args: Vec<String>,
 }
 
+use thiserror::Error;
+#[derive(Error, Debug, Clone)]
+pub enum VanillaLaunchError {
+    #[error("Token expired")]
+    TokenExpire(DateTime<Utc>),
+    #[error("Io error")]
+    Io(CustomIoErrorKind),
+    #[error("some weird error you know")]
+    Anyhow(String),
+}
+// we don't use the mirror feature because it will force us to use unstable rust
+#[derive(Debug, Clone)]
+pub enum CustomIoErrorKind {
+    NotFound,
+    PermissionDenied,
+    AlreadyExists,
+    InvalidInput,
+    TimedOut,
+    Other,
+}
+
+impl From<color_eyre::Report> for VanillaLaunchError {
+    fn from(value: color_eyre::Report) -> Self {
+        Self::Anyhow(format!("{value:?}"))
+    }
+}
+
+impl From<std::io::Error> for VanillaLaunchError {
+    fn from(value: std::io::Error) -> Self {
+        let error = match value.kind() {
+            std::io::ErrorKind::NotFound => CustomIoErrorKind::NotFound,
+            std::io::ErrorKind::PermissionDenied => CustomIoErrorKind::PermissionDenied,
+            std::io::ErrorKind::AlreadyExists => CustomIoErrorKind::AlreadyExists,
+            std::io::ErrorKind::InvalidInput => CustomIoErrorKind::InvalidInput,
+            std::io::ErrorKind::TimedOut => CustomIoErrorKind::TimedOut,
+            _ => CustomIoErrorKind::Other,
+        };
+        Self::Io(error)
+    }
+}
+
 pub async fn launch_game(launch_args: LaunchArgs) -> Result<()> {
     let mut launch_vec = Vec::new();
     launch_vec.extend(launch_args.jvm_args);
@@ -104,7 +146,7 @@ pub type HandlesType<'a> = Vec<BoxFuture<'a, Result<()>>>;
 pub async fn prepare_vanilla_download<'a>(
     collection: Collection,
     game_manifest: GameManifest,
-) -> Result<(DownloadArgs<'a>, ProcessedArguments)> {
+) -> Result<(DownloadArgs<'a>, ProcessedArguments), VanillaLaunchError> {
     let version_id = collection.minecraft_version.id;
     let entry_path = &collection.entry_path;
     let shared_path = get_global_shared_path();
@@ -115,18 +157,10 @@ pub async fn prepare_vanilla_download<'a>(
     let version_directory = shared_path.join(format!("versions/{version_id}"));
     let native_directory = version_directory.join("natives");
 
-    create_dir_all(&library_directory)
-        .await
-        .context("fail to create library directory (vanilla)")?;
-    create_dir_all(&asset_directory)
-        .await
-        .context("fail to create asset directory (vanilla)")?;
-    create_dir_all(&game_directory)
-        .await
-        .context("fail to create game directory (vanilla)")?;
-    create_dir_all(&native_directory)
-        .await
-        .context("fail to create native directory (vanilla)")?;
+    create_dir_all(&library_directory).await?;
+    create_dir_all(&asset_directory).await?;
+    create_dir_all(&game_directory).await?;
+    create_dir_all(&native_directory).await?;
 
     let game_flags = setup_game_flags(&game_manifest.arguments.game)?;
     let jvm_flags = setup_jvm_flags(&game_manifest.arguments.jvm)?;
@@ -229,8 +263,8 @@ fn add_jvm_rules(
     client_jar: impl AsRef<Path>,
     mut jvm_options: JvmOptions,
     jvm_flags: JvmFlags,
-) -> Result<(JvmOptions, JvmFlags), anyhow::Error> {
-    let current_os = os_version::detect()?;
+) -> Result<(JvmOptions, JvmFlags)> {
+    let current_os = os_version::detect().map_err(|x| eyre!(x))?;
     let current_os_type = match current_os {
         os_version::OsVersion::Linux(_) => OsName::Linux,
         os_version::OsVersion::Windows(_) => OsName::Windows,
@@ -279,7 +313,7 @@ fn setup_jvm_options(
     library_directory: impl AsRef<Path>,
     game_directory: impl AsRef<Path>,
     native_directory: impl AsRef<Path>,
-) -> Result<(PathBuf, JvmOptions), anyhow::Error> {
+) -> Result<(PathBuf, JvmOptions)> {
     let client_jar = entry_path
         .as_ref()
         .join(extract_filename(&downloads_list.client.url)?);
@@ -311,7 +345,7 @@ fn setup_jvm_options(
     Ok((client_jar, jvm_options))
 }
 
-fn setup_jvm_flags(jvm_argument: &Vec<Argument>) -> Result<JvmFlags, anyhow::Error> {
+fn setup_jvm_flags(jvm_argument: &Vec<Argument>) -> Result<JvmFlags> {
     let jvm_flags = JvmFlags {
         // rules: get_rules(jvm_argument)?,
         // arguments: jvm_argument
@@ -325,7 +359,7 @@ fn setup_jvm_flags(jvm_argument: &Vec<Argument>) -> Result<JvmFlags, anyhow::Err
     Ok(jvm_flags)
 }
 
-fn setup_game_flags(game_arguments: &Vec<Argument>) -> Result<GameFlags, anyhow::Error> {
+fn setup_game_flags(game_arguments: &Vec<Argument>) -> Result<GameFlags> {
     let game_flags = GameFlags {
         // rules: get_rules(game_argument)?,
         // arguments: game_argument
@@ -345,7 +379,7 @@ async fn setup_game_option(
     asset_directory: impl AsRef<Path> + Send + Sync,
     asset_index_id: String,
     mut game_flags: GameFlags,
-) -> Result<(GameOptions, GameFlags), anyhow::Error> {
+) -> Result<(GameOptions, GameFlags), VanillaLaunchError> {
     let storage = STORAGE.account_storage.read().await;
     let uuid = storage
         .main_account
@@ -355,6 +389,12 @@ async fn setup_game_option(
         .iter()
         .find(|x| x.uuid == uuid)
         .context("Somehow fail to find the main account uuid in accounts")?;
+
+    let expires_at = minecraft_account.access_token.expires_at;
+    if Utc::now() > expires_at {
+        return Err(VanillaLaunchError::TokenExpire(expires_at));
+    }
+
     let game_options = GameOptions {
         auth_player_name: minecraft_account.username.clone(),
         game_version_name: current_version,
