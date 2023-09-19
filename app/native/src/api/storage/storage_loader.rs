@@ -28,7 +28,7 @@ impl StorageLoader {
         }
     }
 
-    pub fn load<T: DeserializeOwned + Serialize>(&self) -> anyhow::Result<T> {
+    pub fn load<T: DeserializeOwned + Serialize>(&self) -> color_eyre::Result<T> {
         let file = File::open(self.get_path_buf())?;
         let reader = BufReader::new(file);
         let storage = serde_json::from_reader(reader)?;
@@ -38,7 +38,7 @@ impl StorageLoader {
 
     pub fn load_with_default<T: Default + DeserializeOwned + Serialize>(
         &self,
-    ) -> anyhow::Result<T> {
+    ) -> color_eyre::Result<T> {
         let path = self.get_path_buf();
         if !path.exists() {
             let storage = T::default();
@@ -49,7 +49,7 @@ impl StorageLoader {
         self.load()
     }
 
-    pub fn save<T: Serialize>(&self, storage: &T) -> anyhow::Result<()> {
+    pub fn save<T: Serialize>(&self, storage: &T) -> color_eyre::Result<()> {
         create_dir_all(self.get_storage_directory())?;
 
         let file = File::create(self.get_path_buf())?;
@@ -74,9 +74,9 @@ pub trait StorageInstance<T: Default + DeserializeOwned + Serialize> {
         PathBuf::from("storages")
     }
 
-    fn save(&self) -> anyhow::Result<()>;
+    fn save(&self) -> color_eyre::Result<()>;
 
-    fn load() -> anyhow::Result<T> {
+    fn load() -> color_eyre::Result<T> {
         let loader =
             StorageLoader::new(Self::file_name().to_owned(), Cow::Owned(Self::base_path()));
         loader.load_with_default::<T>()

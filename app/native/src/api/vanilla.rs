@@ -21,7 +21,9 @@ use self::assets::{extract_assets, parallel_assets};
 use self::library::{os_match, parallel_library, Library};
 use self::manifest::{Argument, Downloads, GameManifest};
 use self::rules::OsName;
-use super::download::{download_file, extract_filename, validate_sha1, DownloadArgs};
+use super::download::{
+    download_file, extract_filename, validate_sha1, DownloadArgs, DownloadError,
+};
 use super::{DATA_DIR, STORAGE};
 
 #[derive(Debug, PartialEq, Deserialize)]
@@ -77,14 +79,16 @@ pub struct LaunchArgs {
 }
 
 use thiserror::Error;
-#[derive(Error, Debug, Clone)]
+#[derive(Error, Debug)]
 pub enum VanillaLaunchError {
     #[error("Token expired")]
     TokenExpire(DateTime<Utc>),
     #[error("Io error")]
     Io(CustomIoErrorKind),
+    #[error("Downloading error, {0}")]
+    DownloadError(#[from] DownloadError),
     #[error("some weird error you know")]
-    Anyhow(String),
+    Other(String),
 }
 // we don't use the mirror feature because it will force us to use unstable rust
 #[derive(Debug, Clone)]
@@ -99,7 +103,7 @@ pub enum CustomIoErrorKind {
 
 impl From<color_eyre::Report> for VanillaLaunchError {
     fn from(value: color_eyre::Report) -> Self {
-        Self::Anyhow(format!("{value:?}"))
+        Self::Other(format!("{value:?}"))
     }
 }
 

@@ -19,7 +19,7 @@ impl StorageInstance<Self> for UILayout {
         UI_LAYOUT_FILE_NAME
     }
 
-    fn save(&self) -> anyhow::Result<()> {
+    fn save(&self) -> color_eyre::Result<()> {
         let storage =
             StorageLoader::new(Self::file_name().to_owned(), Cow::Owned(Self::base_path()));
         storage.save(self)

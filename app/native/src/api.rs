@@ -12,6 +12,7 @@ pub use std::sync::mpsc;
 pub use std::sync::mpsc::{Receiver, Sender};
 
 use anyhow::Context;
+use color_eyre::eyre::eyre;
 use log::{info, warn};
 
 pub use flutter_rust_bridge::StreamSink;
@@ -34,7 +35,9 @@ pub use self::storage::account_storage::{AccountStorageKey, AccountStorageValue}
 use self::storage::storage_loader::StorageInstance;
 pub use self::storage::ui_layout::{UILayout, UILayoutKey, UILayoutValue};
 pub use self::vanilla::prepare_vanilla_download;
+use self::vanilla::version::GetVersionError;
 pub use self::vanilla::version::{VersionMetadata, VersionType};
+use self::vanilla::VanillaLaunchError;
 
 use self::download::{run_download, DownloadBias};
 // use self::forge::{prepare_forge_download, process_forge};
@@ -48,6 +51,7 @@ lazy_static::lazy_static! {
 }
 
 pub fn setup_logger() -> anyhow::Result<()> {
+    color_eyre::install().map_err(|x| anyhow::anyhow!("{x:?}"))?;
     use chrono::Local;
 
     let file_name = format!("{}.log", Local::now().format("%Y-%m-%d-%H-%M-%S"));
@@ -193,7 +197,7 @@ pub fn get_ui_layout_storage(key: UILayoutKey) -> SyncReturn<UILayoutValue> {
 pub fn set_ui_layout_storage(value: UILayoutValue) -> anyhow::Result<()> {
     let mut storage = STORAGE.ui_layout.blocking_write();
     storage.set_value(value);
-    storage.save()?;
+    storage.save().map_err(|x| anyhow::anyhow!("{x:?}"))?;
     Ok(())
 }
 
@@ -209,7 +213,7 @@ pub fn get_skin_file_path(skin: MinecraftSkin) -> SyncReturn<String> {
 pub fn remove_minecraft_account(uuid: Uuid) -> anyhow::Result<()> {
     let mut storage = STORAGE.account_storage.blocking_write();
     storage.remove_account(uuid);
-    storage.save()?;
+    storage.save().map_err(|x| anyhow::anyhow!("{x:?}"))?;
     Ok(())
 }
 
@@ -224,7 +228,7 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
 
             let mut storage = STORAGE.account_storage.write().await;
             storage.add_account(account.clone(), true);
-            storage.save()?;
+            storage.save().map_err(|x| anyhow::anyhow!("{x:?}"))?;
 
             skin.add(LoginFlowEvent::Success(account));
             info!("Successfully login minecraft account");
@@ -241,9 +245,28 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
     Ok(())
 }
 
+use thiserror::Error;
+#[derive(Error, Debug)]
+pub enum MyError {
+    #[error(transparent)]
+    LaunchError(#[from] VanillaLaunchError),
+    #[error(transparent)]
+    VersionGetError(#[from] GetVersionError),
+    #[error("Anyhow error")]
+    Other(String),
+}
+
+impl From<color_eyre::Report> for MyError {
+    fn from(value: color_eyre::Report) -> Self {
+        Self::Other(format!("{value:?}"))
+    }
+}
+
 #[tokio::main(flavor = "current_thread")]
-pub async fn get_vanilla_versions() -> anyhow::Result<Vec<VersionMetadata>> {
-    vanilla::version::get_versions().await
+pub async fn get_vanilla_versions() -> Result<Vec<VersionMetadata>, MyError> {
+    vanilla::version::get_versions()
+        .await
+        .map_err(|err| err.into())
 }
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 2)]
@@ -252,10 +275,10 @@ pub async fn create_collection(
     version_metadata: VersionMetadata,
     mod_loader: Option<ModLoader>,
     advanced_options: Option<AdvancedOptions>,
-) -> anyhow::Result<()> {
+) -> Result<(), MyError> {
     use chrono::{Duration, Utc};
 
-    let (loader, entry_path) = Collection::create(&display_name)?;
+    let (loader, entry_path) = Collection::create(&display_name).map_err(|x| eyre!(x))?;
     let now_time = Utc::now();
 
     let collection = Collection {
@@ -278,28 +301,24 @@ pub async fn create_collection(
     let handle = tokio::spawn(async move {
         info!("Starts preparing vanilla download");
         let game_manifest =
-            vanilla::manifest::fetch_game_manifest(&collection.minecraft_version.url)
-                .await
-                .unwrap();
+            vanilla::manifest::fetch_game_manifest(&collection.minecraft_version.url).await?;
         let (vanilla_download_args, vanilla_arguments) =
-            prepare_vanilla_download(collection, game_manifest)
-                .await
-                .unwrap();
+            prepare_vanilla_download(collection, game_manifest).await?;
 
         info!("Starts downloading vanilla files");
         let full_bias = DownloadBias {
             start: 0.0,
             end: 100.0,
         };
-        run_download(sender, vanilla_download_args, full_bias)
-            .await
-            .unwrap();
+        run_download(sender, vanilla_download_args, full_bias).await?;
+
+        Ok::<_, color_eyre::eyre::Error>(())
     });
 
     for progress in receiver {
         info!("Progress: {:#?}", progress);
     }
 
-    handle.await?;
+    handle.await.map_err(|x| eyre!(x))?;
     Ok(())
 }

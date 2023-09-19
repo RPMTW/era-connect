@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use color_eyre::eyre::Error;
 use tokio::sync::RwLock;
 
 use crate::api::Collection;
@@ -9,7 +10,6 @@ use super::{
     storage_loader::{StorageInstance, StorageLoader},
     ui_layout::UILayout,
 };
-use anyhow::Error;
 use log::error;
 
 pub struct StorageState {

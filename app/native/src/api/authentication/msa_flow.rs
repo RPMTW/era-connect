@@ -1,7 +1,7 @@
 use std::ops::Add;
 
-use anyhow::Context;
 use chrono::{Duration, Utc};
+use color_eyre::eyre::{bail, ContextCompat};
 use flutter_rust_bridge::StreamSink;
 use oauth2::basic::{BasicClient, BasicErrorResponseType, BasicTokenType};
 use oauth2::reqwest::async_http_client;
@@ -122,7 +122,7 @@ pub struct MinecraftUserProfile {
     pub capes: Vec<MinecraftCape>,
 }
 
-pub async fn login_flow(skin: &StreamSink<LoginFlowEvent>) -> anyhow::Result<MinecraftAccount> {
+pub async fn login_flow(skin: &StreamSink<LoginFlowEvent>) -> color_eyre::Result<MinecraftAccount> {
     skin.add(LoginFlowEvent::Stage(LoginFlowStage::FetchingDeviceCode));
 
     // Device Code Flow
@@ -157,7 +157,7 @@ pub async fn login_flow(skin: &StreamSink<LoginFlowEvent>) -> anyhow::Result<Min
         }
         XstsResponse::Error(e) => {
             skin.add(LoginFlowEvent::Error(LoginFlowErrors::XstsError(e.xerr)));
-            return Err(anyhow::anyhow!("XSTS Error"));
+            bail!("XSTS Error")
         }
     };
 
@@ -169,7 +169,7 @@ pub async fn login_flow(skin: &StreamSink<LoginFlowEvent>) -> anyhow::Result<Min
         Ok(profile) => profile,
         Err(e) => {
             skin.add(LoginFlowEvent::Error(LoginFlowErrors::GameNotOwned));
-            return Err(anyhow::anyhow!("Game not owned: {}", e));
+            bail!(e.wrap_err("XSTS Error"))
         }
     };
 
@@ -178,11 +178,11 @@ pub async fn login_flow(skin: &StreamSink<LoginFlowEvent>) -> anyhow::Result<Min
         uuid: profile.id,
         access_token: AccountToken {
             token: mc_access_token,
-            expires_at: Utc::now().add(Duration::seconds(expires_in)).timestamp(),
+            expires_at: Utc::now().add(Duration::seconds(expires_in)),
         },
         refresh_token: AccountToken {
             token: refresh_token,
-            expires_at: Utc::now().add(Duration::days(90)).timestamp(),
+            expires_at: Utc::now().add(Duration::days(90)),
         },
         capes: profile.capes,
         skins: profile.skins,
@@ -191,7 +191,7 @@ pub async fn login_flow(skin: &StreamSink<LoginFlowEvent>) -> anyhow::Result<Min
     Ok(account)
 }
 
-fn create_oauth_client() -> anyhow::Result<OAuthClient> {
+fn create_oauth_client() -> color_eyre::Result<OAuthClient> {
     let client = BasicClient::new(
         ClientId::new(MSA_CLIENT_ID.to_owned()),
         None,
@@ -205,7 +205,7 @@ fn create_oauth_client() -> anyhow::Result<OAuthClient> {
 
 async fn fetch_device_code(
     client: &OAuthClient,
-) -> anyhow::Result<StandardDeviceAuthorizationResponse> {
+) -> color_eyre::Result<StandardDeviceAuthorizationResponse> {
     let response: StandardDeviceAuthorizationResponse = client
         .exchange_device_code()?
         .add_scope(Scope::new(MSA_SCOPE.to_owned()))
@@ -218,7 +218,7 @@ async fn fetch_device_code(
 async fn fetch_microsoft_token(
     client: &OAuthClient,
     auth_response: &StandardDeviceAuthorizationResponse,
-) -> anyhow::Result<(String, String)> {
+) -> color_eyre::Result<(String, String)> {
     let response: StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType> = client
         .exchange_device_access_token(auth_response)
         .request_async(async_http_client, sleep, None)
@@ -234,7 +234,7 @@ async fn fetch_microsoft_token(
     ))
 }
 
-async fn authenticate_xbox_live(ms_access_token: &str) -> anyhow::Result<(String, String)> {
+async fn authenticate_xbox_live(ms_access_token: &str) -> color_eyre::Result<(String, String)> {
     let client = reqwest::Client::new();
 
     let payload = json!({
@@ -268,7 +268,7 @@ async fn authenticate_xbox_live(ms_access_token: &str) -> anyhow::Result<(String
     Ok((xbl_token, user_hash))
 }
 
-async fn fetch_xsts_token(xbl_token: &str) -> anyhow::Result<XstsResponse> {
+async fn fetch_xsts_token(xbl_token: &str) -> color_eyre::Result<XstsResponse> {
     let client = reqwest::Client::new();
 
     let payload = json!({
@@ -302,7 +302,7 @@ async fn fetch_xsts_token(xbl_token: &str) -> anyhow::Result<XstsResponse> {
 pub async fn fetch_minecraft_token(
     xsts_token: &str,
     user_hash: &str,
-) -> anyhow::Result<(String, i64)> {
+) -> color_eyre::Result<(String, i64)> {
     let client = reqwest::Client::new();
 
     let payload = json!({
@@ -319,7 +319,7 @@ pub async fn fetch_minecraft_token(
     Ok((response.access_token, response.expires_in))
 }
 
-pub async fn get_user_profile(mc_access_token: &str) -> anyhow::Result<MinecraftUserProfile> {
+pub async fn get_user_profile(mc_access_token: &str) -> color_eyre::Result<MinecraftUserProfile> {
     let client = reqwest::Client::new();
 
     let response = client

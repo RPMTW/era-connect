@@ -1,4 +1,3 @@
-use anyhow::{Context, Ok};
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 
@@ -7,7 +6,7 @@ use crate::api::download::download_file;
 use super::assets::AssetIndex;
 use super::library::Library;
 use super::rules::Rule;
-use super::version::VersionType;
+use super::version::{GetVersionError, VersionType};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -95,8 +94,8 @@ pub struct LoggingFile {
     pub url: String,
 }
 
-pub async fn fetch_game_manifest(url: &str) -> anyhow::Result<GameManifest> {
+pub async fn fetch_game_manifest(url: &str) -> Result<GameManifest, GetVersionError> {
     let response = download_file(url, None).await?;
 
-    Ok(serde_json::from_slice(&response).context("Failed to parse game manifest")?)
+    Ok(serde_json::from_slice(&response)?)
 }

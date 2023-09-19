@@ -19,6 +19,7 @@ use std::sync::mpsc;
 use tokio::{
     fs::File,
     io::{AsyncReadExt, BufReader},
+    task::JoinError,
     time::{self, Instant},
 };
 
@@ -30,21 +31,27 @@ use super::{
 use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum DownloadError {
-    #[error("{0}")]
-    ReqwestBuilder(String),
-    #[error("{0}")]
+    #[error("Fail to build request Builder")]
+    ReqwestBuilderFail(String),
+    #[error("Fail to fetch a response")]
     ResponseFail(String),
     #[error("Io error")]
     Io {
         msg: String,
         error: CustomIoErrorKind,
     },
+    #[error("internal error from thread, {0}")]
+    ThreadInternalError(String),
+    #[error("thread paniced")]
+    ThreadPanic(String),
+    #[error("thread was cancelled")]
+    CancelledThread(String),
 }
 
 #[derive(Error, Debug)]
 pub enum ShasumValidationError {
     #[error("failed to turn sha1 binary into string")]
-    FailToDecode,
+    FailToDecode(HexErrorKind),
     #[error("Io error")]
     Io(CustomIoErrorKind),
     #[error(r#"
@@ -58,9 +65,36 @@ expected: {}
         expected: String,
     },
 }
+impl From<JoinError> for DownloadError {
+    fn from(value: JoinError) -> Self {
+        if value.is_panic() {
+            Self::ThreadPanic(format!("{value:?}"))
+        } else if value.is_cancelled() {
+            Self::CancelledThread(format!("{value:?}"))
+        } else {
+            // Repr only contains Thread panic and cancelled thread
+            unreachable!()
+        }
+    }
+}
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum HexErrorKind {
+    InvalidHexCharacter { c: char, index: usize },
+    OddLength,
+    InvalidStringLength,
+}
+
 impl From<FromHexError> for ShasumValidationError {
     fn from(value: FromHexError) -> Self {
-        Self::FailToDecode
+        match value {
+            FromHexError::InvalidHexCharacter { c, index } => {
+                Self::FailToDecode(HexErrorKind::InvalidHexCharacter { c, index })
+            }
+            FromHexError::OddLength => Self::FailToDecode(HexErrorKind::OddLength),
+            FromHexError::InvalidStringLength => {
+                Self::FailToDecode(HexErrorKind::InvalidStringLength)
+            }
+        }
     }
 }
 impl From<std::io::Error> for ShasumValidationError {
@@ -82,7 +116,7 @@ pub async fn download_file(
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
         .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
         .build()
-        .map_err(|x| DownloadError::ReqwestBuilder(format!("{x:?}")))?;
+        .map_err(|x| DownloadError::ReqwestBuilderFail(format!("{x:?}")))?;
     let url = url.as_ref();
     let response_result = client.get(url).send().await;
 
@@ -179,7 +213,7 @@ pub async fn run_download(
     sender: mpsc::Sender<Progress>,
     download_args: DownloadArgs<'_>,
     bias: DownloadBias,
-) -> color_eyre::Result<()> {
+) -> Result<(), DownloadError> {
     println!("run_download");
     let handles = download_args.handles;
     let download_complete = Arc::new(AtomicBool::new(false));
@@ -237,7 +271,9 @@ pub async fn run_download(
         }
     });
     // Create a semaphore with a limit on the number of concurrent downloads
-    join_futures(handles, 128).await?;
+    join_futures(handles, 128)
+        .await
+        .map_err(|err| DownloadError::ThreadInternalError(format!("{err:?}")))?;
     download_complete.store(true, Ordering::Release);
     output.await?;
 

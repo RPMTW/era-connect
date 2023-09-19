@@ -80,7 +80,7 @@ impl Collection {
             .collect()
     }
 
-    pub fn scan() -> anyhow::Result<Vec<StorageLoader>> {
+    pub fn scan() -> color_eyre::Result<Vec<StorageLoader>> {
         let mut loaders = Vec::new();
         let collection_base_dir = Self::get_base_path();
         create_dir_all(&collection_base_dir)?;

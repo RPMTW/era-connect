@@ -1,9 +1,9 @@
-use anyhow::Context;
 use chrono::{DateTime, Utc};
 use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
+use serde_json::error::Category;
 
-use crate::api::download::download_file;
+use crate::api::download::{download_file, DownloadError};
 
 const VERSION_MANIFEST_URL: &str =
     "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
@@ -46,12 +46,33 @@ pub enum VersionType {
     OldAlpha,
 }
 
-pub async fn get_versions() -> anyhow::Result<Vec<VersionMetadata>> {
-    let response = download_file(VERSION_MANIFEST_URL, None)
-        .await
-        .context("Failed to download version manifest")?;
-    let version_manifest: VersionsManifest =
-        serde_json::from_slice(&response).context("Failed to parse version manifest")?;
+use thiserror::Error;
+#[derive(Error, Debug)]
+pub enum GetVersionError {
+    #[error("Fail to download version manifest")]
+    ManifestFetchFail(#[from] DownloadError),
+    #[error("Fail to parse version manifest")]
+    Deserialization(Category),
+}
+
+impl From<serde_json::Error> for GetVersionError {
+    fn from(value: serde_json::Error) -> Self {
+        Self::Deserialization(value.classify())
+    }
+}
+
+#[frb(mirror)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum _Category {
+    Io,
+    Syntax,
+    Data,
+    Eof,
+}
+
+pub async fn get_versions() -> Result<Vec<VersionMetadata>, GetVersionError> {
+    let response = download_file(VERSION_MANIFEST_URL, None).await?;
+    let version_manifest: VersionsManifest = serde_json::from_slice(&response)?;
 
     Ok(version_manifest.versions)
 }
