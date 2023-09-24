@@ -399,10 +399,11 @@ async fn setup_game_option(
             .into_iter()
             .map(|x| match x {
                 Argument::General(x) => vec![x],
-                Argument::Ruled { value, .. } => match value {
-                    manifest::ArgumentRuledValue::Single(x) => vec![x],
-                    manifest::ArgumentRuledValue::Multiple(x) => x,
-                },
+                _ => vec![String::new()],
+                // Argument::Ruled { value, .. } => match value {
+                //     manifest::ArgumentRuledValue::Single(x) => vec![x],
+                //     manifest::ArgumentRuledValue::Multiple(x) => x,
+                // },
             })
             .flatten()
             .collect(),
