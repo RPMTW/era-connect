@@ -19,6 +19,8 @@ pub use flutter_rust_bridge::SyncReturn;
 pub use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
+use crate::api::vanilla::launch_game;
+
 pub use self::authentication::account::{
     AccountToken, MinecraftAccount, MinecraftCape, MinecraftSkin, MinecraftSkinVariant,
 };
@@ -278,28 +280,23 @@ pub async fn create_collection(
     let handle = tokio::spawn(async move {
         info!("Starts preparing vanilla download");
         let game_manifest =
-            vanilla::manifest::fetch_game_manifest(&collection.minecraft_version.url)
-                .await
-                .unwrap();
+            vanilla::manifest::fetch_game_manifest(&collection.minecraft_version.url).await?;
         let (vanilla_download_args, vanilla_arguments) =
-            prepare_vanilla_download(collection, game_manifest)
-                .await
-                .unwrap();
+            prepare_vanilla_download(collection, game_manifest).await?;
 
         info!("Starts downloading vanilla files");
         let full_bias = DownloadBias {
             start: 0.0,
             end: 100.0,
         };
-        run_download(sender, vanilla_download_args, full_bias)
-            .await
-            .unwrap();
+        run_download(sender, vanilla_download_args, full_bias).await?;
+        launch_game(vanilla_arguments.launch_args).await
     });
 
     for progress in receiver {
         info!("Progress: {:#?}", progress);
     }
 
-    handle.await?;
+    handle.await??;
     Ok(())
 }

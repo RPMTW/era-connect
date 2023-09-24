@@ -19,19 +19,30 @@ use crate::api::collection::Collection;
 use self::assets::{extract_assets, parallel_assets};
 use self::library::{os_match, parallel_library, Library};
 use self::manifest::{Argument, Downloads, GameManifest};
-use self::rules::OsName;
+use self::rules::{ActionType, OsName};
 use super::download::{download_file, extract_filename, validate_sha1, DownloadArgs};
 use super::{DATA_DIR, STORAGE};
 
 #[derive(Debug, PartialEq, Deserialize)]
-struct GameFlags {
+struct GameFlagsProcessed {
     arguments: Vec<String>,
     additional_arguments: Option<Vec<String>>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct JvmFlags {
+struct JvmFlagsProcessed {
     arguments: Vec<String>,
+    additional_arguments: Option<Vec<String>>,
+}
+#[derive(Debug, PartialEq, Deserialize)]
+struct GameFlagsUnprocessed {
+    arguments: Vec<Argument>,
+    additional_arguments: Option<Vec<String>>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct JvmFlagsUnprocessed {
+    arguments: Vec<Argument>,
     additional_arguments: Option<Vec<String>>,
 }
 
@@ -128,8 +139,8 @@ pub async fn prepare_vanilla_download<'a>(
         .await
         .context("fail to create native directory (vanilla)")?;
 
-    let game_flags = setup_game_flags(&game_manifest.arguments.game)?;
-    let jvm_flags = setup_jvm_flags(&game_manifest.arguments.jvm)?;
+    let game_flags = setup_game_flags(game_manifest.arguments.game)?;
+    let jvm_flags = setup_jvm_flags(game_manifest.arguments.jvm)?;
 
     let (game_options, game_flags) = setup_game_option(
         version_id,
@@ -143,8 +154,10 @@ pub async fn prepare_vanilla_download<'a>(
     let downloads_list = game_manifest.downloads;
     let library_list: Arc<[Library]> = game_manifest.libraries.into();
 
-    let (client_jar, jvm_options) = setup_jvm_options(
-        entry_path,
+    let client_jar_filename = version_directory.join(extract_filename(&downloads_list.client.url)?);
+
+    let jvm_options = setup_jvm_options(
+        client_jar_filename.to_string_lossy().to_string(),
         &downloads_list,
         &library_directory,
         &game_directory,
@@ -154,7 +167,7 @@ pub async fn prepare_vanilla_download<'a>(
     let (jvm_options, mut jvm_flags) = add_jvm_rules(
         Arc::clone(&library_list),
         &library_directory,
-        &client_jar,
+        &client_jar_filename,
         jvm_options,
         jvm_flags,
     )?;
@@ -179,19 +192,17 @@ pub async fn prepare_vanilla_download<'a>(
     )
     .await?;
 
-    let client_jar_filename = version_directory.join(extract_filename(&downloads_list.client.url)?);
-
     if !client_jar_filename.exists() {
+        total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
         let bytes =
             download_file(&downloads_list.client.url, Some(Arc::clone(&current_size))).await?;
         fs::write(client_jar_filename, &bytes).await?;
-        total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     } else if let Err(x) = validate_sha1(&client_jar_filename, &downloads_list.client.sha1).await {
+        total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
         error!("{x}\n redownloading.");
         let bytes =
             download_file(&downloads_list.client.url, Some(Arc::clone(&current_size))).await?;
         fs::write(client_jar_filename, &bytes).await?;
-        total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
     }
 
     let asset_settings = extract_assets(&game_manifest.asset_index, asset_directory).await?;
@@ -228,8 +239,8 @@ fn add_jvm_rules(
     library_path: impl AsRef<Path>,
     client_jar: impl AsRef<Path>,
     mut jvm_options: JvmOptions,
-    jvm_flags: JvmFlags,
-) -> Result<(JvmOptions, JvmFlags), anyhow::Error> {
+    jvm_flags: JvmFlagsUnprocessed,
+) -> Result<(JvmOptions, JvmFlagsProcessed), anyhow::Error> {
     let current_os = os_version::detect()?;
     let current_os_type = match current_os {
         os_version::OsVersion::Linux(_) => OsName::Linux,
@@ -259,36 +270,53 @@ fn add_jvm_rules(
 
     classpath_list.push(client_jar.as_ref().to_string_lossy().to_string());
     jvm_options.classpath = classpath_list.join(":");
-    // for x in &jvm_flags.rules {
-    //     if x.action == ActionType::Allow
-    //         && x.os
-    //             .as_ref()
-    //             .map_or(false, |os| os.name == Some(current_os_type))
-    //     {
-    //         jvm_flags
-    //             .arguments
-    //             .extend_from_slice(x.value.as_ref().context("rules value doesn't exist")?);
-    //     }
-    // }
+    let mut new_arguments = Vec::new();
+
+    for p in jvm_flags.arguments {
+        match p {
+            Argument::General(p) => {
+                new_arguments.push(p);
+            }
+            Argument::Ruled { rules, value } => {
+                for x in rules {
+                    if x.action == ActionType::Allow
+                        && x.os
+                            .as_ref()
+                            .map_or(false, |os| os.name == Some(current_os_type))
+                    {
+                        match value {
+                            manifest::ArgumentRuledValue::Single(ref x) => {
+                                new_arguments.push(x.clone())
+                            }
+                            manifest::ArgumentRuledValue::Multiple(ref x) => {
+                                new_arguments.extend_from_slice(&x)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    let jvm_flags = JvmFlagsProcessed {
+        arguments: new_arguments,
+        additional_arguments: jvm_flags.additional_arguments,
+    };
     Ok((jvm_options, jvm_flags))
 }
 
 fn setup_jvm_options(
-    entry_path: impl AsRef<Path>,
+    client_jar: String,
     downloads_list: &Downloads,
     library_directory: impl AsRef<Path>,
     game_directory: impl AsRef<Path>,
     native_directory: impl AsRef<Path>,
-) -> Result<(PathBuf, JvmOptions), anyhow::Error> {
-    let client_jar = entry_path
-        .as_ref()
-        .join(extract_filename(&downloads_list.client.url)?);
-    let jvm_options = JvmOptions {
+) -> Result<JvmOptions, anyhow::Error> {
+    Ok(JvmOptions {
         launcher_name: String::from("era-connect"),
         launcher_version: String::from("0.0.1"),
         classpath: String::new(),
         classpath_separator: String::from(":"),
-        primary_jar: client_jar.to_string_lossy().to_string(),
+        primary_jar: client_jar,
         library_directory: Arc::from(
             library_directory
                 .as_ref()
@@ -307,33 +335,20 @@ fn setup_jvm_options(
                 .canonicalize()
                 .context("Fail to canonicalize native_directory(jvm_options)")?,
         ),
-    };
-    Ok((client_jar, jvm_options))
+    })
 }
 
-fn setup_jvm_flags(jvm_argument: &Vec<Argument>) -> Result<JvmFlags, anyhow::Error> {
-    let jvm_flags = JvmFlags {
-        // rules: get_rules(jvm_argument)?,
-        // arguments: jvm_argument
-        //     .iter()
-        //     .filter_map(Value::as_str)
-        //     .map(ToString::to_string)
-        //     .collect::<Vec<_>>(),
-        arguments: vec![],
+fn setup_jvm_flags(jvm_argument: Vec<Argument>) -> Result<JvmFlagsUnprocessed, anyhow::Error> {
+    let jvm_flags = JvmFlagsUnprocessed {
+        arguments: jvm_argument,
         additional_arguments: None,
     };
     Ok(jvm_flags)
 }
 
-fn setup_game_flags(game_arguments: &Vec<Argument>) -> Result<GameFlags, anyhow::Error> {
-    let game_flags = GameFlags {
-        // rules: get_rules(game_argument)?,
-        // arguments: game_argument
-        //     .iter()
-        //     .filter_map(Value::as_str)
-        //     .map(ToString::to_string)
-        //     .collect::<Vec<_>>(),
-        arguments: vec![],
+fn setup_game_flags(game_arguments: Vec<Argument>) -> Result<GameFlagsUnprocessed, anyhow::Error> {
+    let game_flags = GameFlagsUnprocessed {
+        arguments: game_arguments,
         additional_arguments: None,
     };
     Ok(game_flags)
@@ -344,8 +359,8 @@ async fn setup_game_option(
     game_directory: impl AsRef<Path> + Send + Sync,
     asset_directory: impl AsRef<Path> + Send + Sync,
     asset_index_id: String,
-    mut game_flags: GameFlags,
-) -> Result<(GameOptions, GameFlags), anyhow::Error> {
+    mut game_flags: GameFlagsUnprocessed,
+) -> Result<(GameOptions, GameFlagsProcessed), anyhow::Error> {
     let storage = STORAGE.account_storage.read().await;
     let uuid = storage
         .main_account
@@ -376,6 +391,24 @@ async fn setup_game_option(
         user_type: String::from("mojang"),
         version_type: String::from("release"),
     };
+
+    // NOTE: IGNORE CHECK
+    let mut game_flags = GameFlagsProcessed {
+        arguments: game_flags
+            .arguments
+            .into_iter()
+            .map(|x| match x {
+                Argument::General(x) => vec![x],
+                Argument::Ruled { value, .. } => match value {
+                    manifest::ArgumentRuledValue::Single(x) => vec![x],
+                    manifest::ArgumentRuledValue::Multiple(x) => x,
+                },
+            })
+            .flatten()
+            .collect(),
+        additional_arguments: game_flags.additional_arguments,
+    };
+
     game_flags.arguments = game_args_parse(&game_flags, &game_options);
 
     if let Some(x) = game_flags.additional_arguments.as_ref() {
@@ -415,7 +448,7 @@ fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmOptions) -> Vec<String>
     parsed_argument
 }
 
-fn game_args_parse(game_flags: &GameFlags, game_arguments: &GameOptions) -> Vec<String> {
+fn game_args_parse(game_flags: &GameFlagsProcessed, game_arguments: &GameOptions) -> Vec<String> {
     let mut modified_arguments = Vec::new();
 
     for argument in &game_flags.arguments {

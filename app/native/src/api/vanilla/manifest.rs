@@ -1,6 +1,6 @@
 use anyhow::{Context, Ok};
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::api::download::download_file;
 
@@ -29,25 +29,25 @@ pub struct GameManifest {
     pub version_type: VersionType,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, PartialEq, Deserialize, Serialize)]
 pub struct Arguments {
     pub game: Vec<Argument>,
     pub jvm: Vec<Argument>,
 }
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum Argument {
     General(String),
     Ruled {
         rules: Vec<Rule>,
-        value: ArgumentValue,
+        value: ArgumentRuledValue,
     },
 }
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
-pub enum ArgumentValue {
+pub enum ArgumentRuledValue {
     Single(String),
     Multiple(Vec<String>),
 }
@@ -97,6 +97,7 @@ pub struct LoggingFile {
 
 pub async fn fetch_game_manifest(url: &str) -> anyhow::Result<GameManifest> {
     let response = download_file(url, None).await?;
+    let p = serde_json::from_slice(&response)?;
 
-    Ok(serde_json::from_slice(&response).context("Failed to parse game manifest")?)
+    Ok(p)
 }
