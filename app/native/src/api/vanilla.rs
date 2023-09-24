@@ -271,6 +271,7 @@ fn add_jvm_rules(
     classpath_list.push(client_jar.as_ref().to_string_lossy().to_string());
     jvm_options.classpath = classpath_list.join(":");
     let mut new_arguments = Vec::new();
+    let current_architecture = std::env::consts::ARCH.to_string();
 
     for p in jvm_flags.arguments {
         match p {
@@ -280,9 +281,10 @@ fn add_jvm_rules(
             Argument::Ruled { rules, value } => {
                 for x in rules {
                     if x.action == ActionType::Allow
-                        && x.os
-                            .as_ref()
-                            .map_or(false, |os| os.name == Some(current_os_type))
+                        && x.os.as_ref().map_or(false, |os| {
+                            os.name == Some(current_os_type)
+                                || os.arch.as_ref() == Some(&current_architecture)
+                        })
                     {
                         match value {
                             manifest::ArgumentRuledValue::Single(ref x) => {
