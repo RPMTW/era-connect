@@ -25,7 +25,7 @@ pub async fn prepare_quilt_download<'a>(
     game_options: GameOptions,
 ) -> Result<(DownloadArgs<'a>, ProcessedArguments)> {
     let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
-    let bytes = download_file(meta_url, None).await?;
+    let bytes = download_file(&meta_url, None).await?;
     let version_manifest: Value = serde_json::from_slice(&bytes)?;
     let current_size = Arc::new(AtomicUsize::new(0));
     let total_size = Arc::new(AtomicUsize::new(0));
@@ -114,16 +114,16 @@ pub async fn prepare_quilt_download<'a>(
                     .await?;
             } else {
                 sha1 = String::from_utf8(
-                    download_file(sha1_url, Some(Arc::clone(&current_size_clone)))
+                    download_file(&sha1_url, Some(Arc::clone(&current_size_clone)))
                         .await?
                         .to_vec(),
                 )?;
             }
             if !path.exists() {
-                let bytes = download_file(url, Some(current_size_clone)).await?;
+                let bytes = download_file(&url, Some(current_size_clone)).await?;
                 fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
             } else if validate_sha1(&sha1_path, &sha1).await.is_err() {
-                let bytes = download_file(url, Some(current_size_clone)).await?;
+                let bytes = download_file(&url, Some(current_size_clone)).await?;
                 fs::write(&path, bytes).await.map_err(|err| anyhow!(err))
             } else {
                 Ok(())

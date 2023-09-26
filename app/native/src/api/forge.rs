@@ -123,12 +123,12 @@ pub async fn prepare_forge_download<'a>(
                     fs::create_dir_all(path.parent().context("forge library path doesn't exist")?)
                         .await?;
                     total_size_clone.fetch_add(artifact.size, Ordering::Relaxed);
-                    let bytes = download_file(url, Some(current_size_clone)).await?;
+                    let bytes = download_file(&url, Some(current_size_clone)).await?;
                     fs::write(path, bytes).await.map_err(|err| anyhow!(err))
                 } else if let Err(err) = validate_sha1(&path, &sha1).await {
                     total_size_clone.fetch_add(artifact.size, Ordering::Relaxed);
                     error!("{err}\n redownloading");
-                    let bytes = download_file(url, Some(current_size_clone)).await?;
+                    let bytes = download_file(&url, Some(current_size_clone)).await?;
                     fs::write(path, bytes).await.map_err(|err| anyhow!(err))
                 } else {
                     debug!("hash verified");
@@ -150,7 +150,7 @@ pub async fn prepare_forge_download<'a>(
                 } else {
                     fs::create_dir_all(path.parent().context("library parent dir doesn't exist")?)
                         .await?;
-                    let bytes = download_file(url, None).await?;
+                    let bytes = download_file(&url, None).await?;
                     fs::write(path, bytes).await.map_err(|err| anyhow!(err))
                 }
             }));

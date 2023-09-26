@@ -25,16 +25,16 @@ use super::{vanilla::HandlesType, DownloadState, STATE};
 pub async fn download_file(
     url: impl AsRef<str> + Send + Sync,
     current_size_clone: Option<Arc<AtomicUsize>>,
-) -> Result<Bytes, reqwest::Error> {
+) -> Result<Bytes, anyhow::Error> {
+    let url = url.as_ref();
     let client = reqwest::Client::builder()
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
         .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
         .build()?;
-    let url = url.as_ref();
     let response_result = client.get(url).send().await;
 
     let retry_amount = 3;
-    let mut response = match response_result {
+    let response = match response_result {
         Ok(x) => Ok(x),
         Err(err) => {
             let mut temp = Err(err);
@@ -55,14 +55,33 @@ pub async fn download_file(
         }
     }?;
 
+    let bytes = match chunked_download(response, current_size_clone.clone()).await {
+        Ok(x) => x,
+        Err(err) => {
+            error!("{err:?} you fucked up.");
+            if let Some(ref size) = current_size_clone {
+                size.fetch_sub(err.1, Ordering::Relaxed);
+            }
+            chunked_download(client.get(url).send().await?, current_size_clone)
+                .await
+                .map_err(|err| err.0)?
+        }
+    };
+
+    Ok(bytes)
+}
+
+async fn chunked_download(
+    mut response: reqwest::Response,
+    current_size_clone: Option<Arc<AtomicUsize>>,
+) -> Result<Bytes, (reqwest::Error, usize)> {
     let mut bytes = BytesMut::new();
-    while let Some(chunk) = response.chunk().await? {
+    while let Some(chunk) = response.chunk().await.map_err(|err| (err, bytes.len()))? {
         if let Some(ref size) = current_size_clone {
             size.fetch_add(chunk.len(), Ordering::Relaxed);
         }
         bytes.put(chunk);
     }
-
     Ok(bytes.freeze())
 }
 
@@ -168,7 +187,6 @@ pub async fn run_download(
             };
             prev_bytes = current_size;
             instant = Instant::now();
-            info!("{:?}", progress);
             sender.send(progress).unwrap();
 
             let state = *STATE.read().await;
