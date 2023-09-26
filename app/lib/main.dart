@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:era_connect/api/ffi.dart';
 import 'package:era_connect/api/lib.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
@@ -23,8 +24,18 @@ void main() async {
     await windowManager.setMinimumSize(const Size(1350, 820));
     await initializeAPIs();
     runApp(const EraConnectApp());
+    // testRust;
   });
 }
+
+// void testRust() async {
+//   final t = await api.getVanillaVersions();
+//   final p = t.elementAt(0);
+//   final forge = await api.createCollection(
+//     displayName: "fuck",
+//     versionMetadata: p,
+//   );
+// }
 
 class EraConnectApp extends StatefulWidget {
   const EraConnectApp({Key? key}) : super(key: key);

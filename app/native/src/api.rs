@@ -20,6 +20,8 @@ pub use flutter_rust_bridge::SyncReturn;
 pub use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
+use crate::api::vanilla::launch_game;
+
 pub use self::authentication::account::{
     AccountToken, MinecraftAccount, MinecraftCape, MinecraftSkin, MinecraftSkinVariant,
 };
@@ -311,14 +313,13 @@ pub async fn create_collection(
             end: 100.0,
         };
         run_download(sender, vanilla_download_args, full_bias).await?;
-
-        Ok::<_, color_eyre::eyre::Error>(())
+        launch_game(vanilla_arguments.launch_args).await
     });
 
     for progress in receiver {
         info!("Progress: {:#?}", progress);
     }
 
-    handle.await.map_err(|x| eyre!(x))?;
+    handle.await.map_err(|x| eyre!(x))??;
     Ok(())
 }

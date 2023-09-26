@@ -28,7 +28,7 @@ pub struct GameManifest {
     pub version_type: VersionType,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, PartialEq, Deserialize)]
 pub struct Arguments {
     pub game: Vec<Argument>,
     pub jvm: Vec<Argument>,
@@ -40,13 +40,13 @@ pub enum Argument {
     General(String),
     Ruled {
         rules: Vec<Rule>,
-        value: ArgumentValue,
+        value: ArgumentRuledValue,
     },
 }
 
 #[derive(Debug, PartialEq, Deserialize)]
 #[serde(untagged)]
-pub enum ArgumentValue {
+pub enum ArgumentRuledValue {
     Single(String),
     Multiple(Vec<String>),
 }
@@ -96,6 +96,7 @@ pub struct LoggingFile {
 
 pub async fn fetch_game_manifest(url: &str) -> Result<GameManifest, GetVersionError> {
     let response = download_file(url, None).await?;
+    let p = serde_json::from_slice(&response)?;
 
-    Ok(serde_json::from_slice(&response)?)
+    Ok(p)
 }
