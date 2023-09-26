@@ -289,9 +289,7 @@ pub async fn create_collection(
             start: 0.0,
             end: 100.0,
         };
-        run_download(sender, vanilla_download_args, full_bias)
-            .await
-            .unwrap();
+        run_download(sender, vanilla_download_args, full_bias).await?;
         launch_game(vanilla_arguments.launch_args).await
     });
 
@@ -299,6 +297,6 @@ pub async fn create_collection(
         info!("Progress: {:#?}", progress);
     }
 
-    handle.await?.unwrap();
+    handle.await??;
     Ok(())
 }
