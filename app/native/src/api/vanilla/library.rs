@@ -67,11 +67,11 @@ pub async fn parallel_library(
     folder: Arc<Path>,
     native_folder: Arc<Path>,
     current: Arc<AtomicUsize>,
+    total_size: Arc<AtomicUsize>,
     library_download_handles: &mut HandlesType<'_>,
-) -> Result<Arc<AtomicUsize>> {
+) -> Result<()> {
     let index_counter = Arc::new(AtomicUsize::new(0));
     let current_size = current;
-    let download_total_size = Arc::new(AtomicUsize::new(0));
     let num_libraries = library_list_arc.len();
 
     let current_os = os_version::detect()?;
@@ -86,8 +86,8 @@ pub async fn parallel_library(
         let library_list_clone = Arc::clone(&library_list_arc);
         let counter_clone = Arc::clone(&index_counter);
         let current_size_clone = Arc::clone(&current_size);
+        let total_size_clone = Arc::clone(&total_size);
         let folder_clone = Arc::clone(&folder);
-        let download_total_size_clone = Arc::clone(&download_total_size);
         let native_folder_clone = Arc::clone(&native_folder);
         let handle = Box::pin(async move {
             let index = counter_clone.fetch_add(1, Ordering::SeqCst);
@@ -118,9 +118,10 @@ pub async fn parallel_library(
                 // always download(kinda required for now.)
                 if process_native {
                     let url = &library.downloads.artifact.url;
+                    total_size_clone.fetch_add(library.downloads.artifact.size, Ordering::Relaxed);
                     native_download(
                         url,
-                        &current_size_clone,
+                        current_size_clone,
                         native_folder_clone,
                         library_extension,
                     )
@@ -129,8 +130,7 @@ pub async fn parallel_library(
                 } else if !non_native_redownload {
                     Ok(())
                 } else {
-                    download_total_size_clone
-                        .fetch_add(library.downloads.artifact.size, Ordering::Relaxed);
+                    total_size_clone.fetch_add(library.downloads.artifact.size, Ordering::Relaxed);
                     let parent_dir = non_native_download_path
                         .parent()
                         .context("Can't find parent of non_native_download_path")?;
@@ -151,16 +151,18 @@ pub async fn parallel_library(
         library_download_handles.push(handle);
     }
 
-    Ok(download_total_size)
+    Ok(())
 }
 
 async fn native_download(
     url: &String,
-    current_size_clone: &Arc<AtomicUsize>,
+    current_size: Arc<AtomicUsize>,
     native_folder: Arc<Path>,
     library_extension: &str,
 ) -> Result<()> {
-    let bytes = download_file(url, Some(Arc::clone(current_size_clone))).await?;
+    let current_size_clone = Arc::clone(&current_size);
+    let bytes = download_file(url, Some(current_size_clone)).await?;
+
     let reader = std::io::Cursor::new(bytes);
     if let Ok(mut archive) = zip::ZipArchive::new(reader) {
         let native_temp_dir = native_folder.join("temp");
