@@ -13,7 +13,7 @@ use std::{
 };
 use tokio::fs;
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AssetIndex {
     pub url: String,
