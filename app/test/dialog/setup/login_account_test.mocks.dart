@@ -494,7 +494,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         ),
       ) as _i7.AccountStorageValue);
   @override
-  String? getSkinFilePath({
+  String getSkinFilePath({
     required _i7.MinecraftSkin? skin,
     dynamic hint,
   }) =>
@@ -507,8 +507,9 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
             #hint: hint,
           },
         ),
-        returnValueForMissingStub: null,
-      ) as String?);
+        returnValue: '',
+        returnValueForMissingStub: '',
+      ) as String);
   @override
   _i8.Future<void> removeMinecraftAccount({
     required _i4.UuidValue? uuid,
