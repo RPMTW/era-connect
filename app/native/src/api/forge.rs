@@ -234,9 +234,9 @@ pub async fn process_forge(
             .iter()
             .map(|x| {
                 convert_maven_to_path(x, Some(&folder))
-                    .expect("failed to convert processor classpath maven to path")
+                    .context("failed to convert processor classpath maven to path")
             })
-            .collect::<Vec<_>>();
+            .collect::<Result<Vec<_>>>()?;
         processor_classpath.push(jar);
         let minecraft_jar;
         let side;
@@ -285,14 +285,10 @@ pub async fn process_forge(
         )
         .into_iter()
         .map(|x| {
-            if x.starts_with('[') {
-                convert_maven_to_path(&x, Some(&folder))
-                    .expect("failed to convert [] types maven into path")
-            } else {
-                x
-            }
+            convert_maven_to_path(&x, Some(&folder))
+                .context("failed to convert [] types maven into path")
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>>>()?;
         let mut all = Vec::new();
         all.push(String::from("-cp"));
         all.push(processor_classpath.join(":"));
