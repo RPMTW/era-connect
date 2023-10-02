@@ -19,7 +19,7 @@ use crate::api::collection::Collection;
 
 use self::assets::{extract_assets, parallel_assets};
 use self::library::{os_match, parallel_library, Library};
-use self::manifest::{Argument, Downloads, GameManifest};
+use self::manifest::{Argument, GameManifest};
 use self::rules::{ActionType, OsName};
 use super::download::{
     download_file, extract_filename, validate_sha1, DownloadArgs, DownloadError,
@@ -196,7 +196,6 @@ pub async fn prepare_vanilla_download<'a>(
 
     let jvm_options = setup_jvm_options(
         client_jar_filename.to_string_lossy().to_string(),
-        &downloads_list,
         &library_directory,
         &game_directory,
         &native_directory,
@@ -221,11 +220,13 @@ pub async fn prepare_vanilla_download<'a>(
         Arc::clone(&jvm_options.native_directory),
     );
 
-    let total_size = parallel_library(
+    let total_size = Arc::new(AtomicUsize::new(0));
+    parallel_library(
         Arc::clone(&library_list),
         library_path,
         native_library_path,
         Arc::clone(&current_size),
+        Arc::clone(&total_size),
         &mut handles,
     )
     .await?;
@@ -346,7 +347,6 @@ fn add_jvm_rules(
 
 fn setup_jvm_options(
     client_jar: String,
-    downloads_list: &Downloads,
     library_directory: impl AsRef<Path>,
     game_directory: impl AsRef<Path>,
     native_directory: impl AsRef<Path>,

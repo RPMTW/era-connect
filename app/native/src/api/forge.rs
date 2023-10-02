@@ -87,9 +87,9 @@ pub async fn prepare_forge_download<'a>(
     jvm_options: JvmOptions,
     game_options: GameOptions,
 ) -> Result<(DownloadArgs<'a>, ProcessedArguments, Value)> {
-    // refactor
+    // NOTE: blah blah
     let bytes = download_file(
-        "https://meta.modrinth.com/forge/v0/versions/1.20.1-forge-47.1.43.json",
+        "https://meta.modrinth.com/forge/v0/versions/1.20.2-forge-48.0.13.json",
         None,
     )
     .await?;
@@ -467,19 +467,14 @@ fn convert_maven_to_path(str: &str, folder: Option<&str>) -> Result<String> {
         || pre_convert_maven_to_path(str, None),
         |position| pre_convert_maven_to_path(&str[..position], Some(&str[position + 1..])),
     )?;
-    // HACK: hell why
-    if let Some(folder) = folder {
-        if pre_maven.starts_with('[') {
-            pre_maven.insert_str(1, format!("{folder}/").as_str());
-            pre_maven.remove(0);
-        } else {
-            pre_maven.insert_str(0, format!("{folder}/").as_str());
-        }
-    } else if pre_maven.starts_with('[') {
-        pre_maven.remove(0);
-    }
     if let Some(pos) = pre_maven.chars().position(|x| x == ']') {
         pre_maven.remove(pos);
+    }
+    if let Some(pos) = pre_maven.chars().position(|x| x == '[') {
+        pre_maven.remove(pos);
+    }
+    if let Some(folder) = folder {
+        pre_maven.insert_str(0, format!("{folder}/").as_str());
     }
     Ok(pre_maven)
 }

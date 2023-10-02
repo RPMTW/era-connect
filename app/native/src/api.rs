@@ -20,6 +20,7 @@ pub use flutter_rust_bridge::SyncReturn;
 pub use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
+use crate::api::forge::{prepare_forge_download, process_forge};
 use crate::api::vanilla::launch_game;
 
 pub use self::authentication::account::{
@@ -111,36 +112,36 @@ pub fn setup_logger() -> anyhow::Result<()> {
 
 //     let (vanilla_download_args, vanilla_arguments, game_manifest) =
 //         prepare_vanilla_download(&collection).await?;
-//     info!("Starts Vanilla Downloading");
-//     let vanilla_bias = DownloadBias {
-//         start: 0.0,
-//         end: 90.0,
-//     };
-//     let stream = run_download(stream, vanilla_download_args, vanilla_bias).await?;
-//     let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
-//         vanilla_arguments.launch_args,
-//         vanilla_arguments.jvm_args,
-//         vanilla_arguments.game_args,
-//     )
-//     .await?;
+// info!("Starts Vanilla Downloading");
+// let vanilla_bias = DownloadBias {
+//     start: 0.0,
+//     end: 90.0,
+// };
+// let stream = run_download(stream, vanilla_download_args, vanilla_bias).await?;
+// let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
+//     vanilla_arguments.launch_args,
+//     vanilla_arguments.jvm_args,
+//     vanilla_arguments.game_args,
+// )
+// .await?;
 
-//     let forge_bias = DownloadBias {
-//         start: 90.0,
-//         end: 100.0,
-//     };
-//     info!("Starts Forge Downloading");
-//     run_download(stream, forge_download_args, forge_bias).await?;
-//     info!("Starts Forge Processing");
-//     let processed_arguments = process_forge(
-//         forge_arguments.launch_args,
-//         forge_arguments.jvm_args,
-//         forge_arguments.game_args,
-//         game_manifest,
-//         manifest,
-//     )
-//     .await?;
+// let forge_bias = DownloadBias {
+//     start: 90.0,
+//     end: 100.0,
+// };
+// info!("Starts Forge Downloading");
+// run_download(stream, forge_download_args, forge_bias).await?;
+// info!("Starts Forge Processing");
+// let processed_arguments = process_forge(
+//     forge_arguments.launch_args,
+//     forge_arguments.jvm_args,
+//     forge_arguments.game_args,
+//     game_manifest,
+//     manifest,
+// )
+// .await?;
 
-//     launch_game(processed_arguments).await
+// launch_game(processed_arguments).await
 // }
 
 // #[tokio::main(flavor = "current_thread")]
@@ -300,20 +301,45 @@ pub async fn create_collection(
     );
 
     let (sender, receiver) = mpsc::channel();
+    let vanilla_sender = sender.clone();
+    let forge_sender = sender.clone();
     let handle = tokio::spawn(async move {
-        info!("Starts preparing vanilla download");
+        // info!("Starts Vanilla Downloading");
+        let vanilla_bias = DownloadBias {
+            start: 0.0,
+            end: 90.0,
+        };
         let game_manifest =
             vanilla::manifest::fetch_game_manifest(&collection.minecraft_version.url).await?;
         let (vanilla_download_args, vanilla_arguments) =
-            prepare_vanilla_download(collection, game_manifest).await?;
+            prepare_vanilla_download(collection, game_manifest.clone()).await?;
 
-        info!("Starts downloading vanilla files");
-        let full_bias = DownloadBias {
-            start: 0.0,
+        run_download(vanilla_sender, vanilla_download_args, vanilla_bias).await?;
+
+        let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
+            vanilla_arguments.launch_args,
+            vanilla_arguments.jvm_args,
+            vanilla_arguments.game_args,
+        )
+        .await?;
+
+        let forge_bias = DownloadBias {
+            start: 90.0,
             end: 100.0,
         };
-        run_download(sender, vanilla_download_args, full_bias).await?;
-        launch_game(vanilla_arguments.launch_args).await
+        info!("Starts Forge Downloading");
+        run_download(forge_sender, forge_download_args, forge_bias).await?;
+        info!("Starts Forge Processing");
+        let processed_arguments = process_forge(
+            forge_arguments.launch_args,
+            forge_arguments.jvm_args,
+            forge_arguments.game_args,
+            game_manifest,
+            manifest,
+        )
+        .await?;
+
+        launch_game(processed_arguments).await
     });
 
     for progress in receiver {

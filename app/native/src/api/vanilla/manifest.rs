@@ -8,7 +8,7 @@ use super::library::Library;
 use super::rules::Rule;
 use super::version::{GetVersionError, VersionType};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GameManifest {
     pub arguments: Arguments,
@@ -28,7 +28,7 @@ pub struct GameManifest {
     pub version_type: VersionType,
 }
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
 pub struct Arguments {
     pub game: Vec<Argument>,
     pub jvm: Vec<Argument>,
@@ -51,7 +51,7 @@ pub enum ArgumentRuledValue {
     Multiple(Vec<String>),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Downloads {
     pub client: DownloadMetadata,
     pub client_mappings: DownloadMetadata,
@@ -59,26 +59,26 @@ pub struct Downloads {
     pub server_mappings: DownloadMetadata,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct DownloadMetadata {
     pub sha1: String,
     pub size: usize,
     pub url: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct JavaVersion {
     pub component: String,
     pub major_version: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct LoggingConfig {
     pub client: LoggingClientConfig,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct LoggingClientConfig {
     pub argument: String,
     pub file: LoggingFile,
@@ -86,7 +86,7 @@ pub struct LoggingClientConfig {
     pub logging_type: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct LoggingFile {
     pub id: String,
     pub sha1: String,
