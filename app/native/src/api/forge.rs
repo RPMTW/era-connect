@@ -17,8 +17,8 @@ use tokio::{fs, io::AsyncBufReadExt};
 use super::{
     download::{download_file, extract_filename, validate_sha1, DownloadArgs},
     vanilla::{
-        manifest::GameManifest, GameOptions, HandlesType, JvmOptions, LaunchArgs,
-        ProcessedArguments,
+        get_global_shared_path, manifest::GameManifest, GameOptions, HandlesType, JvmOptions,
+        LaunchArgs, ProcessedArguments,
     },
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -185,7 +185,7 @@ pub async fn prepare_forge_download<'a>(
 pub async fn process_forge(
     mut launch_args: LaunchArgs,
     jvm_options: JvmOptions,
-    _game_options: GameOptions,
+    game_options: GameOptions,
     game_manifest: GameManifest,
     manifest: Value,
 ) -> Result<LaunchArgs> {
@@ -241,8 +241,11 @@ pub async fn process_forge(
         if let Some(sides) = processor.sides {
             match sides.get(0) {
                 Some(x) if x == "server" => {
+                    let shared_path = get_global_shared_path();
+                    let version_id = &game_options.game_version_name;
+                    let version_directory = shared_path.join(format!("versions/{version_id}"));
                     let url = &game_manifest.downloads.server.url;
-                    let path = std::env::current_dir()?.join(extract_filename(url)?);
+                    let path = version_directory.join(extract_filename(url)?);
                     if !path.exists() {
                         fs::create_dir_all(
                             path.parent()

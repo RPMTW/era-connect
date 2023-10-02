@@ -488,6 +488,6 @@ fn game_args_parse(game_flags: &GameFlagsProcessed, game_arguments: &GameOptions
     modified_arguments
 }
 
-fn get_global_shared_path() -> PathBuf {
+pub fn get_global_shared_path() -> PathBuf {
     DATA_DIR.join("shared")
 }
