@@ -461,17 +461,12 @@ pub fn pre_convert_maven_to_path(input: &str, extension: Option<&str>) -> Result
 }
 
 fn convert_maven_to_path(str: &str, folder: Option<&str>) -> Result<String> {
-    let pos = str.chars().position(|x| x == '@');
+    let pos = str.find(|x| x == '@');
     let mut pre_maven = pos.map_or_else(
         || pre_convert_maven_to_path(str, None),
         |position| pre_convert_maven_to_path(&str[..position], Some(&str[position + 1..])),
     )?;
-    if let Some(pos) = pre_maven.chars().position(|x| x == ']') {
-        pre_maven.remove(pos);
-    }
-    if let Some(pos) = pre_maven.chars().position(|x| x == '[') {
-        pre_maven.remove(pos);
-    }
+    pre_maven.retain(|x| x != '[' && x != ']');
     if let Some(folder) = folder {
         pre_maven.insert_str(0, format!("{folder}/").as_str());
     }
