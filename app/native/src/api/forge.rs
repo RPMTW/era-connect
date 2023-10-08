@@ -18,8 +18,8 @@ use tokio::{fs, io::AsyncBufReadExt};
 use super::{
     download::{download_file, extract_filename, validate_sha1, DownloadArgs},
     vanilla::{
-        manifest::GameManifest, GameOptions, HandlesType, JvmOptions, LaunchArgs,
-        ProcessedArguments,
+        get_global_shared_path, manifest::GameManifest, GameOptions, HandlesType, JvmOptions,
+        LaunchArgs, ProcessedArguments,
     },
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -186,7 +186,7 @@ pub async fn prepare_forge_download<'a>(
 pub async fn process_forge(
     mut launch_args: LaunchArgs,
     jvm_options: JvmOptions,
-    _game_options: GameOptions,
+    game_options: GameOptions,
     game_manifest: GameManifest,
     manifest: Value,
 ) -> Result<LaunchArgs> {
@@ -233,17 +233,20 @@ pub async fn process_forge(
             .iter()
             .map(|x| {
                 convert_maven_to_path(x, Some(&folder))
-                    .expect("failed to convert processor classpath maven to path")
+                    .context("failed to convert processor classpath maven to path")
             })
-            .collect::<Vec<_>>();
+            .collect::<Result<Vec<_>>>()?;
         processor_classpath.push(jar);
         let minecraft_jar;
         let side;
         if let Some(sides) = processor.sides {
             match sides.get(0) {
                 Some(x) if x == "server" => {
+                    let shared_path = get_global_shared_path();
+                    let version_id = &game_options.game_version_name;
+                    let version_directory = shared_path.join(format!("versions/{version_id}"));
                     let url = &game_manifest.downloads.server.url;
-                    let path = std::env::current_dir()?.join(extract_filename(url)?);
+                    let path = version_directory.join(extract_filename(url)?);
                     if !path.exists() {
                         fs::create_dir_all(
                             path.parent()
@@ -278,12 +281,12 @@ pub async fn process_forge(
         .map(|x| {
             if x.starts_with('[') {
                 convert_maven_to_path(&x, Some(&folder))
-                    .expect("failed to convert [] types maven into path")
+                    .context("failed to convert [] types maven into path")
             } else {
-                x
+                Ok(x)
             }
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>>>()?;
         let mut all = Vec::new();
         all.push(String::from("-cp"));
         all.push(processor_classpath.join(":"));
@@ -462,17 +465,12 @@ pub fn pre_convert_maven_to_path(input: &str, extension: Option<&str>) -> Result
 }
 
 fn convert_maven_to_path(str: &str, folder: Option<&str>) -> Result<String> {
-    let pos = str.chars().position(|x| x == '@');
+    let pos = str.find(|x| x == '@');
     let mut pre_maven = pos.map_or_else(
         || pre_convert_maven_to_path(str, None),
         |position| pre_convert_maven_to_path(&str[..position], Some(&str[position + 1..])),
     )?;
-    if let Some(pos) = pre_maven.chars().position(|x| x == ']') {
-        pre_maven.remove(pos);
-    }
-    if let Some(pos) = pre_maven.chars().position(|x| x == '[') {
-        pre_maven.remove(pos);
-    }
+    pre_maven.retain(|x| x != '[' && x != ']');
     if let Some(folder) = folder {
         pre_maven.insert_str(0, format!("{folder}/").as_str());
     }
