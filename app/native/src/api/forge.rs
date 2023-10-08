@@ -285,8 +285,12 @@ pub async fn process_forge(
         )
         .into_iter()
         .map(|x| {
-            convert_maven_to_path(&x, Some(&folder))
-                .context("failed to convert [] types maven into path")
+            if x.starts_with('[') {
+                convert_maven_to_path(&x, Some(&folder))
+                    .context("failed to convert [] types maven into path")
+            } else {
+                Ok(x)
+            }
         })
         .collect::<Result<Vec<_>>>()?;
         let mut all = Vec::new();
