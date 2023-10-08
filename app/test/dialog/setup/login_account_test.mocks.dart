@@ -85,6 +85,7 @@ class MockStorageApi extends _i1.Mock implements _i6.StorageApi {
           Invocation.getter(#uiLayout),
         ),
       ) as _i2.UILayoutStorage);
+
   @override
   _i3.AccountStorage get accountStorage => (super.noSuchMethod(
         Invocation.getter(#accountStorage),
@@ -108,6 +109,7 @@ class MockAccountStorage extends _i1.Mock implements _i3.AccountStorage {
         Invocation.getter(#accounts),
         returnValue: <_i7.MinecraftAccount>[],
       ) as List<_i7.MinecraftAccount>);
+
   @override
   _i8.Future<void> removeAccount(_i4.UuidValue? uuid) => (super.noSuchMethod(
         Invocation.method(
@@ -132,6 +134,7 @@ class MockAccountToken extends _i1.Mock implements _i7.AccountToken {
         Invocation.getter(#token),
         returnValue: '',
       ) as String);
+
   @override
   int get expiresAt => (super.noSuchMethod(
         Invocation.getter(#expiresAt),
@@ -155,16 +158,19 @@ class MockMinecraftSkin extends _i1.Mock implements _i7.MinecraftSkin {
           Invocation.getter(#id),
         ),
       ) as _i4.UuidValue);
+
   @override
   String get state => (super.noSuchMethod(
         Invocation.getter(#state),
         returnValue: '',
       ) as String);
+
   @override
   String get url => (super.noSuchMethod(
         Invocation.getter(#url),
         returnValue: '',
       ) as String);
+
   @override
   _i7.MinecraftSkinVariant get variant => (super.noSuchMethod(
         Invocation.getter(#variant),
@@ -189,6 +195,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kSetupLoggerConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kLaunchVanillaConstMeta =>
       (super.noSuchMethod(
@@ -202,6 +209,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kLaunchVanillaConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kLaunchForgeConstMeta =>
       (super.noSuchMethod(
@@ -215,6 +223,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kLaunchForgeConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kLaunchQuiltConstMeta =>
       (super.noSuchMethod(
@@ -228,6 +237,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kLaunchQuiltConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kFetchStateConstMeta =>
       (super.noSuchMethod(
@@ -241,6 +251,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kFetchStateConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kWriteStateConstMeta =>
       (super.noSuchMethod(
@@ -254,6 +265,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kWriteStateConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kGetUiLayoutStorageConstMeta =>
       (super.noSuchMethod(
@@ -267,6 +279,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kGetUiLayoutStorageConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kSetUiLayoutStorageConstMeta =>
       (super.noSuchMethod(
@@ -280,6 +293,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kSetUiLayoutStorageConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kGetAccountStorageConstMeta =>
       (super.noSuchMethod(
@@ -293,6 +307,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kGetAccountStorageConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kGetSkinFilePathConstMeta =>
       (super.noSuchMethod(
@@ -306,6 +321,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kGetSkinFilePathConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kRemoveMinecraftAccountConstMeta =>
       (super.noSuchMethod(
@@ -319,6 +335,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kRemoveMinecraftAccountConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i5.FlutterRustBridgeTaskConstMeta get kMinecraftLoginFlowConstMeta =>
       (super.noSuchMethod(
@@ -332,6 +349,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           Invocation.getter(#kMinecraftLoginFlowConstMeta),
         ),
       ) as _i5.FlutterRustBridgeTaskConstMeta);
+
   @override
   _i8.Future<void> setupLogger({dynamic hint}) => (super.noSuchMethod(
         Invocation.method(
@@ -342,6 +360,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
       ) as _i8.Future<void>);
+
   @override
   _i8.Stream<_i7.Progress> launchVanilla({dynamic hint}) => (super.noSuchMethod(
         Invocation.method(
@@ -352,6 +371,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValue: _i8.Stream<_i7.Progress>.empty(),
         returnValueForMissingStub: _i8.Stream<_i7.Progress>.empty(),
       ) as _i8.Stream<_i7.Progress>);
+
   @override
   _i8.Stream<_i7.Progress> launchForge({dynamic hint}) => (super.noSuchMethod(
         Invocation.method(
@@ -362,6 +382,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValue: _i8.Stream<_i7.Progress>.empty(),
         returnValueForMissingStub: _i8.Stream<_i7.Progress>.empty(),
       ) as _i8.Stream<_i7.Progress>);
+
   @override
   _i8.Stream<_i7.Progress> launchQuilt({dynamic hint}) => (super.noSuchMethod(
         Invocation.method(
@@ -372,6 +393,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValue: _i8.Stream<_i7.Progress>.empty(),
         returnValueForMissingStub: _i8.Stream<_i7.Progress>.empty(),
       ) as _i8.Stream<_i7.Progress>);
+
   @override
   _i8.Future<_i7.DownloadState> fetchState({dynamic hint}) =>
       (super.noSuchMethod(
@@ -385,6 +407,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValueForMissingStub:
             _i8.Future<_i7.DownloadState>.value(_i7.DownloadState.Downloading),
       ) as _i8.Future<_i7.DownloadState>);
+
   @override
   _i8.Future<void> writeState({
     required _i7.DownloadState? s,
@@ -402,6 +425,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
       ) as _i8.Future<void>);
+
   @override
   _i7.UILayoutValue getUiLayoutStorage({
     required _i7.UILayoutKey? key,
@@ -439,6 +463,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           ),
         ),
       ) as _i7.UILayoutValue);
+
   @override
   _i8.Future<void> setUiLayoutStorage({
     required _i7.UILayoutValue? value,
@@ -456,6 +481,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
       ) as _i8.Future<void>);
+
   @override
   _i7.AccountStorageValue getAccountStorage({
     required _i7.AccountStorageKey? key,
@@ -493,8 +519,9 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           ),
         ),
       ) as _i7.AccountStorageValue);
+
   @override
-  String? getSkinFilePath({
+  String getSkinFilePath({
     required _i7.MinecraftSkin? skin,
     dynamic hint,
   }) =>
@@ -507,8 +534,10 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
             #hint: hint,
           },
         ),
-        returnValueForMissingStub: null,
-      ) as String?);
+        returnValue: '',
+        returnValueForMissingStub: '',
+      ) as String);
+
   @override
   _i8.Future<void> removeMinecraftAccount({
     required _i4.UuidValue? uuid,
@@ -526,6 +555,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
       ) as _i8.Future<void>);
+
   @override
   _i8.Stream<_i7.LoginFlowEvent> minecraftLoginFlow({dynamic hint}) =>
       (super.noSuchMethod(
@@ -537,6 +567,7 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValue: _i8.Stream<_i7.LoginFlowEvent>.empty(),
         returnValueForMissingStub: _i8.Stream<_i7.LoginFlowEvent>.empty(),
       ) as _i8.Stream<_i7.LoginFlowEvent>);
+
   @override
   void dispose() => super.noSuchMethod(
         Invocation.method(
