@@ -57,7 +57,6 @@ class MockStorageApi extends _i1.Mock implements _i4.StorageApi {
           Invocation.getter(#uiLayout),
         ),
       ) as _i2.UILayoutStorage);
-
   @override
   _i3.AccountStorage get accountStorage => (super.noSuchMethod(
         Invocation.getter(#accountStorage),
@@ -81,7 +80,6 @@ class MockUILayoutStorage extends _i1.Mock implements _i2.UILayoutStorage {
         Invocation.getter(#completedSetup),
         returnValue: false,
       ) as bool);
-
   @override
   set completedSetup(bool? value) => super.noSuchMethod(
         Invocation.setter(

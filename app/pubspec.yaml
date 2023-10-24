@@ -31,7 +31,7 @@ dependencies:
     sdk: flutter
 
   ffi: ^2.0.2
-  flutter_rust_bridge: ^1.81.2
+  flutter_rust_bridge: ^1.82.3
   meta: ^1.9.1
   flutter_svg: ^2.0.7
   window_manager: ^0.3.5
@@ -42,7 +42,7 @@ dependencies:
   era_connect_i18n:
     path: ../packages/era_connect_i18n
   url_launcher: ^6.1.12
-  uuid: ^3.0.7
+  uuid: ^4.1.0
 
 dev_dependencies:
   flutter_test:
