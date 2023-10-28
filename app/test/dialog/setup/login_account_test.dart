@@ -36,11 +36,11 @@ void main() {
     ffi.api = MockNativeImpl();
     storageApi = MockStorageApi();
     final accountStorage = MockAccountStorage();
-    final uuid = UuidValue('00000000-0000-0000-0000-000000000000');
+    const uuid = UuidValue('00000000-0000-0000-0000-000000000000');
 
     when((ffi.api as MockNativeImpl)
             .getSkinFilePath(skin: anyNamed('skin'), hint: anyNamed('hint')))
-        .thenReturn('');
+        .thenReturn("stuff.png");
     when(storageApi.accountStorage).thenReturn(accountStorage);
     when(accountStorage.mainAccount).thenReturn(uuid);
     when(accountStorage.accounts).thenReturn([

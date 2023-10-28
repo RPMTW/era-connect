@@ -56,7 +56,8 @@ extension MinecraftSkinExtension on bridge.MinecraftSkin {
       height: size,
     );
 
-    final file = File(api.getSkinFilePath(skin: this));
+    final String path = api.getSkinFilePath(skin: this);
+    final file = File(path);
     if (!file.existsSync()) return defaultImage;
 
     return Image.file(

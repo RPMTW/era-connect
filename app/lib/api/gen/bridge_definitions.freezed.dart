@@ -77,23 +77,23 @@ class _$AccountStorageValueCopyWithImpl<$Res, $Val extends AccountStorageValue>
 }
 
 /// @nodoc
-abstract class _$$AccountStorageValue_AccountsCopyWith<$Res> {
-  factory _$$AccountStorageValue_AccountsCopyWith(
-          _$AccountStorageValue_Accounts value,
-          $Res Function(_$AccountStorageValue_Accounts) then) =
-      __$$AccountStorageValue_AccountsCopyWithImpl<$Res>;
+abstract class _$$AccountStorageValue_AccountsImplCopyWith<$Res> {
+  factory _$$AccountStorageValue_AccountsImplCopyWith(
+          _$AccountStorageValue_AccountsImpl value,
+          $Res Function(_$AccountStorageValue_AccountsImpl) then) =
+      __$$AccountStorageValue_AccountsImplCopyWithImpl<$Res>;
   @useResult
   $Res call({List<MinecraftAccount> field0});
 }
 
 /// @nodoc
-class __$$AccountStorageValue_AccountsCopyWithImpl<$Res>
+class __$$AccountStorageValue_AccountsImplCopyWithImpl<$Res>
     extends _$AccountStorageValueCopyWithImpl<$Res,
-        _$AccountStorageValue_Accounts>
-    implements _$$AccountStorageValue_AccountsCopyWith<$Res> {
-  __$$AccountStorageValue_AccountsCopyWithImpl(
-      _$AccountStorageValue_Accounts _value,
-      $Res Function(_$AccountStorageValue_Accounts) _then)
+        _$AccountStorageValue_AccountsImpl>
+    implements _$$AccountStorageValue_AccountsImplCopyWith<$Res> {
+  __$$AccountStorageValue_AccountsImplCopyWithImpl(
+      _$AccountStorageValue_AccountsImpl _value,
+      $Res Function(_$AccountStorageValue_AccountsImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -101,7 +101,7 @@ class __$$AccountStorageValue_AccountsCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$AccountStorageValue_Accounts(
+    return _then(_$AccountStorageValue_AccountsImpl(
       null == field0
           ? _value._field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -112,8 +112,9 @@ class __$$AccountStorageValue_AccountsCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AccountStorageValue_Accounts implements AccountStorageValue_Accounts {
-  const _$AccountStorageValue_Accounts(final List<MinecraftAccount> field0)
+class _$AccountStorageValue_AccountsImpl
+    implements AccountStorageValue_Accounts {
+  const _$AccountStorageValue_AccountsImpl(final List<MinecraftAccount> field0)
       : _field0 = field0;
 
   final List<MinecraftAccount> _field0;
@@ -133,7 +134,7 @@ class _$AccountStorageValue_Accounts implements AccountStorageValue_Accounts {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$AccountStorageValue_Accounts &&
+            other is _$AccountStorageValue_AccountsImpl &&
             const DeepCollectionEquality().equals(other._field0, _field0));
   }
 
@@ -144,9 +145,10 @@ class _$AccountStorageValue_Accounts implements AccountStorageValue_Accounts {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$AccountStorageValue_AccountsCopyWith<_$AccountStorageValue_Accounts>
-      get copyWith => __$$AccountStorageValue_AccountsCopyWithImpl<
-          _$AccountStorageValue_Accounts>(this, _$identity);
+  _$$AccountStorageValue_AccountsImplCopyWith<
+          _$AccountStorageValue_AccountsImpl>
+      get copyWith => __$$AccountStorageValue_AccountsImplCopyWithImpl<
+          _$AccountStorageValue_AccountsImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -214,33 +216,34 @@ class _$AccountStorageValue_Accounts implements AccountStorageValue_Accounts {
 
 abstract class AccountStorageValue_Accounts implements AccountStorageValue {
   const factory AccountStorageValue_Accounts(
-      final List<MinecraftAccount> field0) = _$AccountStorageValue_Accounts;
+      final List<MinecraftAccount> field0) = _$AccountStorageValue_AccountsImpl;
 
   @override
   List<MinecraftAccount> get field0;
   @JsonKey(ignore: true)
-  _$$AccountStorageValue_AccountsCopyWith<_$AccountStorageValue_Accounts>
+  _$$AccountStorageValue_AccountsImplCopyWith<
+          _$AccountStorageValue_AccountsImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$AccountStorageValue_MainAccountCopyWith<$Res> {
-  factory _$$AccountStorageValue_MainAccountCopyWith(
-          _$AccountStorageValue_MainAccount value,
-          $Res Function(_$AccountStorageValue_MainAccount) then) =
-      __$$AccountStorageValue_MainAccountCopyWithImpl<$Res>;
+abstract class _$$AccountStorageValue_MainAccountImplCopyWith<$Res> {
+  factory _$$AccountStorageValue_MainAccountImplCopyWith(
+          _$AccountStorageValue_MainAccountImpl value,
+          $Res Function(_$AccountStorageValue_MainAccountImpl) then) =
+      __$$AccountStorageValue_MainAccountImplCopyWithImpl<$Res>;
   @useResult
   $Res call({UuidValue? field0});
 }
 
 /// @nodoc
-class __$$AccountStorageValue_MainAccountCopyWithImpl<$Res>
+class __$$AccountStorageValue_MainAccountImplCopyWithImpl<$Res>
     extends _$AccountStorageValueCopyWithImpl<$Res,
-        _$AccountStorageValue_MainAccount>
-    implements _$$AccountStorageValue_MainAccountCopyWith<$Res> {
-  __$$AccountStorageValue_MainAccountCopyWithImpl(
-      _$AccountStorageValue_MainAccount _value,
-      $Res Function(_$AccountStorageValue_MainAccount) _then)
+        _$AccountStorageValue_MainAccountImpl>
+    implements _$$AccountStorageValue_MainAccountImplCopyWith<$Res> {
+  __$$AccountStorageValue_MainAccountImplCopyWithImpl(
+      _$AccountStorageValue_MainAccountImpl _value,
+      $Res Function(_$AccountStorageValue_MainAccountImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -248,7 +251,7 @@ class __$$AccountStorageValue_MainAccountCopyWithImpl<$Res>
   $Res call({
     Object? field0 = freezed,
   }) {
-    return _then(_$AccountStorageValue_MainAccount(
+    return _then(_$AccountStorageValue_MainAccountImpl(
       freezed == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -259,9 +262,9 @@ class __$$AccountStorageValue_MainAccountCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AccountStorageValue_MainAccount
+class _$AccountStorageValue_MainAccountImpl
     implements AccountStorageValue_MainAccount {
-  const _$AccountStorageValue_MainAccount([this.field0]);
+  const _$AccountStorageValue_MainAccountImpl([this.field0]);
 
   @override
   final UuidValue? field0;
@@ -275,7 +278,7 @@ class _$AccountStorageValue_MainAccount
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$AccountStorageValue_MainAccount &&
+            other is _$AccountStorageValue_MainAccountImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -285,9 +288,10 @@ class _$AccountStorageValue_MainAccount
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$AccountStorageValue_MainAccountCopyWith<_$AccountStorageValue_MainAccount>
-      get copyWith => __$$AccountStorageValue_MainAccountCopyWithImpl<
-          _$AccountStorageValue_MainAccount>(this, _$identity);
+  _$$AccountStorageValue_MainAccountImplCopyWith<
+          _$AccountStorageValue_MainAccountImpl>
+      get copyWith => __$$AccountStorageValue_MainAccountImplCopyWithImpl<
+          _$AccountStorageValue_MainAccountImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -355,12 +359,13 @@ class _$AccountStorageValue_MainAccount
 
 abstract class AccountStorageValue_MainAccount implements AccountStorageValue {
   const factory AccountStorageValue_MainAccount([final UuidValue? field0]) =
-      _$AccountStorageValue_MainAccount;
+      _$AccountStorageValue_MainAccountImpl;
 
   @override
   UuidValue? get field0;
   @JsonKey(ignore: true)
-  _$$AccountStorageValue_MainAccountCopyWith<_$AccountStorageValue_MainAccount>
+  _$$AccountStorageValue_MainAccountImplCopyWith<
+          _$AccountStorageValue_MainAccountImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -431,21 +436,22 @@ class _$LoginFlowErrorsCopyWithImpl<$Res, $Val extends LoginFlowErrors>
 }
 
 /// @nodoc
-abstract class _$$LoginFlowErrors_XstsErrorCopyWith<$Res> {
-  factory _$$LoginFlowErrors_XstsErrorCopyWith(
-          _$LoginFlowErrors_XstsError value,
-          $Res Function(_$LoginFlowErrors_XstsError) then) =
-      __$$LoginFlowErrors_XstsErrorCopyWithImpl<$Res>;
+abstract class _$$LoginFlowErrors_XstsErrorImplCopyWith<$Res> {
+  factory _$$LoginFlowErrors_XstsErrorImplCopyWith(
+          _$LoginFlowErrors_XstsErrorImpl value,
+          $Res Function(_$LoginFlowErrors_XstsErrorImpl) then) =
+      __$$LoginFlowErrors_XstsErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({XstsTokenErrorType field0});
 }
 
 /// @nodoc
-class __$$LoginFlowErrors_XstsErrorCopyWithImpl<$Res>
-    extends _$LoginFlowErrorsCopyWithImpl<$Res, _$LoginFlowErrors_XstsError>
-    implements _$$LoginFlowErrors_XstsErrorCopyWith<$Res> {
-  __$$LoginFlowErrors_XstsErrorCopyWithImpl(_$LoginFlowErrors_XstsError _value,
-      $Res Function(_$LoginFlowErrors_XstsError) _then)
+class __$$LoginFlowErrors_XstsErrorImplCopyWithImpl<$Res>
+    extends _$LoginFlowErrorsCopyWithImpl<$Res, _$LoginFlowErrors_XstsErrorImpl>
+    implements _$$LoginFlowErrors_XstsErrorImplCopyWith<$Res> {
+  __$$LoginFlowErrors_XstsErrorImplCopyWithImpl(
+      _$LoginFlowErrors_XstsErrorImpl _value,
+      $Res Function(_$LoginFlowErrors_XstsErrorImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -453,7 +459,7 @@ class __$$LoginFlowErrors_XstsErrorCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$LoginFlowErrors_XstsError(
+    return _then(_$LoginFlowErrors_XstsErrorImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -464,8 +470,8 @@ class __$$LoginFlowErrors_XstsErrorCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$LoginFlowErrors_XstsError implements LoginFlowErrors_XstsError {
-  const _$LoginFlowErrors_XstsError(this.field0);
+class _$LoginFlowErrors_XstsErrorImpl implements LoginFlowErrors_XstsError {
+  const _$LoginFlowErrors_XstsErrorImpl(this.field0);
 
   @override
   final XstsTokenErrorType field0;
@@ -479,7 +485,7 @@ class _$LoginFlowErrors_XstsError implements LoginFlowErrors_XstsError {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LoginFlowErrors_XstsError &&
+            other is _$LoginFlowErrors_XstsErrorImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -489,9 +495,9 @@ class _$LoginFlowErrors_XstsError implements LoginFlowErrors_XstsError {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$LoginFlowErrors_XstsErrorCopyWith<_$LoginFlowErrors_XstsError>
-      get copyWith => __$$LoginFlowErrors_XstsErrorCopyWithImpl<
-          _$LoginFlowErrors_XstsError>(this, _$identity);
+  _$$LoginFlowErrors_XstsErrorImplCopyWith<_$LoginFlowErrors_XstsErrorImpl>
+      get copyWith => __$$LoginFlowErrors_XstsErrorImplCopyWithImpl<
+          _$LoginFlowErrors_XstsErrorImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -564,36 +570,38 @@ class _$LoginFlowErrors_XstsError implements LoginFlowErrors_XstsError {
 
 abstract class LoginFlowErrors_XstsError implements LoginFlowErrors {
   const factory LoginFlowErrors_XstsError(final XstsTokenErrorType field0) =
-      _$LoginFlowErrors_XstsError;
+      _$LoginFlowErrors_XstsErrorImpl;
 
   XstsTokenErrorType get field0;
   @JsonKey(ignore: true)
-  _$$LoginFlowErrors_XstsErrorCopyWith<_$LoginFlowErrors_XstsError>
+  _$$LoginFlowErrors_XstsErrorImplCopyWith<_$LoginFlowErrors_XstsErrorImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$LoginFlowErrors_GameNotOwnedCopyWith<$Res> {
-  factory _$$LoginFlowErrors_GameNotOwnedCopyWith(
-          _$LoginFlowErrors_GameNotOwned value,
-          $Res Function(_$LoginFlowErrors_GameNotOwned) then) =
-      __$$LoginFlowErrors_GameNotOwnedCopyWithImpl<$Res>;
+abstract class _$$LoginFlowErrors_GameNotOwnedImplCopyWith<$Res> {
+  factory _$$LoginFlowErrors_GameNotOwnedImplCopyWith(
+          _$LoginFlowErrors_GameNotOwnedImpl value,
+          $Res Function(_$LoginFlowErrors_GameNotOwnedImpl) then) =
+      __$$LoginFlowErrors_GameNotOwnedImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
-class __$$LoginFlowErrors_GameNotOwnedCopyWithImpl<$Res>
-    extends _$LoginFlowErrorsCopyWithImpl<$Res, _$LoginFlowErrors_GameNotOwned>
-    implements _$$LoginFlowErrors_GameNotOwnedCopyWith<$Res> {
-  __$$LoginFlowErrors_GameNotOwnedCopyWithImpl(
-      _$LoginFlowErrors_GameNotOwned _value,
-      $Res Function(_$LoginFlowErrors_GameNotOwned) _then)
+class __$$LoginFlowErrors_GameNotOwnedImplCopyWithImpl<$Res>
+    extends _$LoginFlowErrorsCopyWithImpl<$Res,
+        _$LoginFlowErrors_GameNotOwnedImpl>
+    implements _$$LoginFlowErrors_GameNotOwnedImplCopyWith<$Res> {
+  __$$LoginFlowErrors_GameNotOwnedImplCopyWithImpl(
+      _$LoginFlowErrors_GameNotOwnedImpl _value,
+      $Res Function(_$LoginFlowErrors_GameNotOwnedImpl) _then)
       : super(_value, _then);
 }
 
 /// @nodoc
 
-class _$LoginFlowErrors_GameNotOwned implements LoginFlowErrors_GameNotOwned {
-  const _$LoginFlowErrors_GameNotOwned();
+class _$LoginFlowErrors_GameNotOwnedImpl
+    implements LoginFlowErrors_GameNotOwned {
+  const _$LoginFlowErrors_GameNotOwnedImpl();
 
   @override
   String toString() {
@@ -604,7 +612,7 @@ class _$LoginFlowErrors_GameNotOwned implements LoginFlowErrors_GameNotOwned {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LoginFlowErrors_GameNotOwned);
+            other is _$LoginFlowErrors_GameNotOwnedImpl);
   }
 
   @override
@@ -680,26 +688,28 @@ class _$LoginFlowErrors_GameNotOwned implements LoginFlowErrors_GameNotOwned {
 }
 
 abstract class LoginFlowErrors_GameNotOwned implements LoginFlowErrors {
-  const factory LoginFlowErrors_GameNotOwned() = _$LoginFlowErrors_GameNotOwned;
+  const factory LoginFlowErrors_GameNotOwned() =
+      _$LoginFlowErrors_GameNotOwnedImpl;
 }
 
 /// @nodoc
-abstract class _$$LoginFlowErrors_UnknownErrorCopyWith<$Res> {
-  factory _$$LoginFlowErrors_UnknownErrorCopyWith(
-          _$LoginFlowErrors_UnknownError value,
-          $Res Function(_$LoginFlowErrors_UnknownError) then) =
-      __$$LoginFlowErrors_UnknownErrorCopyWithImpl<$Res>;
+abstract class _$$LoginFlowErrors_UnknownErrorImplCopyWith<$Res> {
+  factory _$$LoginFlowErrors_UnknownErrorImplCopyWith(
+          _$LoginFlowErrors_UnknownErrorImpl value,
+          $Res Function(_$LoginFlowErrors_UnknownErrorImpl) then) =
+      __$$LoginFlowErrors_UnknownErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String field0});
 }
 
 /// @nodoc
-class __$$LoginFlowErrors_UnknownErrorCopyWithImpl<$Res>
-    extends _$LoginFlowErrorsCopyWithImpl<$Res, _$LoginFlowErrors_UnknownError>
-    implements _$$LoginFlowErrors_UnknownErrorCopyWith<$Res> {
-  __$$LoginFlowErrors_UnknownErrorCopyWithImpl(
-      _$LoginFlowErrors_UnknownError _value,
-      $Res Function(_$LoginFlowErrors_UnknownError) _then)
+class __$$LoginFlowErrors_UnknownErrorImplCopyWithImpl<$Res>
+    extends _$LoginFlowErrorsCopyWithImpl<$Res,
+        _$LoginFlowErrors_UnknownErrorImpl>
+    implements _$$LoginFlowErrors_UnknownErrorImplCopyWith<$Res> {
+  __$$LoginFlowErrors_UnknownErrorImplCopyWithImpl(
+      _$LoginFlowErrors_UnknownErrorImpl _value,
+      $Res Function(_$LoginFlowErrors_UnknownErrorImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -707,7 +717,7 @@ class __$$LoginFlowErrors_UnknownErrorCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$LoginFlowErrors_UnknownError(
+    return _then(_$LoginFlowErrors_UnknownErrorImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -718,8 +728,9 @@ class __$$LoginFlowErrors_UnknownErrorCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$LoginFlowErrors_UnknownError implements LoginFlowErrors_UnknownError {
-  const _$LoginFlowErrors_UnknownError(this.field0);
+class _$LoginFlowErrors_UnknownErrorImpl
+    implements LoginFlowErrors_UnknownError {
+  const _$LoginFlowErrors_UnknownErrorImpl(this.field0);
 
   @override
   final String field0;
@@ -733,7 +744,7 @@ class _$LoginFlowErrors_UnknownError implements LoginFlowErrors_UnknownError {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LoginFlowErrors_UnknownError &&
+            other is _$LoginFlowErrors_UnknownErrorImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -743,9 +754,10 @@ class _$LoginFlowErrors_UnknownError implements LoginFlowErrors_UnknownError {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$LoginFlowErrors_UnknownErrorCopyWith<_$LoginFlowErrors_UnknownError>
-      get copyWith => __$$LoginFlowErrors_UnknownErrorCopyWithImpl<
-          _$LoginFlowErrors_UnknownError>(this, _$identity);
+  _$$LoginFlowErrors_UnknownErrorImplCopyWith<
+          _$LoginFlowErrors_UnknownErrorImpl>
+      get copyWith => __$$LoginFlowErrors_UnknownErrorImplCopyWithImpl<
+          _$LoginFlowErrors_UnknownErrorImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -818,11 +830,12 @@ class _$LoginFlowErrors_UnknownError implements LoginFlowErrors_UnknownError {
 
 abstract class LoginFlowErrors_UnknownError implements LoginFlowErrors {
   const factory LoginFlowErrors_UnknownError(final String field0) =
-      _$LoginFlowErrors_UnknownError;
+      _$LoginFlowErrors_UnknownErrorImpl;
 
   String get field0;
   @JsonKey(ignore: true)
-  _$$LoginFlowErrors_UnknownErrorCopyWith<_$LoginFlowErrors_UnknownError>
+  _$$LoginFlowErrors_UnknownErrorImplCopyWith<
+          _$LoginFlowErrors_UnknownErrorImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -900,20 +913,20 @@ class _$LoginFlowEventCopyWithImpl<$Res, $Val extends LoginFlowEvent>
 }
 
 /// @nodoc
-abstract class _$$LoginFlowEvent_StageCopyWith<$Res> {
-  factory _$$LoginFlowEvent_StageCopyWith(_$LoginFlowEvent_Stage value,
-          $Res Function(_$LoginFlowEvent_Stage) then) =
-      __$$LoginFlowEvent_StageCopyWithImpl<$Res>;
+abstract class _$$LoginFlowEvent_StageImplCopyWith<$Res> {
+  factory _$$LoginFlowEvent_StageImplCopyWith(_$LoginFlowEvent_StageImpl value,
+          $Res Function(_$LoginFlowEvent_StageImpl) then) =
+      __$$LoginFlowEvent_StageImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LoginFlowStage field0});
 }
 
 /// @nodoc
-class __$$LoginFlowEvent_StageCopyWithImpl<$Res>
-    extends _$LoginFlowEventCopyWithImpl<$Res, _$LoginFlowEvent_Stage>
-    implements _$$LoginFlowEvent_StageCopyWith<$Res> {
-  __$$LoginFlowEvent_StageCopyWithImpl(_$LoginFlowEvent_Stage _value,
-      $Res Function(_$LoginFlowEvent_Stage) _then)
+class __$$LoginFlowEvent_StageImplCopyWithImpl<$Res>
+    extends _$LoginFlowEventCopyWithImpl<$Res, _$LoginFlowEvent_StageImpl>
+    implements _$$LoginFlowEvent_StageImplCopyWith<$Res> {
+  __$$LoginFlowEvent_StageImplCopyWithImpl(_$LoginFlowEvent_StageImpl _value,
+      $Res Function(_$LoginFlowEvent_StageImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -921,7 +934,7 @@ class __$$LoginFlowEvent_StageCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$LoginFlowEvent_Stage(
+    return _then(_$LoginFlowEvent_StageImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -932,8 +945,8 @@ class __$$LoginFlowEvent_StageCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$LoginFlowEvent_Stage implements LoginFlowEvent_Stage {
-  const _$LoginFlowEvent_Stage(this.field0);
+class _$LoginFlowEvent_StageImpl implements LoginFlowEvent_Stage {
+  const _$LoginFlowEvent_StageImpl(this.field0);
 
   @override
   final LoginFlowStage field0;
@@ -947,7 +960,7 @@ class _$LoginFlowEvent_Stage implements LoginFlowEvent_Stage {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LoginFlowEvent_Stage &&
+            other is _$LoginFlowEvent_StageImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -957,9 +970,10 @@ class _$LoginFlowEvent_Stage implements LoginFlowEvent_Stage {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$LoginFlowEvent_StageCopyWith<_$LoginFlowEvent_Stage> get copyWith =>
-      __$$LoginFlowEvent_StageCopyWithImpl<_$LoginFlowEvent_Stage>(
-          this, _$identity);
+  _$$LoginFlowEvent_StageImplCopyWith<_$LoginFlowEvent_StageImpl>
+      get copyWith =>
+          __$$LoginFlowEvent_StageImplCopyWithImpl<_$LoginFlowEvent_StageImpl>(
+              this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1038,31 +1052,32 @@ class _$LoginFlowEvent_Stage implements LoginFlowEvent_Stage {
 
 abstract class LoginFlowEvent_Stage implements LoginFlowEvent {
   const factory LoginFlowEvent_Stage(final LoginFlowStage field0) =
-      _$LoginFlowEvent_Stage;
+      _$LoginFlowEvent_StageImpl;
 
   @override
   LoginFlowStage get field0;
   @JsonKey(ignore: true)
-  _$$LoginFlowEvent_StageCopyWith<_$LoginFlowEvent_Stage> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$LoginFlowEvent_StageImplCopyWith<_$LoginFlowEvent_StageImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$LoginFlowEvent_DeviceCodeCopyWith<$Res> {
-  factory _$$LoginFlowEvent_DeviceCodeCopyWith(
-          _$LoginFlowEvent_DeviceCode value,
-          $Res Function(_$LoginFlowEvent_DeviceCode) then) =
-      __$$LoginFlowEvent_DeviceCodeCopyWithImpl<$Res>;
+abstract class _$$LoginFlowEvent_DeviceCodeImplCopyWith<$Res> {
+  factory _$$LoginFlowEvent_DeviceCodeImplCopyWith(
+          _$LoginFlowEvent_DeviceCodeImpl value,
+          $Res Function(_$LoginFlowEvent_DeviceCodeImpl) then) =
+      __$$LoginFlowEvent_DeviceCodeImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LoginFlowDeviceCode field0});
 }
 
 /// @nodoc
-class __$$LoginFlowEvent_DeviceCodeCopyWithImpl<$Res>
-    extends _$LoginFlowEventCopyWithImpl<$Res, _$LoginFlowEvent_DeviceCode>
-    implements _$$LoginFlowEvent_DeviceCodeCopyWith<$Res> {
-  __$$LoginFlowEvent_DeviceCodeCopyWithImpl(_$LoginFlowEvent_DeviceCode _value,
-      $Res Function(_$LoginFlowEvent_DeviceCode) _then)
+class __$$LoginFlowEvent_DeviceCodeImplCopyWithImpl<$Res>
+    extends _$LoginFlowEventCopyWithImpl<$Res, _$LoginFlowEvent_DeviceCodeImpl>
+    implements _$$LoginFlowEvent_DeviceCodeImplCopyWith<$Res> {
+  __$$LoginFlowEvent_DeviceCodeImplCopyWithImpl(
+      _$LoginFlowEvent_DeviceCodeImpl _value,
+      $Res Function(_$LoginFlowEvent_DeviceCodeImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1070,7 +1085,7 @@ class __$$LoginFlowEvent_DeviceCodeCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$LoginFlowEvent_DeviceCode(
+    return _then(_$LoginFlowEvent_DeviceCodeImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1081,8 +1096,8 @@ class __$$LoginFlowEvent_DeviceCodeCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$LoginFlowEvent_DeviceCode implements LoginFlowEvent_DeviceCode {
-  const _$LoginFlowEvent_DeviceCode(this.field0);
+class _$LoginFlowEvent_DeviceCodeImpl implements LoginFlowEvent_DeviceCode {
+  const _$LoginFlowEvent_DeviceCodeImpl(this.field0);
 
   @override
   final LoginFlowDeviceCode field0;
@@ -1096,7 +1111,7 @@ class _$LoginFlowEvent_DeviceCode implements LoginFlowEvent_DeviceCode {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LoginFlowEvent_DeviceCode &&
+            other is _$LoginFlowEvent_DeviceCodeImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1106,9 +1121,9 @@ class _$LoginFlowEvent_DeviceCode implements LoginFlowEvent_DeviceCode {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$LoginFlowEvent_DeviceCodeCopyWith<_$LoginFlowEvent_DeviceCode>
-      get copyWith => __$$LoginFlowEvent_DeviceCodeCopyWithImpl<
-          _$LoginFlowEvent_DeviceCode>(this, _$identity);
+  _$$LoginFlowEvent_DeviceCodeImplCopyWith<_$LoginFlowEvent_DeviceCodeImpl>
+      get copyWith => __$$LoginFlowEvent_DeviceCodeImplCopyWithImpl<
+          _$LoginFlowEvent_DeviceCodeImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1187,20 +1202,20 @@ class _$LoginFlowEvent_DeviceCode implements LoginFlowEvent_DeviceCode {
 
 abstract class LoginFlowEvent_DeviceCode implements LoginFlowEvent {
   const factory LoginFlowEvent_DeviceCode(final LoginFlowDeviceCode field0) =
-      _$LoginFlowEvent_DeviceCode;
+      _$LoginFlowEvent_DeviceCodeImpl;
 
   @override
   LoginFlowDeviceCode get field0;
   @JsonKey(ignore: true)
-  _$$LoginFlowEvent_DeviceCodeCopyWith<_$LoginFlowEvent_DeviceCode>
+  _$$LoginFlowEvent_DeviceCodeImplCopyWith<_$LoginFlowEvent_DeviceCodeImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$LoginFlowEvent_ErrorCopyWith<$Res> {
-  factory _$$LoginFlowEvent_ErrorCopyWith(_$LoginFlowEvent_Error value,
-          $Res Function(_$LoginFlowEvent_Error) then) =
-      __$$LoginFlowEvent_ErrorCopyWithImpl<$Res>;
+abstract class _$$LoginFlowEvent_ErrorImplCopyWith<$Res> {
+  factory _$$LoginFlowEvent_ErrorImplCopyWith(_$LoginFlowEvent_ErrorImpl value,
+          $Res Function(_$LoginFlowEvent_ErrorImpl) then) =
+      __$$LoginFlowEvent_ErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LoginFlowErrors field0});
 
@@ -1208,11 +1223,11 @@ abstract class _$$LoginFlowEvent_ErrorCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$$LoginFlowEvent_ErrorCopyWithImpl<$Res>
-    extends _$LoginFlowEventCopyWithImpl<$Res, _$LoginFlowEvent_Error>
-    implements _$$LoginFlowEvent_ErrorCopyWith<$Res> {
-  __$$LoginFlowEvent_ErrorCopyWithImpl(_$LoginFlowEvent_Error _value,
-      $Res Function(_$LoginFlowEvent_Error) _then)
+class __$$LoginFlowEvent_ErrorImplCopyWithImpl<$Res>
+    extends _$LoginFlowEventCopyWithImpl<$Res, _$LoginFlowEvent_ErrorImpl>
+    implements _$$LoginFlowEvent_ErrorImplCopyWith<$Res> {
+  __$$LoginFlowEvent_ErrorImplCopyWithImpl(_$LoginFlowEvent_ErrorImpl _value,
+      $Res Function(_$LoginFlowEvent_ErrorImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1220,7 +1235,7 @@ class __$$LoginFlowEvent_ErrorCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$LoginFlowEvent_Error(
+    return _then(_$LoginFlowEvent_ErrorImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1239,8 +1254,8 @@ class __$$LoginFlowEvent_ErrorCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$LoginFlowEvent_Error implements LoginFlowEvent_Error {
-  const _$LoginFlowEvent_Error(this.field0);
+class _$LoginFlowEvent_ErrorImpl implements LoginFlowEvent_Error {
+  const _$LoginFlowEvent_ErrorImpl(this.field0);
 
   @override
   final LoginFlowErrors field0;
@@ -1254,7 +1269,7 @@ class _$LoginFlowEvent_Error implements LoginFlowEvent_Error {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LoginFlowEvent_Error &&
+            other is _$LoginFlowEvent_ErrorImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1264,9 +1279,10 @@ class _$LoginFlowEvent_Error implements LoginFlowEvent_Error {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$LoginFlowEvent_ErrorCopyWith<_$LoginFlowEvent_Error> get copyWith =>
-      __$$LoginFlowEvent_ErrorCopyWithImpl<_$LoginFlowEvent_Error>(
-          this, _$identity);
+  _$$LoginFlowEvent_ErrorImplCopyWith<_$LoginFlowEvent_ErrorImpl>
+      get copyWith =>
+          __$$LoginFlowEvent_ErrorImplCopyWithImpl<_$LoginFlowEvent_ErrorImpl>(
+              this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1345,30 +1361,32 @@ class _$LoginFlowEvent_Error implements LoginFlowEvent_Error {
 
 abstract class LoginFlowEvent_Error implements LoginFlowEvent {
   const factory LoginFlowEvent_Error(final LoginFlowErrors field0) =
-      _$LoginFlowEvent_Error;
+      _$LoginFlowEvent_ErrorImpl;
 
   @override
   LoginFlowErrors get field0;
   @JsonKey(ignore: true)
-  _$$LoginFlowEvent_ErrorCopyWith<_$LoginFlowEvent_Error> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$LoginFlowEvent_ErrorImplCopyWith<_$LoginFlowEvent_ErrorImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$LoginFlowEvent_SuccessCopyWith<$Res> {
-  factory _$$LoginFlowEvent_SuccessCopyWith(_$LoginFlowEvent_Success value,
-          $Res Function(_$LoginFlowEvent_Success) then) =
-      __$$LoginFlowEvent_SuccessCopyWithImpl<$Res>;
+abstract class _$$LoginFlowEvent_SuccessImplCopyWith<$Res> {
+  factory _$$LoginFlowEvent_SuccessImplCopyWith(
+          _$LoginFlowEvent_SuccessImpl value,
+          $Res Function(_$LoginFlowEvent_SuccessImpl) then) =
+      __$$LoginFlowEvent_SuccessImplCopyWithImpl<$Res>;
   @useResult
   $Res call({MinecraftAccount field0});
 }
 
 /// @nodoc
-class __$$LoginFlowEvent_SuccessCopyWithImpl<$Res>
-    extends _$LoginFlowEventCopyWithImpl<$Res, _$LoginFlowEvent_Success>
-    implements _$$LoginFlowEvent_SuccessCopyWith<$Res> {
-  __$$LoginFlowEvent_SuccessCopyWithImpl(_$LoginFlowEvent_Success _value,
-      $Res Function(_$LoginFlowEvent_Success) _then)
+class __$$LoginFlowEvent_SuccessImplCopyWithImpl<$Res>
+    extends _$LoginFlowEventCopyWithImpl<$Res, _$LoginFlowEvent_SuccessImpl>
+    implements _$$LoginFlowEvent_SuccessImplCopyWith<$Res> {
+  __$$LoginFlowEvent_SuccessImplCopyWithImpl(
+      _$LoginFlowEvent_SuccessImpl _value,
+      $Res Function(_$LoginFlowEvent_SuccessImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1376,7 +1394,7 @@ class __$$LoginFlowEvent_SuccessCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$LoginFlowEvent_Success(
+    return _then(_$LoginFlowEvent_SuccessImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1387,8 +1405,8 @@ class __$$LoginFlowEvent_SuccessCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$LoginFlowEvent_Success implements LoginFlowEvent_Success {
-  const _$LoginFlowEvent_Success(this.field0);
+class _$LoginFlowEvent_SuccessImpl implements LoginFlowEvent_Success {
+  const _$LoginFlowEvent_SuccessImpl(this.field0);
 
   @override
   final MinecraftAccount field0;
@@ -1402,7 +1420,7 @@ class _$LoginFlowEvent_Success implements LoginFlowEvent_Success {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LoginFlowEvent_Success &&
+            other is _$LoginFlowEvent_SuccessImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1412,9 +1430,9 @@ class _$LoginFlowEvent_Success implements LoginFlowEvent_Success {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$LoginFlowEvent_SuccessCopyWith<_$LoginFlowEvent_Success> get copyWith =>
-      __$$LoginFlowEvent_SuccessCopyWithImpl<_$LoginFlowEvent_Success>(
-          this, _$identity);
+  _$$LoginFlowEvent_SuccessImplCopyWith<_$LoginFlowEvent_SuccessImpl>
+      get copyWith => __$$LoginFlowEvent_SuccessImplCopyWithImpl<
+          _$LoginFlowEvent_SuccessImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1493,13 +1511,13 @@ class _$LoginFlowEvent_Success implements LoginFlowEvent_Success {
 
 abstract class LoginFlowEvent_Success implements LoginFlowEvent {
   const factory LoginFlowEvent_Success(final MinecraftAccount field0) =
-      _$LoginFlowEvent_Success;
+      _$LoginFlowEvent_SuccessImpl;
 
   @override
   MinecraftAccount get field0;
   @JsonKey(ignore: true)
-  _$$LoginFlowEvent_SuccessCopyWith<_$LoginFlowEvent_Success> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$LoginFlowEvent_SuccessImplCopyWith<_$LoginFlowEvent_SuccessImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -1578,24 +1596,25 @@ class _$UILayoutValueCopyWithImpl<$Res, $Val extends UILayoutValue>
 }
 
 /// @nodoc
-abstract class _$$UILayoutValue_CompletedSetupCopyWith<$Res>
+abstract class _$$UILayoutValue_CompletedSetupImplCopyWith<$Res>
     implements $UILayoutValueCopyWith<$Res> {
-  factory _$$UILayoutValue_CompletedSetupCopyWith(
-          _$UILayoutValue_CompletedSetup value,
-          $Res Function(_$UILayoutValue_CompletedSetup) then) =
-      __$$UILayoutValue_CompletedSetupCopyWithImpl<$Res>;
+  factory _$$UILayoutValue_CompletedSetupImplCopyWith(
+          _$UILayoutValue_CompletedSetupImpl value,
+          $Res Function(_$UILayoutValue_CompletedSetupImpl) then) =
+      __$$UILayoutValue_CompletedSetupImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({bool field0});
 }
 
 /// @nodoc
-class __$$UILayoutValue_CompletedSetupCopyWithImpl<$Res>
-    extends _$UILayoutValueCopyWithImpl<$Res, _$UILayoutValue_CompletedSetup>
-    implements _$$UILayoutValue_CompletedSetupCopyWith<$Res> {
-  __$$UILayoutValue_CompletedSetupCopyWithImpl(
-      _$UILayoutValue_CompletedSetup _value,
-      $Res Function(_$UILayoutValue_CompletedSetup) _then)
+class __$$UILayoutValue_CompletedSetupImplCopyWithImpl<$Res>
+    extends _$UILayoutValueCopyWithImpl<$Res,
+        _$UILayoutValue_CompletedSetupImpl>
+    implements _$$UILayoutValue_CompletedSetupImplCopyWith<$Res> {
+  __$$UILayoutValue_CompletedSetupImplCopyWithImpl(
+      _$UILayoutValue_CompletedSetupImpl _value,
+      $Res Function(_$UILayoutValue_CompletedSetupImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1603,7 +1622,7 @@ class __$$UILayoutValue_CompletedSetupCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$UILayoutValue_CompletedSetup(
+    return _then(_$UILayoutValue_CompletedSetupImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1614,8 +1633,9 @@ class __$$UILayoutValue_CompletedSetupCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$UILayoutValue_CompletedSetup implements UILayoutValue_CompletedSetup {
-  const _$UILayoutValue_CompletedSetup(this.field0);
+class _$UILayoutValue_CompletedSetupImpl
+    implements UILayoutValue_CompletedSetup {
+  const _$UILayoutValue_CompletedSetupImpl(this.field0);
 
   @override
   final bool field0;
@@ -1629,7 +1649,7 @@ class _$UILayoutValue_CompletedSetup implements UILayoutValue_CompletedSetup {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$UILayoutValue_CompletedSetup &&
+            other is _$UILayoutValue_CompletedSetupImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1639,9 +1659,10 @@ class _$UILayoutValue_CompletedSetup implements UILayoutValue_CompletedSetup {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$UILayoutValue_CompletedSetupCopyWith<_$UILayoutValue_CompletedSetup>
-      get copyWith => __$$UILayoutValue_CompletedSetupCopyWithImpl<
-          _$UILayoutValue_CompletedSetup>(this, _$identity);
+  _$$UILayoutValue_CompletedSetupImplCopyWith<
+          _$UILayoutValue_CompletedSetupImpl>
+      get copyWith => __$$UILayoutValue_CompletedSetupImplCopyWithImpl<
+          _$UILayoutValue_CompletedSetupImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1703,13 +1724,14 @@ class _$UILayoutValue_CompletedSetup implements UILayoutValue_CompletedSetup {
 
 abstract class UILayoutValue_CompletedSetup implements UILayoutValue {
   const factory UILayoutValue_CompletedSetup(final bool field0) =
-      _$UILayoutValue_CompletedSetup;
+      _$UILayoutValue_CompletedSetupImpl;
 
   @override
   bool get field0;
   @override
   @JsonKey(ignore: true)
-  _$$UILayoutValue_CompletedSetupCopyWith<_$UILayoutValue_CompletedSetup>
+  _$$UILayoutValue_CompletedSetupImplCopyWith<
+          _$UILayoutValue_CompletedSetupImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -1799,11 +1821,11 @@ class _$VersionMetadataCopyWithImpl<$Res, $Val extends VersionMetadata>
 }
 
 /// @nodoc
-abstract class _$$_VersionMetadataCopyWith<$Res>
+abstract class _$$VersionMetadataImplCopyWith<$Res>
     implements $VersionMetadataCopyWith<$Res> {
-  factory _$$_VersionMetadataCopyWith(
-          _$_VersionMetadata value, $Res Function(_$_VersionMetadata) then) =
-      __$$_VersionMetadataCopyWithImpl<$Res>;
+  factory _$$VersionMetadataImplCopyWith(_$VersionMetadataImpl value,
+          $Res Function(_$VersionMetadataImpl) then) =
+      __$$VersionMetadataImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -1817,11 +1839,11 @@ abstract class _$$_VersionMetadataCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$_VersionMetadataCopyWithImpl<$Res>
-    extends _$VersionMetadataCopyWithImpl<$Res, _$_VersionMetadata>
-    implements _$$_VersionMetadataCopyWith<$Res> {
-  __$$_VersionMetadataCopyWithImpl(
-      _$_VersionMetadata _value, $Res Function(_$_VersionMetadata) _then)
+class __$$VersionMetadataImplCopyWithImpl<$Res>
+    extends _$VersionMetadataCopyWithImpl<$Res, _$VersionMetadataImpl>
+    implements _$$VersionMetadataImplCopyWith<$Res> {
+  __$$VersionMetadataImplCopyWithImpl(
+      _$VersionMetadataImpl _value, $Res Function(_$VersionMetadataImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1835,7 +1857,7 @@ class __$$_VersionMetadataCopyWithImpl<$Res>
     Object? sha1 = null,
     Object? complianceLevel = null,
   }) {
-    return _then(_$_VersionMetadata(
+    return _then(_$VersionMetadataImpl(
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
@@ -1870,8 +1892,8 @@ class __$$_VersionMetadataCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$_VersionMetadata implements _VersionMetadata {
-  const _$_VersionMetadata(
+class _$VersionMetadataImpl implements _VersionMetadata {
+  const _$VersionMetadataImpl(
       {required this.id,
       required this.versionType,
       required this.url,
@@ -1904,7 +1926,7 @@ class _$_VersionMetadata implements _VersionMetadata {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$_VersionMetadata &&
+            other is _$VersionMetadataImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.versionType, versionType) ||
                 other.versionType == versionType) &&
@@ -1925,8 +1947,9 @@ class _$_VersionMetadata implements _VersionMetadata {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$_VersionMetadataCopyWith<_$_VersionMetadata> get copyWith =>
-      __$$_VersionMetadataCopyWithImpl<_$_VersionMetadata>(this, _$identity);
+  _$$VersionMetadataImplCopyWith<_$VersionMetadataImpl> get copyWith =>
+      __$$VersionMetadataImplCopyWithImpl<_$VersionMetadataImpl>(
+          this, _$identity);
 }
 
 abstract class _VersionMetadata implements VersionMetadata {
@@ -1937,7 +1960,7 @@ abstract class _VersionMetadata implements VersionMetadata {
       required final DateTime uploadedTime,
       required final DateTime releaseTime,
       required final String sha1,
-      required final int complianceLevel}) = _$_VersionMetadata;
+      required final int complianceLevel}) = _$VersionMetadataImpl;
 
   @override
   String get id;
@@ -1955,6 +1978,6 @@ abstract class _VersionMetadata implements VersionMetadata {
   int get complianceLevel;
   @override
   @JsonKey(ignore: true)
-  _$$_VersionMetadataCopyWith<_$_VersionMetadata> get copyWith =>
+  _$$VersionMetadataImplCopyWith<_$VersionMetadataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

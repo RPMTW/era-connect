@@ -431,7 +431,9 @@ fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmOptions) -> Vec<String>
             buf.push_str(&s[..pos]);
             let start = &s[pos + 2..];
 
-            let Some(closing) = start.find('}') else { panic!("missing closing brace"); };
+            let Some(closing) = start.find('}') else {
+                panic!("missing closing brace");
+            };
             let var = &start[..closing];
             // make processing string to next part
             s = &start[closing + 1..];
@@ -462,7 +464,9 @@ fn game_args_parse(game_flags: &GameFlagsProcessed, game_arguments: &GameOptions
             buf.push_str(&s[..pos]);
             let start = &s[pos + 2..];
 
-            let Some(closing) = start.find('}') else { panic!("missing closing brace"); };
+            let Some(closing) = start.find('}') else {
+                panic!("missing closing brace");
+            };
             let var = &start[..closing];
             // make processing string to next part
             s = &start[closing + 1..];
