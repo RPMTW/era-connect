@@ -42,7 +42,7 @@ dependencies:
   era_connect_i18n:
     path: ../packages/era_connect_i18n
   url_launcher: ^6.1.12
-  uuid: ^3.0.7
+  uuid: ^4.2.1
 
 dev_dependencies:
   flutter_test:
