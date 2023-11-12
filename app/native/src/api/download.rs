@@ -13,14 +13,17 @@ use bytes::{BufMut, Bytes, BytesMut};
 use futures::StreamExt;
 use log::{error, info};
 use reqwest::Url;
-use std::sync::mpsc;
 use tokio::{
     fs::File,
     io::{AsyncReadExt, BufReader},
+    sync::{
+        mpsc::{channel, unbounded_channel},
+        RwLock,
+    },
     time::{self, Instant},
 };
 
-use super::{vanilla::HandlesType, DownloadState, STATE};
+use super::{collection::CollectionId, vanilla::HandlesType, DOWNLOAD_PROGRESS};
 
 pub async fn download_file(
     url: impl AsRef<str> + Send + Sync,
@@ -142,7 +145,7 @@ pub struct DownloadBias {
 
 // get progress and and launch download
 pub async fn run_download(
-    sender: mpsc::Sender<Progress>,
+    id: CollectionId,
     download_args: DownloadArgs<'_>,
     bias: DownloadBias,
 ) -> anyhow::Result<()> {
@@ -156,10 +159,10 @@ pub async fn run_download(
 
     let multiplier = (bias.end - bias.start) / 100.0;
 
-    *STATE.write().await = DownloadState::Downloading;
     let sleep_time = 250;
     let rolling_average_window = 5000 / sleep_time;
     let mut average_speed = VecDeque::with_capacity(rolling_average_window);
+
     let output = tokio::spawn(async move {
         let mut instant = Instant::now();
         let mut prev_bytes = 0.0;
@@ -187,18 +190,8 @@ pub async fn run_download(
             };
             prev_bytes = current_size;
             instant = Instant::now();
-            sender.send(progress).unwrap();
-
-            let state = *STATE.read().await;
-            match state {
-                DownloadState::Downloading => {}
-                DownloadState::Paused => {
-                    while *STATE.read().await != DownloadState::Downloading {
-                        time::sleep(Duration::from_millis(100)).await;
-                    }
-                }
-                DownloadState::Stopped => break,
-            }
+            dbg!(&progress);
+            DOWNLOAD_PROGRESS.insert(id.clone(), progress);
         }
     });
     // Create a semaphore with a limit on the number of concurrent downloads
@@ -215,17 +208,7 @@ pub async fn join_futures(
 ) -> Result<(), anyhow::Error> {
     let mut download_stream = tokio_stream::iter(handles).buffer_unordered(concurrency_limit);
     while let Some(x) = download_stream.next().await {
-        let state = *STATE.read().await;
-        match state {
-            DownloadState::Downloading => x?,
-            DownloadState::Paused => {
-                while *STATE.read().await != DownloadState::Downloading {
-                    time::sleep(Duration::from_millis(100)).await;
-                    info!("pausing!");
-                }
-            }
-            DownloadState::Stopped => break,
-        }
+        x?
     }
     Ok(())
 }

@@ -6,13 +6,12 @@ pub mod quilt;
 pub mod storage;
 pub mod vanilla;
 
+use anyhow::Context;
+use dashmap::DashMap;
+use log::{info, warn};
 use std::fs::create_dir_all;
 use std::path::PathBuf;
-pub use std::sync::mpsc;
-pub use std::sync::mpsc::{Receiver, Sender};
-
-use anyhow::Context;
-use log::{info, warn};
+use std::sync::Arc;
 
 pub use flutter_rust_bridge::StreamSink;
 pub use flutter_rust_bridge::SyncReturn;
@@ -28,9 +27,8 @@ pub use self::authentication::account::{
 pub use self::authentication::msa_flow::{
     LoginFlowDeviceCode, LoginFlowErrors, LoginFlowEvent, LoginFlowStage, XstsTokenErrorType,
 };
-pub use self::collection::{
-    AdvancedOptions, Collection, CollectionKey, CollectionValue, ModLoader, ModLoaderType,
-};
+use self::collection::CollectionId;
+pub use self::collection::{AdvancedOptions, Collection, ModLoader, ModLoaderType};
 pub use self::download::Progress;
 pub use self::quilt::prepare_quilt_download;
 pub use self::storage::account_storage::{AccountStorageKey, AccountStorageValue};
@@ -46,7 +44,8 @@ use self::storage::storage_state::StorageState;
 
 lazy_static::lazy_static! {
     static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
-    static ref STATE: RwLock<DownloadState> = RwLock::new(DownloadState::default());
+    // static ref DOWNLOAD_PROGRESS: RwLock<HashMap<CollectionId, (UnboundedSender<Progress>, RwLock<UnboundedReceiver<Progress>>)>> = RwLock::new(HashMap::default());
+    static ref DOWNLOAD_PROGRESS: Arc<DashMap<CollectionId,Progress>> = Arc::new(DashMap::default());
     static ref STORAGE: StorageState = StorageState::new();
 }
 
@@ -167,27 +166,6 @@ pub fn setup_logger() -> anyhow::Result<()> {
 //     launch_game(quilt_processed.launch_args).await
 // }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum DownloadState {
-    Downloading,
-    Paused,
-    Stopped,
-}
-
-impl Default for DownloadState {
-    fn default() -> Self {
-        Self::Stopped
-    }
-}
-
-pub fn fetch_state() -> DownloadState {
-    *STATE.blocking_read()
-}
-
-pub fn write_state(s: DownloadState) {
-    *STATE.blocking_write() = s;
-}
-
 pub fn get_ui_layout_storage(key: UILayoutKey) -> SyncReturn<UILayoutValue> {
     let value = STORAGE.ui_layout.blocking_read().get_value(key);
     SyncReturn(value)
@@ -271,17 +249,15 @@ pub async fn create_collection(
         advanced_options,
         entry_path,
     };
+    let collection_id = collection.get_collection_id();
     loader.save(&collection)?;
     info!(
         "Successfully created collection basic file at {}",
         collection.entry_path.display()
     );
 
-    let (sender, receiver) = mpsc::channel();
-    let vanilla_sender = sender.clone();
-    let forge_sender = sender.clone();
     let handle = tokio::spawn(async move {
-        // info!("Starts Vanilla Downloading");
+        info!("Starts Vanilla Downloading");
         let vanilla_bias = DownloadBias {
             start: 0.0,
             end: 90.0,
@@ -291,7 +267,7 @@ pub async fn create_collection(
         let (vanilla_download_args, vanilla_arguments) =
             prepare_vanilla_download(collection, game_manifest.clone()).await?;
 
-        run_download(vanilla_sender, vanilla_download_args, vanilla_bias).await?;
+        run_download(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
 
         let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
             vanilla_arguments.launch_args,
@@ -305,7 +281,7 @@ pub async fn create_collection(
             end: 100.0,
         };
         info!("Starts Forge Downloading");
-        run_download(forge_sender, forge_download_args, forge_bias).await?;
+        run_download(collection_id, forge_download_args, forge_bias).await?;
         info!("Starts Forge Processing");
         let processed_arguments = process_forge(
             forge_arguments.launch_args,
@@ -319,10 +295,9 @@ pub async fn create_collection(
         launch_game(processed_arguments).await
     });
 
-    for progress in receiver {
-        info!("Progress: {:#?}", progress);
+    for x in DOWNLOAD_PROGRESS.iter() {
+        dbg!(x.value());
     }
-
     handle.await??;
     Ok(())
 }

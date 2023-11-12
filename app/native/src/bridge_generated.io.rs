@@ -7,16 +7,6 @@ pub extern "C" fn wire_setup_logger(port_: i64) {
 }
 
 #[no_mangle]
-pub extern "C" fn wire_fetch_state(port_: i64) {
-    wire_fetch_state_impl(port_)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_write_state(port_: i64, s: i32) {
-    wire_write_state_impl(port_, s)
-}
-
-#[no_mangle]
 pub extern "C" fn wire_get_ui_layout_storage(key: i32) -> support::WireSyncReturn {
     wire_get_ui_layout_storage_impl(key)
 }

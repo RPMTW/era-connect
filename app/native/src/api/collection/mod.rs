@@ -4,13 +4,12 @@ use chrono::{DateTime, Duration, Utc};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use struct_key_value_pair::VariantStruct;
 
 use super::vanilla::version::VersionMetadata;
 use super::{storage::storage_loader::StorageLoader, DATA_DIR};
 
 #[serde_with::serde_as]
-#[derive(Debug, Deserialize, Serialize, VariantStruct, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Collection {
     pub display_name: String,
     pub minecraft_version: VersionMetadata,
@@ -25,12 +24,25 @@ pub struct Collection {
     pub entry_path: PathBuf,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, Default, Eq, PartialEq, Hash)]
+pub struct CollectionId(String);
+
 const COLLECTION_FILE_NAME: &str = "collection.json";
 const COLLECTION_BASE: &str = "collections";
 
 impl Collection {
     pub fn get_base_path() -> PathBuf {
         DATA_DIR.join(COLLECTION_BASE)
+    }
+
+    pub fn get_collection_id(&self) -> CollectionId {
+        CollectionId(
+            self.entry_path
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .to_string(),
+        )
     }
 
     pub fn create(display_name: &str) -> std::io::Result<(StorageLoader, PathBuf)> {
