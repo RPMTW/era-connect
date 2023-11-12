@@ -16,7 +16,7 @@ color-eyre = "0.6.2"
 crossbeam = { version = "0.8.2", features = ["crossbeam-channel"] }
 dirs = "5.0.1"
 error-chain = "0.12.4"
-flutter_rust_bridge = { version = "1.82.3", features = [
+flutter_rust_bridge = { version = "1.82.4", features = [
     "zero-copy",
     "uuid",
 ] }
