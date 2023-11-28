@@ -197,34 +197,6 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
       ) as _i5.FlutterRustBridgeTaskConstMeta);
 
   @override
-  _i5.FlutterRustBridgeTaskConstMeta get kFetchStateConstMeta =>
-      (super.noSuchMethod(
-        Invocation.getter(#kFetchStateConstMeta),
-        returnValue: _FakeFlutterRustBridgeTaskConstMeta_3(
-          this,
-          Invocation.getter(#kFetchStateConstMeta),
-        ),
-        returnValueForMissingStub: _FakeFlutterRustBridgeTaskConstMeta_3(
-          this,
-          Invocation.getter(#kFetchStateConstMeta),
-        ),
-      ) as _i5.FlutterRustBridgeTaskConstMeta);
-
-  @override
-  _i5.FlutterRustBridgeTaskConstMeta get kWriteStateConstMeta =>
-      (super.noSuchMethod(
-        Invocation.getter(#kWriteStateConstMeta),
-        returnValue: _FakeFlutterRustBridgeTaskConstMeta_3(
-          this,
-          Invocation.getter(#kWriteStateConstMeta),
-        ),
-        returnValueForMissingStub: _FakeFlutterRustBridgeTaskConstMeta_3(
-          this,
-          Invocation.getter(#kWriteStateConstMeta),
-        ),
-      ) as _i5.FlutterRustBridgeTaskConstMeta);
-
-  @override
   _i5.FlutterRustBridgeTaskConstMeta get kGetUiLayoutStorageConstMeta =>
       (super.noSuchMethod(
         Invocation.getter(#kGetUiLayoutStorageConstMeta),
@@ -323,6 +295,20 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
       ) as _i5.FlutterRustBridgeTaskConstMeta);
 
   @override
+  _i5.FlutterRustBridgeTaskConstMeta get kGetAllDownloadProgressConstMeta =>
+      (super.noSuchMethod(
+        Invocation.getter(#kGetAllDownloadProgressConstMeta),
+        returnValue: _FakeFlutterRustBridgeTaskConstMeta_3(
+          this,
+          Invocation.getter(#kGetAllDownloadProgressConstMeta),
+        ),
+        returnValueForMissingStub: _FakeFlutterRustBridgeTaskConstMeta_3(
+          this,
+          Invocation.getter(#kGetAllDownloadProgressConstMeta),
+        ),
+      ) as _i5.FlutterRustBridgeTaskConstMeta);
+
+  @override
   _i5.FlutterRustBridgeTaskConstMeta get kCreateCollectionConstMeta =>
       (super.noSuchMethod(
         Invocation.getter(#kCreateCollectionConstMeta),
@@ -342,38 +328,6 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
           #setupLogger,
           [],
           {#hint: hint},
-        ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
-
-  @override
-  _i8.Future<_i7.DownloadState> fetchState({dynamic hint}) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #fetchState,
-          [],
-          {#hint: hint},
-        ),
-        returnValue:
-            _i8.Future<_i7.DownloadState>.value(_i7.DownloadState.Downloading),
-        returnValueForMissingStub:
-            _i8.Future<_i7.DownloadState>.value(_i7.DownloadState.Downloading),
-      ) as _i8.Future<_i7.DownloadState>);
-
-  @override
-  _i8.Future<void> writeState({
-    required _i7.DownloadState? s,
-    dynamic hint,
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #writeState,
-          [],
-          {
-            #s: s,
-            #hint: hint,
-          },
         ),
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
@@ -534,6 +488,20 @@ class MockNativeImpl extends _i1.Mock implements _i9.NativeImpl {
         returnValueForMissingStub: _i8.Future<List<_i7.VersionMetadata>>.value(
             <_i7.VersionMetadata>[]),
       ) as _i8.Future<List<_i7.VersionMetadata>>);
+
+  @override
+  _i8.Stream<List<(_i7.CollectionId, _i7.Progress)>> getAllDownloadProgress(
+          {dynamic hint}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getAllDownloadProgress,
+          [],
+          {#hint: hint},
+        ),
+        returnValue: _i8.Stream<List<(_i7.CollectionId, _i7.Progress)>>.empty(),
+        returnValueForMissingStub:
+            _i8.Stream<List<(_i7.CollectionId, _i7.Progress)>>.empty(),
+      ) as _i8.Stream<List<(_i7.CollectionId, _i7.Progress)>>);
 
   @override
   _i8.Future<void> createCollection({

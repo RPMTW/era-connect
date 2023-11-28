@@ -25,7 +25,7 @@ pub struct Collection {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default, Eq, PartialEq, Hash)]
-pub struct CollectionId(String);
+pub struct CollectionId(pub String);
 
 const COLLECTION_FILE_NAME: &str = "collection.json";
 const COLLECTION_BASE: &str = "collections";

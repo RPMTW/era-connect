@@ -171,6 +171,24 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
+  Stream<List<(CollectionId, Progress)>> getAllDownloadProgress(
+      {dynamic hint}) {
+    return _platform.executeStream(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_get_all_download_progress(port_),
+      parseSuccessData: _wire2api_list___record__collection_id_progress,
+      parseErrorData: null,
+      constMeta: kGetAllDownloadProgressConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kGetAllDownloadProgressConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_all_download_progress",
+        argNames: [],
+      );
+
   Future<void> createCollection(
       {required String displayName,
       required VersionMetadata versionMetadata,
@@ -225,6 +243,18 @@ class NativeImpl implements Native {
     return UuidValue.fromByteList(_wire2api_uint_8_list(raw));
   }
 
+  (CollectionId, Progress) _wire2api___record__collection_id_progress(
+      dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) {
+      throw Exception('Expected 2 elements, got ${arr.length}');
+    }
+    return (
+      _wire2api_collection_id(arr[0]),
+      _wire2api_progress(arr[1]),
+    );
+  }
+
   AccountStorageValue _wire2api_account_storage_value(dynamic raw) {
     switch (raw[0]) {
       case 0:
@@ -267,12 +297,32 @@ class NativeImpl implements Native {
     return _wire2api_minecraft_account(raw);
   }
 
+  CollectionId _wire2api_collection_id(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return CollectionId(
+      field0: _wire2api_String(arr[0]),
+    );
+  }
+
+  double _wire2api_f64(dynamic raw) {
+    return raw as double;
+  }
+
   int _wire2api_i32(dynamic raw) {
     return raw as int;
   }
 
   int _wire2api_i64(dynamic raw) {
     return castInt(raw);
+  }
+
+  List<(CollectionId, Progress)>
+      _wire2api_list___record__collection_id_progress(dynamic raw) {
+    return (raw as List<dynamic>)
+        .map(_wire2api___record__collection_id_progress)
+        .toList();
   }
 
   List<MinecraftAccount> _wire2api_list_minecraft_account(dynamic raw) {
@@ -389,6 +439,18 @@ class NativeImpl implements Native {
 
   UuidValue? _wire2api_opt_Uuid(dynamic raw) {
     return raw == null ? null : _wire2api_Uuid(raw);
+  }
+
+  Progress _wire2api_progress(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return Progress(
+      speed: _wire2api_f64(arr[0]),
+      percentages: _wire2api_f64(arr[1]),
+      currentSize: _wire2api_f64(arr[2]),
+      totalSize: _wire2api_f64(arr[3]),
+    );
   }
 
   int _wire2api_u32(dynamic raw) {
@@ -875,6 +937,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
           'wire_get_vanilla_versions');
   late final _wire_get_vanilla_versions =
       _wire_get_vanilla_versionsPtr.asFunction<void Function(int)>();
+
+  void wire_get_all_download_progress(
+    int port_,
+  ) {
+    return _wire_get_all_download_progress(
+      port_,
+    );
+  }
+
+  late final _wire_get_all_download_progressPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_get_all_download_progress');
+  late final _wire_get_all_download_progress =
+      _wire_get_all_download_progressPtr.asFunction<void Function(int)>();
 
   void wire_create_collection(
     int port_,

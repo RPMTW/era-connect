@@ -45,6 +45,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kGetVanillaVersionsConstMeta;
 
+  Stream<List<(CollectionId, Progress)>> getAllDownloadProgress({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kGetAllDownloadProgressConstMeta;
+
   Future<void> createCollection(
       {required String displayName,
       required VersionMetadata versionMetadata,
@@ -85,6 +89,14 @@ class AdvancedOptions {
 
   const AdvancedOptions({
     this.jvmMaxMemory,
+  });
+}
+
+class CollectionId {
+  final String field0;
+
+  const CollectionId({
+    required this.field0,
   });
 }
 
@@ -200,6 +212,20 @@ enum ModLoaderType {
   NeoForge,
   Fabric,
   Quilt,
+}
+
+class Progress {
+  final double speed;
+  final double percentages;
+  final double currentSize;
+  final double totalSize;
+
+  const Progress({
+    required this.speed,
+    required this.percentages,
+    required this.currentSize,
+    required this.totalSize,
+  });
 }
 
 enum UILayoutKey {

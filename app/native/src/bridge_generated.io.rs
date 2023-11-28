@@ -44,6 +44,11 @@ pub extern "C" fn wire_get_vanilla_versions(port_: i64) {
 }
 
 #[no_mangle]
+pub extern "C" fn wire_get_all_download_progress(port_: i64) {
+    wire_get_all_download_progress_impl(port_)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_create_collection(
     port_: i64,
     display_name: *mut wire_uint_8_list,

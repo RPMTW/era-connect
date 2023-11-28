@@ -11,15 +11,11 @@ use std::{
 use anyhow::{bail, Context};
 use bytes::{BufMut, Bytes, BytesMut};
 use futures::StreamExt;
-use log::{error, info};
+use log::error;
 use reqwest::Url;
 use tokio::{
     fs::File,
     io::{AsyncReadExt, BufReader},
-    sync::{
-        mpsc::{channel, unbounded_channel},
-        RwLock,
-    },
     time::{self, Instant},
 };
 
@@ -190,7 +186,6 @@ pub async fn run_download(
             };
             prev_bytes = current_size;
             instant = Instant::now();
-            dbg!(&progress);
             DOWNLOAD_PROGRESS.insert(id.clone(), progress);
         }
     });

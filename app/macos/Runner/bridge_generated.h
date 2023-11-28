@@ -81,6 +81,8 @@ void wire_minecraft_login_flow(int64_t port_);
 
 void wire_get_vanilla_versions(int64_t port_);
 
+void wire_get_all_download_progress(int64_t port_);
+
 void wire_create_collection(int64_t port_,
                             struct wire_uint_8_list *display_name,
                             struct wire_VersionMetadata *version_metadata,
@@ -115,6 +117,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_remove_minecraft_account);
     dummy_var ^= ((int64_t) (void*) wire_minecraft_login_flow);
     dummy_var ^= ((int64_t) (void*) wire_get_vanilla_versions);
+    dummy_var ^= ((int64_t) (void*) wire_get_all_download_progress);
     dummy_var ^= ((int64_t) (void*) wire_create_collection);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_advanced_options_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_minecraft_skin_0);

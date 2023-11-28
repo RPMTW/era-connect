@@ -27,7 +27,7 @@ pub use self::authentication::account::{
 pub use self::authentication::msa_flow::{
     LoginFlowDeviceCode, LoginFlowErrors, LoginFlowEvent, LoginFlowStage, XstsTokenErrorType,
 };
-use self::collection::CollectionId;
+pub use self::collection::CollectionId;
 pub use self::collection::{AdvancedOptions, Collection, ModLoader, ModLoaderType};
 pub use self::download::Progress;
 pub use self::quilt::prepare_quilt_download;
@@ -44,7 +44,6 @@ use self::storage::storage_state::StorageState;
 
 lazy_static::lazy_static! {
     static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
-    // static ref DOWNLOAD_PROGRESS: RwLock<HashMap<CollectionId, (UnboundedSender<Progress>, RwLock<UnboundedReceiver<Progress>>)>> = RwLock::new(HashMap::default());
     static ref DOWNLOAD_PROGRESS: Arc<DashMap<CollectionId,Progress>> = Arc::new(DashMap::default());
     static ref STORAGE: StorageState = StorageState::new();
 }
@@ -84,60 +83,6 @@ pub fn setup_logger() -> anyhow::Result<()> {
     info!("Successfully setup logger");
     Ok(())
 }
-
-// #[tokio::main(flavor = "current_thread")]
-// pub async fn launch_vanilla(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-//     // HACK: This is a temporary solution to get the collection
-//     let collection = STORAGE.collections.read().await.get(0).unwrap().clone();
-//     let (vanilla_download_args, vanilla_arguments, game_manifest) =
-//         prepare_vanilla_download(&collection).await?;
-
-//     let vanilla_bias = DownloadBias {
-//         start: 0.0,
-//         end: 100.0,
-//     };
-//     run_download(stream, vanilla_download_args, vanilla_bias).await?;
-//     launch_game(vanilla_arguments.launch_args).await
-// }
-
-// #[tokio::main(flavor = "current_thread")]
-// pub async fn launch_forge(stream: StreamSink<Progress>) -> anyhow::Result<()> {
-//     // HACK: This is a temporary solution to get the collection
-//     let collection = STORAGE.collections.read().await.get(0).unwrap().clone();
-
-//     let (vanilla_download_args, vanilla_arguments, game_manifest) =
-//         prepare_vanilla_download(&collection).await?;
-// info!("Starts Vanilla Downloading");
-// let vanilla_bias = DownloadBias {
-//     start: 0.0,
-//     end: 90.0,
-// };
-// let stream = run_download(stream, vanilla_download_args, vanilla_bias).await?;
-// let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
-//     vanilla_arguments.launch_args,
-//     vanilla_arguments.jvm_args,
-//     vanilla_arguments.game_args,
-// )
-// .await?;
-
-// let forge_bias = DownloadBias {
-//     start: 90.0,
-//     end: 100.0,
-// };
-// info!("Starts Forge Downloading");
-// run_download(stream, forge_download_args, forge_bias).await?;
-// info!("Starts Forge Processing");
-// let processed_arguments = process_forge(
-//     forge_arguments.launch_args,
-//     forge_arguments.jvm_args,
-//     forge_arguments.game_args,
-//     game_manifest,
-//     manifest,
-// )
-// .await?;
-
-// launch_game(processed_arguments).await
-// }
 
 // #[tokio::main(flavor = "current_thread")]
 // pub async fn launch_quilt(stream: StreamSink<Progress>) -> anyhow::Result<()> {
@@ -227,6 +172,12 @@ pub async fn get_vanilla_versions() -> anyhow::Result<Vec<VersionMetadata>> {
     vanilla::version::get_versions().await
 }
 
+pub fn get_all_download_progress(sink: StreamSink<Vec<(CollectionId, Progress)>>) {
+    let a = (&*DOWNLOAD_PROGRESS.clone()).clone();
+    let p = a.into_iter().collect::<Vec<_>>();
+    sink.add(p);
+}
+
 #[tokio::main(flavor = "multi_thread", worker_threads = 2)]
 pub async fn create_collection(
     display_name: String,
@@ -249,12 +200,12 @@ pub async fn create_collection(
         advanced_options,
         entry_path,
     };
-    let collection_id = collection.get_collection_id();
     loader.save(&collection)?;
     info!(
         "Successfully created collection basic file at {}",
         collection.entry_path.display()
     );
+    let collection_id = collection.get_collection_id();
 
     let handle = tokio::spawn(async move {
         info!("Starts Vanilla Downloading");
@@ -295,9 +246,6 @@ pub async fn create_collection(
         launch_game(processed_arguments).await
     });
 
-    for x in DOWNLOAD_PROGRESS.iter() {
-        dbg!(x.value());
-    }
     handle.await??;
     Ok(())
 }

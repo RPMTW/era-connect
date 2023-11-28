@@ -133,6 +133,22 @@ fn wire_get_vanilla_versions_impl(port_: MessagePort) {
         move || move |task_callback| get_vanilla_versions(),
     )
 }
+fn wire_get_all_download_progress_impl(port_: MessagePort) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, (), _>(
+        WrapInfo {
+            debug_name: "get_all_download_progress",
+            port: Some(port_),
+            mode: FfiCallMode::Stream,
+        },
+        move || {
+            move |task_callback| {
+                Result::<_, ()>::Ok(get_all_download_progress(
+                    task_callback.stream_sink::<_, Vec<(CollectionId, Progress)>>(),
+                ))
+            }
+        },
+    )
+}
 fn wire_create_collection_impl(
     port_: MessagePort,
     display_name: impl Wire2Api<String> + UnwindSafe,
@@ -314,6 +330,18 @@ impl rust2dart::IntoIntoDart<AccountToken> for AccountToken {
     }
 }
 
+impl support::IntoDart for CollectionId {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for CollectionId {}
+impl rust2dart::IntoIntoDart<CollectionId> for CollectionId {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
 impl support::IntoDart for LoginFlowDeviceCode {
     fn into_dart(self) -> support::DartAbi {
         vec![
@@ -452,6 +480,24 @@ impl support::IntoDart for MinecraftSkinVariant {
 }
 impl support::IntoDartExceptPrimitive for MinecraftSkinVariant {}
 impl rust2dart::IntoIntoDart<MinecraftSkinVariant> for MinecraftSkinVariant {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for Progress {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.speed.into_into_dart().into_dart(),
+            self.percentages.into_into_dart().into_dart(),
+            self.current_size.into_into_dart().into_dart(),
+            self.total_size.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for Progress {}
+impl rust2dart::IntoIntoDart<Progress> for Progress {
     fn into_into_dart(self) -> Self {
         self
     }
