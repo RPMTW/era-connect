@@ -21,7 +21,8 @@ use self::library::{os_match, parallel_library, Library};
 use self::manifest::{Argument, GameManifest};
 use self::rules::{ActionType, OsName};
 use super::download::{download_file, extract_filename, validate_sha1, DownloadArgs};
-use super::{DATA_DIR, STORAGE};
+use super::storage::storage_loader::get_global_shared_path;
+use super::STORAGE;
 
 #[derive(Debug, PartialEq, Deserialize)]
 struct GameFlagsProcessed {
@@ -490,8 +491,4 @@ fn game_args_parse(game_flags: &GameFlagsProcessed, game_arguments: &GameOptions
         modified_arguments.push(buf);
     }
     modified_arguments
-}
-
-pub fn get_global_shared_path() -> PathBuf {
-    DATA_DIR.join("shared")
 }

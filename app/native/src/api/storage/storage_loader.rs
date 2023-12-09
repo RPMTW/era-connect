@@ -14,6 +14,9 @@ pub struct StorageLoader {
     file_name: String,
     base_path: PathBuf,
 }
+pub fn get_global_shared_path() -> PathBuf {
+    DATA_DIR.join("shared")
+}
 
 impl StorageLoader {
     pub fn new(file_name: String, base_path: Cow<Path>) -> Self {

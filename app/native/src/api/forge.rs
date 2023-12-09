@@ -9,6 +9,7 @@ use std::{
 };
 
 use anyhow::{anyhow, bail, Context, Result};
+use bytes::Bytes;
 use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -16,9 +17,10 @@ use tokio::{fs, io::AsyncBufReadExt};
 
 use super::{
     download::{download_file, extract_filename, validate_sha1, DownloadArgs},
+    storage::storage_loader::get_global_shared_path,
     vanilla::{
-        get_global_shared_path, manifest::GameManifest, GameOptions, HandlesType, JvmOptions,
-        LaunchArgs, ProcessedArguments,
+        manifest::GameManifest, GameOptions, HandlesType, JvmOptions, LaunchArgs,
+        ProcessedArguments,
     },
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -81,26 +83,60 @@ struct ForgeLibraryArtifact {
     url: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct ForgeVersionsManifest {
+    game_versions: Vec<ForgeVersion>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct ForgeVersion {
+    id: String,
+    stable: bool,
+    loaders: Vec<ForgeLoaders>,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct ForgeLoaders {
+    id: String,
+    url: String,
+    stable: bool,
+}
+
+async fn fetch_forge_manifest(game_version: &str, forge_version: Option<&str>) -> Result<Bytes> {
+    let bytes = download_file("https://meta.modrinth.com/forge/v0/manifest.json", None).await?;
+    let forge_manifest: ForgeVersionsManifest = serde_json::from_slice(&bytes)?;
+    let loaders = &forge_manifest
+        .game_versions
+        .iter()
+        .find(|x| x.id == game_version)
+        .context("Can't find the desired game version")?
+        .loaders;
+    let loader_url = &match forge_version {
+        Some(x) => loaders.iter().find(|y| y.id == x),
+        None => loaders.first(),
+    }
+    .context("Can't find the forge manifest")?
+    .url;
+    download_file(&loader_url, None).await
+}
+
 pub async fn prepare_forge_download<'a>(
     mut launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
 ) -> Result<(DownloadArgs<'a>, ProcessedArguments, Value)> {
-    // NOTE: blah blah
-    let bytes = download_file(
-        "https://meta.modrinth.com/forge/v0/versions/1.20.2-forge-48.0.13.json",
-        None,
-    )
-    .await?;
+    let bytes = fetch_forge_manifest(&game_options.game_version_name, None).await?;
+
     let current_size = Arc::new(AtomicUsize::new(0));
     let total_size = Arc::new(AtomicUsize::new(0));
+
     let forge_manifest: Value = serde_json::from_slice(&bytes)?;
     let libraries: Vec<ForgeLibrary> = Vec::<ForgeLibrary>::deserialize(
         forge_manifest
             .get("libraries")
             .context("forge library key doesn't exist")?,
     )?;
-    // NOTE: rust can't dedcue the type here(cause dyn trait)
+
     let mut handles: HandlesType = Vec::new();
     let mut classpath = Vec::new();
     let library_directory = &jvm_options.library_directory;
@@ -144,16 +180,14 @@ pub async fn prepare_forge_download<'a>(
                 classpath.push(path.to_string_lossy().to_string());
             }
 
-            handles.push(Box::pin(async move {
-                if path.exists() {
-                    Ok(())
-                } else {
+            if !path.exists() {
+                handles.push(Box::pin(async move {
                     fs::create_dir_all(path.parent().context("library parent dir doesn't exist")?)
                         .await?;
                     let bytes = download_file(&url, None).await?;
                     fs::write(path, bytes).await.map_err(|err| anyhow!(err))
-                }
-            }));
+                }));
+            }
         }
     }
 

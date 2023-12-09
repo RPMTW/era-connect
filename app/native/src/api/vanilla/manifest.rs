@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::api::download::download_file;
+use crate::api::storage::storage_loader::get_global_shared_path;
 
 use super::assets::AssetIndex;
 use super::library::Library;
