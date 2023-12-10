@@ -34,14 +34,21 @@ struct Processors {
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 struct ProcessorData {
     merged_mappings: ProcessorsDataType,
+    /// starts at 1.20.4
+    merged_mappings_sha: ProcessorsDataType,
     mappings: ProcessorsDataType,
-    mc_extra: ProcessorsDataType,
-    mc_extra_sha: ProcessorsDataType,
-    mc_slim: ProcessorsDataType,
-    mc_slim_sha: ProcessorsDataType,
+    /// removed from 1.20.4
+    mc_extra: Option<ProcessorsDataType>,
+    /// removed from 1.20.4
+    mc_extra_sha: Option<ProcessorsDataType>,
+    /// removed from 1.20.4
+    mc_slim: Option<ProcessorsDataType>,
+    /// removed from 1.20.4
+    mc_slim_sha: Option<ProcessorsDataType>,
     mc_unpacked: ProcessorsDataType,
     mc_srg: ProcessorsDataType,
-    mcp_version: ProcessorsDataType,
+    /// removed from 1.20.4
+    mcp_version: Option<ProcessorsDataType>,
     mojmaps: ProcessorsDataType,
     patched: ProcessorsDataType,
     patched_sha: ProcessorsDataType,
@@ -248,8 +255,12 @@ pub async fn process_forge(
         .as_str();
     data.merged_mappings.convert_maven_to_path(&folder)?;
     data.mappings.convert_maven_to_path(&folder)?;
-    data.mc_extra.convert_maven_to_path(&folder)?;
-    data.mc_slim.convert_maven_to_path(&folder)?;
+    data.mc_extra
+        .as_mut()
+        .map(|x| x.convert_maven_to_path(&folder));
+    data.mc_slim
+        .as_mut()
+        .map(|x| x.convert_maven_to_path(&folder));
     data.mc_srg.convert_maven_to_path(&folder)?;
     data.mc_unpacked.convert_maven_to_path(&folder)?;
     data.mojmaps.convert_maven_to_path(&folder)?;
@@ -320,6 +331,7 @@ pub async fn process_forge(
             }
         })
         .collect::<Result<Vec<_>>>()?;
+
         let mut all = Vec::new();
         all.push(String::from("-cp"));
         all.push(processor_classpath.join(":"));
@@ -436,17 +448,32 @@ fn process_client(
                 buf.push_str(match var {
                     "MERGED_MAPPINGS" => processors_data.merged_mappings.client.as_str(),
                     "MAPPINGS" => processors_data.mappings.client.as_str(),
-                    "MC_EXTRA" => processors_data.mc_extra.client.as_str(),
-                    "MC_EXTRA_SHA" => processors_data.mc_extra_sha.client.as_str(),
-                    "MC_SLIM" => processors_data.mc_slim.client.as_str(),
-                    "MC_SLIM_SHA" => processors_data.mc_slim_sha.client.as_str(),
+                    "MC_EXTRA" => processors_data.mc_extra.as_ref().unwrap().client.as_str(),
+                    "MC_EXTRA_SHA" => processors_data
+                        .mc_extra_sha
+                        .as_ref()
+                        .unwrap()
+                        .client
+                        .as_str(),
+                    "MC_SLIM" => processors_data.mc_slim.as_ref().unwrap().client.as_str(),
+                    "MC_SLIM_SHA" => processors_data
+                        .mc_slim_sha
+                        .as_ref()
+                        .unwrap()
+                        .client
+                        .as_str(),
                     "MC_SRG" => processors_data.mc_srg.client.as_str(),
                     "MC_UNPACKED" => processors_data.mc_unpacked.client.as_str(),
                     "MOJMAPS" => processors_data.mojmaps.client.as_str(),
                     "PATCHED" => processors_data.patched.client.as_str(),
                     "PATCHED_SHA" => processors_data.patched_sha.client.as_str(),
                     "BINPATCH" => processors_data.binpatch.client.as_str(),
-                    "MCP_VERSION" => processors_data.mcp_version.client.as_str(),
+                    "MCP_VERSION" => processors_data
+                        .mcp_version
+                        .as_ref()
+                        .unwrap()
+                        .client
+                        .as_str(),
                     "MINECRAFT_JAR" => minecraft_jar,
                     "ROOT" => root,
                     "INSTALLER" => installer,
@@ -457,21 +484,36 @@ fn process_client(
                 buf.push_str(match var {
                     "MERGED_MAPPINGS" => processors_data.merged_mappings.server.as_str(),
                     "MAPPINGS" => processors_data.mappings.server.as_str(),
-                    "MC_EXTRA" => processors_data.mc_extra.server.as_str(),
-                    "MC_EXTRA_SHA" => processors_data.mc_extra_sha.server.as_str(),
-                    "MC_SLIM" => processors_data.mc_slim.server.as_str(),
-                    "MC_SLIM_SHA" => processors_data.mc_slim_sha.server.as_str(),
+                    "MC_EXTRA" => processors_data.mc_extra.as_ref().unwrap().server.as_str(),
+                    "MC_EXTRA_SHA" => processors_data
+                        .mc_extra_sha
+                        .as_ref()
+                        .unwrap()
+                        .server
+                        .as_str(),
+                    "MC_SLIM" => processors_data.mc_slim.as_ref().unwrap().server.as_str(),
+                    "MC_SLIM_SHA" => processors_data
+                        .mc_slim_sha
+                        .as_ref()
+                        .unwrap()
+                        .server
+                        .as_str(),
                     "MC_SRG" => processors_data.mc_srg.server.as_str(),
                     "MC_UNPACKED" => processors_data.mc_unpacked.server.as_str(),
                     "MOJMAPS" => processors_data.mojmaps.server.as_str(),
                     "PATCHED" => processors_data.patched.server.as_str(),
                     "PATCHED_SHA" => processors_data.patched_sha.server.as_str(),
                     "BINPATCH" => processors_data.binpatch.server.as_str(),
-                    "MCP_VERSION" => processors_data.mcp_version.server.as_str(),
+                    "MCP_VERSION" => processors_data
+                        .mcp_version
+                        .as_ref()
+                        .unwrap()
+                        .server
+                        .as_str(),
                     "MINECRAFT_JAR" => minecraft_jar,
                     "ROOT" => root,
                     "INSTALLER" => installer,
-                    "SIDE" => "client",
+                    "SIDE" => "server",
                     _ => "",
                 });
             }
