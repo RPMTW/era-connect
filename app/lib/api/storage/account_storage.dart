@@ -1,21 +1,21 @@
-import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
-import 'package:era_connect/api/ffi.dart';
+import 'package:era_connect/api/lib.dart';
+import 'package:era_connect/src/rust/api.dart';
+import 'package:era_connect/src/rust/api/storage/account_storage.dart';
 import 'package:uuid/uuid.dart';
 
 class AccountStorage {
   const AccountStorage();
 
-  List<bridge.MinecraftAccount> get accounts =>
-      _get<List<bridge.MinecraftAccount>>(bridge.AccountStorageKey.Accounts);
+  List<MinecraftAccount> get accounts =>
+      _get<List<MinecraftAccount>>(AccountStorageKey.accounts);
 
-  UuidValue? get mainAccount =>
-      _get<UuidValue?>(bridge.AccountStorageKey.MainAccount);
+  UuidValue? get mainAccount => _get<UuidValue?>(AccountStorageKey.mainAccount);
 
   Future<void> removeAccount(UuidValue uuid) {
-    return api.removeMinecraftAccount(uuid: uuid);
+    return removeMinecraftAccount(uuid: uuid);
   }
 }
 
-T _get<T>(bridge.AccountStorageKey key) {
-  return api.getAccountStorage(key: key).field0 as T;
+T _get<T>(AccountStorageKey key) {
+  return getAccountStorage(key: key).field0 as T;
 }

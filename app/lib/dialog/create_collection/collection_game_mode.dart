@@ -170,8 +170,8 @@ class _CollectionGameModeStepState extends State<CollectionGameModeStep> {
             }
 
             final versionType = gameMode == GameMode.snapshot
-                ? VersionType.Snapshot
-                : VersionType.Release;
+                ? VersionType.snapshot
+                : VersionType.release;
             final filteredVersions =
                 versions.where((e) => e.versionType == versionType).toList();
 

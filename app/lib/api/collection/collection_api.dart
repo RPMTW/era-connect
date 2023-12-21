@@ -1,5 +1,5 @@
-import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
-import 'package:era_connect/api/ffi.dart';
+import 'package:era_connect/src/rust/api.dart';
+import 'package:era_connect/src/rust/api/vanilla/version.dart';
 
 const collectionApi = CollectionApi();
 
@@ -8,8 +8,8 @@ class CollectionApi {
 
   Future<void> create(
       {required String displayName,
-      required bridge.VersionMetadata versionMetadata}) async {
-    await api.createCollection(
+      required VersionMetadata versionMetadata}) async {
+    await createCollection(
         displayName: displayName, versionMetadata: versionMetadata);
   }
 }

@@ -1,9 +1,9 @@
+import 'package:era_connect/src/rust/api.dart';
+import 'package:flutter/material.dart';
+import 'package:era_connect/src/rust/frb_generated.dart';
 import 'dart:io';
-import 'package:era_connect/api/ffi.dart';
-import 'package:era_connect/api/lib.dart';
 import 'package:era_connect_i18n/era_connect_i18n.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'pages/main_page.dart';
@@ -11,6 +11,7 @@ import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await RustLib.init();
   await windowManager.ensureInitialized();
 
   final windowOptions = WindowOptions(
@@ -22,9 +23,8 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
     await windowManager.setMinimumSize(const Size(1350, 820));
-    await initializeAPIs();
+    final t = await getV();
     runApp(const EraConnectApp());
-    // testRust;
   });
 }
 
