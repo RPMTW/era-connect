@@ -1,6 +1,7 @@
 import 'package:era_connect/api/lib.dart';
-import 'package:era_connect/src/rust/api.dart';
-import 'package:era_connect/src/rust/api/storage/account_storage.dart';
+import 'package:era_connect/src/rust/api/shared_resources/authentication/account.dart';
+import 'package:era_connect/src/rust/api/shared_resources/entry.dart';
+import 'package:era_connect/src/rust/api/backend_exclusive/storage/account_storage.dart';
 import 'package:uuid/uuid.dart';
 
 class AccountStorage {

@@ -1,5 +1,5 @@
-import 'package:era_connect/src/rust/api.dart';
-import 'package:era_connect/src/rust/api/vanilla/version.dart';
+import 'package:era_connect/src/rust/api/backend_exclusive/vanilla/version.dart';
+import 'package:era_connect/src/rust/api/shared_resources/entry.dart';
 
 const collectionApi = CollectionApi();
 

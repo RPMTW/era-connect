@@ -1,5 +1,5 @@
-import 'package:era_connect/src/rust/api.dart';
-import 'package:era_connect/src/rust/api/storage/ui_layout.dart';
+import 'package:era_connect/src/rust/api/backend_exclusive/storage/ui_layout.dart';
+import 'package:era_connect/src/rust/api/shared_resources/entry.dart';
 
 class UILayoutStorage {
   const UILayoutStorage();

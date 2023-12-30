@@ -1,5 +1,4 @@
 import 'package:era_connect/api/lib.dart';
-import 'package:era_connect/src/rust/api/authentication/msa_flow.dart';
 import 'package:era_connect_ui/era_connect_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

@@ -31,8 +31,8 @@ dependencies:
     sdk: flutter
 
   ffi: ^2.0.2
-  flutter_rust_bridge: 2.0.0-dev.2
-  meta: ^1.9.1
+  flutter_rust_bridge: 2.0.0-dev.7
+  meta: ^1.10.0
   flutter_svg: ^2.0.7
   window_manager: ^0.3.5
   provider: ^6.0.5

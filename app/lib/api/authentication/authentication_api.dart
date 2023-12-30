@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:era_connect/src/rust/api.dart';
-import 'package:era_connect/src/rust/api/authentication/account.dart';
-import 'package:era_connect/src/rust/api/authentication/msa_flow.dart';
+import 'package:era_connect/src/rust/api/shared_resources/authentication/account.dart';
+import 'package:era_connect/src/rust/api/shared_resources/authentication/msa_flow.dart';
+import 'package:era_connect/src/rust/api/shared_resources/entry.dart';
 import 'package:flutter/widgets.dart';
 
 const authenticationApi = AuthenticationApi();
