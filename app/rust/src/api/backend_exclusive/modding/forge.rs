@@ -1,4 +1,5 @@
 use std::{
+    collections::{HashMap, HashSet},
     io::{BufRead, BufReader},
     path::PathBuf,
     process::Stdio,
@@ -8,7 +9,7 @@ use std::{
     },
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use bytes::Bytes;
 use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
@@ -16,8 +17,7 @@ use serde_json::Value;
 use tokio::{fs, io::AsyncBufReadExt};
 
 use crate::api::backend_exclusive::{
-    download::{download_file, extract_filename, validate_sha1, DownloadArgs, HandlesType},
-    storage::storage_loader::get_global_shared_path,
+    download::{download_file, validate_sha1, DownloadArgs, HandlesType},
     vanilla::{
         launcher::{GameOptions, JvmOptions, LaunchArgs, ProcessedArguments},
         manifest::GameManifest,
@@ -30,13 +30,14 @@ struct Processors {
     classpath: Vec<String>,
     args: Vec<String>,
     sides: Option<Vec<String>>,
+    outputs: Option<HashMap<String, String>>,
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 struct ProcessorData {
     merged_mappings: ProcessorsDataType,
-    /// starts at 1.20.4
-    merged_mappings_sha: ProcessorsDataType,
+    /// added at 1.20.4
+    merged_mappings_sha: Option<ProcessorsDataType>,
     mappings: ProcessorsDataType,
     /// removed from 1.20.4
     mc_extra: Option<ProcessorsDataType>,
@@ -52,7 +53,8 @@ struct ProcessorData {
     mcp_version: Option<ProcessorsDataType>,
     mojmaps: ProcessorsDataType,
     patched: ProcessorsDataType,
-    patched_sha: ProcessorsDataType,
+    /// removed from 1.20.4
+    patched_sha: Option<ProcessorsDataType>,
     binpatch: ProcessorsDataType,
 }
 
@@ -70,7 +72,7 @@ impl ProcessorsDataType {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct ForgeLibrary {
     downloads: Option<ForgeLibraryDownloadMetadata>,
     name: String,
@@ -78,12 +80,12 @@ struct ForgeLibrary {
     include_in_classpath: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct ForgeLibraryDownloadMetadata {
     artifact: ForgeLibraryArtifact,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct ForgeLibraryArtifact {
     path: String,
     sha1: String,
@@ -111,7 +113,7 @@ struct ForgeLoaders {
 }
 
 async fn fetch_forge_manifest(game_version: &str, forge_version: Option<&str>) -> Result<Bytes> {
-    let bytes = download_file("https://meta.modrinth.com/forge/v0/manifest.json", None).await?;
+    let bytes = download_file("https://meta.modrinth.com/neo/v0/manifest.json", None).await?;
     let forge_manifest: ForgeVersionsManifest = serde_json::from_slice(&bytes)?;
     let loaders = &forge_manifest
         .game_versions
@@ -146,7 +148,7 @@ pub async fn prepare_forge_download<'a>(
     )?;
 
     let mut handles: HandlesType = Vec::new();
-    let mut classpath = Vec::new();
+    let mut classpath = HashSet::new();
     let library_directory = &jvm_options.library_directory;
 
     for library in libraries {
@@ -159,7 +161,7 @@ pub async fn prepare_forge_download<'a>(
             let sha1 = artifact.sha1.clone();
 
             if library.include_in_classpath {
-                classpath.push(path.to_string_lossy().to_string());
+                classpath.insert(path.to_string_lossy().to_string());
             }
 
             handles.push(Box::pin(async move {
@@ -185,7 +187,7 @@ pub async fn prepare_forge_download<'a>(
             let path = library_directory.join(name);
 
             if library.include_in_classpath {
-                classpath.push(path.to_string_lossy().to_string());
+                classpath.insert(path.to_string_lossy().to_string());
             }
 
             if !path.exists() {
@@ -205,8 +207,12 @@ pub async fn prepare_forge_download<'a>(
             .jvm_args
             .get_mut(pos + 1)
             .context("the next argument of -cp doesn't exist")?;
-        classpaths.push(':');
-        classpaths.push_str(classpath.join(":").as_str());
+        let mut a = classpaths
+            .split(':')
+            .map(|x| x.to_string())
+            .collect::<HashSet<_>>();
+        a.extend(classpath);
+        *classpaths = a.into_iter().collect::<Vec<_>>().join(":");
     }
 
     Ok((
@@ -241,7 +247,7 @@ pub async fn process_forge(
             .get("processors")
             .context("forge manifest processors doensn't exist")?,
     )?;
-    let folder = jvm_options.library_directory.to_string_lossy().to_string();
+    let libraries_folder = jvm_options.library_directory.to_string_lossy().to_string();
     let library_manifest = Vec::<ForgeLibrary>::deserialize(
         manifest
             .get("libraries")
@@ -250,82 +256,60 @@ pub async fn process_forge(
     let forge_installer = library_manifest
         .iter()
         .filter(|x| x.downloads.is_none())
-        .nth(1)
+        .find(|x| x.name.contains("client"))
         .context("client installer doesn't exist")?
         .name
         .as_str();
-    data.merged_mappings.convert_maven_to_path(&folder)?;
-    data.mappings.convert_maven_to_path(&folder)?;
+    data.merged_mappings
+        .convert_maven_to_path(&libraries_folder)?;
+    data.mappings.convert_maven_to_path(&libraries_folder)?;
     data.mc_extra
         .as_mut()
-        .map(|x| x.convert_maven_to_path(&folder));
+        .map(|x| x.convert_maven_to_path(&libraries_folder));
     data.mc_slim
         .as_mut()
-        .map(|x| x.convert_maven_to_path(&folder));
-    data.mc_srg.convert_maven_to_path(&folder)?;
-    data.mc_unpacked.convert_maven_to_path(&folder)?;
-    data.mojmaps.convert_maven_to_path(&folder)?;
-    data.patched.convert_maven_to_path(&folder)?;
-    data.binpatch.convert_maven_to_path(&folder)?;
+        .map(|x| x.convert_maven_to_path(&libraries_folder));
+    data.mc_srg.convert_maven_to_path(&libraries_folder)?;
+    data.mc_unpacked.convert_maven_to_path(&libraries_folder)?;
+    data.mojmaps.convert_maven_to_path(&libraries_folder)?;
+    data.patched.convert_maven_to_path(&libraries_folder)?;
+    data.binpatch.convert_maven_to_path(&libraries_folder)?;
 
     for processor in processors {
-        let jar = convert_maven_to_path(&processor.jar, Some(&folder))?;
-        let processor_main_class = get_processor_main_class(jar.clone())
+        let processor_jar = convert_maven_to_path(&processor.jar, Some(&libraries_folder))?;
+        let processor_main_class = get_processor_main_class(processor_jar.clone())
             .await?
             .context("Processor main class doesn't exist")?;
         let mut processor_classpath = processor
             .classpath
             .iter()
             .map(|x| {
-                convert_maven_to_path(x, Some(&folder))
+                convert_maven_to_path(x, Some(&libraries_folder))
                     .context("failed to convert processor classpath maven to path")
             })
             .collect::<Result<Vec<_>>>()?;
-        processor_classpath.push(jar);
-        let minecraft_jar;
-        let side;
+
+        processor_classpath.push(processor_jar);
+
+        let minecraft_jar = &jvm_options.primary_jar;
+
         if let Some(sides) = processor.sides {
-            match sides.get(0) {
-                Some(x) if x == "server" => {
-                    let shared_path = get_global_shared_path();
-                    let version_id = &game_options.game_version_name;
-                    let version_directory = shared_path.join(format!("versions/{version_id}"));
-                    let url = &game_manifest.downloads.server.url;
-                    let path = version_directory.join(extract_filename(url)?);
-                    if !path.exists() {
-                        fs::create_dir_all(
-                            path.parent()
-                                .context("failed to get parent dir of server jar")?,
-                        )
-                        .await?;
-                        let bytes = download_file(url, None).await?;
-                        fs::write(&path, bytes).await.map_err(|err| anyhow!(err))?;
-                    }
-                    side = x.to_string();
-                    minecraft_jar = path.to_string_lossy().to_string();
-                }
-                Some(x) if x == "client" => {
-                    side = x.to_string();
-                    minecraft_jar = jvm_options.primary_jar.clone();
-                }
-                None | Some(_) => bail!("Somehow the sides exists but its empty????"),
-            };
-        } else {
-            minecraft_jar = String::new();
-            side = String::from("client");
+            if sides.contains(&String::from("server")) {
+                continue;
+            }
         }
+
         let args = process_client(
             &processor.args,
             &data,
             &minecraft_jar,
             &jvm_options.game_directory.to_string_lossy(),
-            &convert_maven_to_path(forge_installer, Some(&folder))?,
-            &side,
+            &convert_maven_to_path(forge_installer, Some(&libraries_folder))?,
         )
         .into_iter()
         .map(|x| {
             if x.starts_with('[') {
-                convert_maven_to_path(&x, Some(&folder))
+                convert_maven_to_path(&x, Some(&libraries_folder))
                     .context("failed to convert [] types maven into path")
             } else {
                 Ok(x)
@@ -336,7 +320,7 @@ pub async fn process_forge(
         let mut all = Vec::new();
         all.push(String::from("-cp"));
         all.push(processor_classpath.join(":"));
-        all.push(processor_main_class.clone());
+        all.push(processor_main_class);
         all.extend(args);
 
         let process = tokio::process::Command::new("java")
@@ -426,7 +410,6 @@ fn process_client(
     minecraft_jar: &str,
     root: &str,
     installer: &str,
-    sides: &str,
 ) -> Vec<String> {
     let mut parsed_argument = Vec::new();
 
@@ -445,79 +428,46 @@ fn process_client(
             // make processing string to next part
             s = &start[closing + 1..];
 
-            if sides == "client" {
-                buf.push_str(match var {
-                    "MERGED_MAPPINGS" => processors_data.merged_mappings.client.as_str(),
-                    "MAPPINGS" => processors_data.mappings.client.as_str(),
-                    "MC_EXTRA" => processors_data.mc_extra.as_ref().unwrap().client.as_str(),
-                    "MC_EXTRA_SHA" => processors_data
-                        .mc_extra_sha
-                        .as_ref()
-                        .unwrap()
-                        .client
-                        .as_str(),
-                    "MC_SLIM" => processors_data.mc_slim.as_ref().unwrap().client.as_str(),
-                    "MC_SLIM_SHA" => processors_data
-                        .mc_slim_sha
-                        .as_ref()
-                        .unwrap()
-                        .client
-                        .as_str(),
-                    "MC_SRG" => processors_data.mc_srg.client.as_str(),
-                    "MC_UNPACKED" => processors_data.mc_unpacked.client.as_str(),
-                    "MOJMAPS" => processors_data.mojmaps.client.as_str(),
-                    "PATCHED" => processors_data.patched.client.as_str(),
-                    "PATCHED_SHA" => processors_data.patched_sha.client.as_str(),
-                    "BINPATCH" => processors_data.binpatch.client.as_str(),
-                    "MCP_VERSION" => processors_data
-                        .mcp_version
-                        .as_ref()
-                        .unwrap()
-                        .client
-                        .as_str(),
-                    "MINECRAFT_JAR" => minecraft_jar,
-                    "ROOT" => root,
-                    "INSTALLER" => installer,
-                    "SIDE" => "client",
-                    _ => "",
-                });
-            } else if sides == "server" {
-                buf.push_str(match var {
-                    "MERGED_MAPPINGS" => processors_data.merged_mappings.server.as_str(),
-                    "MAPPINGS" => processors_data.mappings.server.as_str(),
-                    "MC_EXTRA" => processors_data.mc_extra.as_ref().unwrap().server.as_str(),
-                    "MC_EXTRA_SHA" => processors_data
-                        .mc_extra_sha
-                        .as_ref()
-                        .unwrap()
-                        .server
-                        .as_str(),
-                    "MC_SLIM" => processors_data.mc_slim.as_ref().unwrap().server.as_str(),
-                    "MC_SLIM_SHA" => processors_data
-                        .mc_slim_sha
-                        .as_ref()
-                        .unwrap()
-                        .server
-                        .as_str(),
-                    "MC_SRG" => processors_data.mc_srg.server.as_str(),
-                    "MC_UNPACKED" => processors_data.mc_unpacked.server.as_str(),
-                    "MOJMAPS" => processors_data.mojmaps.server.as_str(),
-                    "PATCHED" => processors_data.patched.server.as_str(),
-                    "PATCHED_SHA" => processors_data.patched_sha.server.as_str(),
-                    "BINPATCH" => processors_data.binpatch.server.as_str(),
-                    "MCP_VERSION" => processors_data
-                        .mcp_version
-                        .as_ref()
-                        .unwrap()
-                        .server
-                        .as_str(),
-                    "MINECRAFT_JAR" => minecraft_jar,
-                    "ROOT" => root,
-                    "INSTALLER" => installer,
-                    "SIDE" => "server",
-                    _ => "",
-                });
-            }
+            buf.push_str(match var {
+                "MERGED_MAPPINGS" => processors_data.merged_mappings.client.as_str(),
+                "MAPPINGS" => processors_data.mappings.client.as_str(),
+                "MC_EXTRA" => processors_data.mc_extra.as_ref().unwrap().client.as_str(),
+                "MC_EXTRA_SHA" => processors_data
+                    .mc_extra_sha
+                    .as_ref()
+                    .unwrap()
+                    .client
+                    .as_str(),
+                "MC_SLIM" => processors_data.mc_slim.as_ref().unwrap().client.as_str(),
+                "MC_SLIM_SHA" => processors_data
+                    .mc_slim_sha
+                    .as_ref()
+                    .unwrap()
+                    .client
+                    .as_str(),
+                "MC_SRG" => processors_data.mc_srg.client.as_str(),
+                "MC_UNPACKED" => processors_data.mc_unpacked.client.as_str(),
+                "MOJMAPS" => processors_data.mojmaps.client.as_str(),
+                "PATCHED" => processors_data.patched.client.as_str(),
+                "PATCHED_SHA" => processors_data
+                    .patched_sha
+                    .as_ref()
+                    .unwrap()
+                    .client
+                    .as_str(),
+                "BINPATCH" => processors_data.binpatch.client.as_str(),
+                "MCP_VERSION" => processors_data
+                    .mcp_version
+                    .as_ref()
+                    .unwrap()
+                    .client
+                    .as_str(),
+                "MINECRAFT_JAR" => minecraft_jar,
+                "ROOT" => root,
+                "INSTALLER" => installer,
+                "SIDE" => "client",
+                _ => "",
+            });
         }
         buf.push_str(s);
         parsed_argument.push(buf);
@@ -535,6 +485,9 @@ pub fn pre_convert_maven_to_path(input: &str, extension: Option<&str>) -> Result
     let path_version = parts[2];
     let mut version = parts[2].to_owned();
     if let Some(x) = parts.get(3) {
+        version.push_str(format!("-{x}").as_str());
+    }
+    if let Some(x) = parts.get(4) {
         version.push_str(format!("-{x}").as_str());
     }
     let extension = extension.unwrap_or("jar");
