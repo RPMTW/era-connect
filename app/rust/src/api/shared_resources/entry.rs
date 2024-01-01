@@ -25,7 +25,7 @@ use crate::api::shared_resources::authentication::msa_flow::LoginFlowEvent;
 use crate::api::shared_resources::authentication::{self, account::MinecraftSkin};
 
 use crate::api::backend_exclusive::vanilla;
-pub use crate::api::backend_exclusive::vanilla::version::VersionMetadata;
+use crate::api::backend_exclusive::vanilla::version::VersionMetadata;
 
 use crate::api::backend_exclusive::download::{run_download, DownloadBias, Progress};
 use crate::api::backend_exclusive::vanilla::launcher::{launch_game, prepare_vanilla_download};
@@ -180,6 +180,12 @@ pub async fn create_collection(
 
     let (loader, entry_path) = Collection::create(display_name.clone())?;
     let now_time = Utc::now();
+
+    // NOTE: testing purposes
+    let mod_loader = Some(ModLoader {
+        mod_loader_type: ModLoaderType::Fabric,
+        version: None,
+    });
 
     let collection = Collection {
         display_name,

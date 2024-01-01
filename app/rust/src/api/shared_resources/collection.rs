@@ -28,6 +28,9 @@ pub struct Collection {
     pub entry_path: PathBuf,
 }
 
+impl UnwindSafe for ModManager {}
+impl RefUnwindSafe for ModManager {}
+
 #[derive(Debug, Deserialize, Serialize, Clone, Default, Eq, PartialEq, Hash)]
 pub struct CollectionId(pub String);
 
