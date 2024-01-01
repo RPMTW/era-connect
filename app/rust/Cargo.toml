@@ -45,3 +45,7 @@ serde_with = { version = "3.3.0", features = ["chrono"] }
 rand = "0.8.5"
 regex = "1.9.5"
 dashmap = "5.5.3"
+rayon = "1.8.0"
+async-recursion = "1.0.5"
+ferinth = "2.9.2"
+semver = "1.0.20"

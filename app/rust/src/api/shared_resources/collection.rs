@@ -1,19 +1,24 @@
+use std::panic::{RefUnwindSafe, UnwindSafe};
 pub use std::{borrow::Cow, fs::create_dir_all, path::PathBuf};
 
 use chrono::{DateTime, Duration, Utc};
+use flutter_rust_bridge::frb;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
 use crate::api::{
     backend_exclusive::{
-        storage::storage_loader::StorageLoader, vanilla::version::VersionMetadata,
+        download::{run_parallel_download, DownloadBias},
+        mod_management::mods::{ModManager, ModOverride, Tag},
+        storage::storage_loader::StorageLoader,
+        vanilla::version::VersionMetadata,
     },
     shared_resources::entry::DATA_DIR,
 };
 
 #[serde_with::serde_as]
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct Collection {
     pub display_name: String,
     pub minecraft_version: VersionMetadata,
@@ -26,6 +31,7 @@ pub struct Collection {
 
     #[serde(skip)]
     pub entry_path: PathBuf,
+    pub mod_manager: ModManager,
 }
 
 impl UnwindSafe for ModManager {}
@@ -38,6 +44,28 @@ const COLLECTION_FILE_NAME: &str = "collection.json";
 const COLLECTION_BASE: &str = "collections";
 
 impl Collection {
+    /// use project id(slug also works) to add mod, will deal with dependencies insertion
+    #[frb(ignore)]
+    pub async fn add_mod(
+        &mut self,
+        project_id: impl AsRef<str> + Send + Sync,
+        tag: Vec<Tag>,
+        mod_override: Option<&Vec<ModOverride>>,
+    ) -> anyhow::Result<()> {
+        let project_id = project_id.as_ref();
+        let project = self.mod_manager.ferinth.get_project(project_id).await?;
+        ModManager::add_project(project, tag, mod_override.unwrap_or(&Vec::new()), self).await?;
+        Ok(())
+    }
+
+    #[frb(ignore)]
+    pub async fn download_mods(&mut self) -> anyhow::Result<()> {
+        let id = self.get_collection_id();
+        let download_args = ModManager::get_download(self).await?;
+        run_parallel_download(id, download_args, DownloadBias::default()).await?;
+        Ok(())
+    }
+
     pub fn get_base_path() -> PathBuf {
         DATA_DIR.join(COLLECTION_BASE)
     }
@@ -52,7 +80,7 @@ impl Collection {
         )
     }
 
-    pub fn create(display_name: String) -> std::io::Result<(StorageLoader, PathBuf)> {
+    pub fn create_loader(display_name: String) -> std::io::Result<(StorageLoader, PathBuf)> {
         // Windows file and directory name restrictions.
         let invalid_chars_regex = Regex::new(r#"[\\/:*?\"<>|]"#).unwrap();
         let reserved_names = vec![
@@ -122,16 +150,20 @@ impl Collection {
         }
         Ok(loaders)
     }
+
+    pub fn game_directory(&self) -> PathBuf {
+        self.entry_path.join("minecraft_root")
+    }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct ModLoader {
     #[serde(rename = "type")]
     pub mod_loader_type: ModLoaderType,
-    pub version: String,
+    pub version: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
 pub enum ModLoaderType {
     Forge,
     NeoForge,
@@ -139,7 +171,7 @@ pub enum ModLoaderType {
     Quilt,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct AdvancedOptions {
     pub jvm_max_memory: Option<usize>,
 }

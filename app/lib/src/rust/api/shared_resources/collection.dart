@@ -100,11 +100,11 @@ class CollectionId {
 
 class ModLoader {
   final ModLoaderType modLoaderType;
-  final String version;
+  final String? version;
 
   const ModLoader({
     required this.modLoaderType,
-    required this.version,
+    this.version,
   });
 
   @override

@@ -20,7 +20,7 @@ pub struct LatestVersion {
     pub snapshot: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 #[frb[dart_metadata = ("freezed")]]
 pub struct VersionMetadata {
@@ -37,13 +37,24 @@ pub struct VersionMetadata {
     pub compliance_level: u32,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum VersionType {
     Release,
     Snapshot,
     OldBeta,
     OldAlpha,
+}
+impl Ord for VersionMetadata {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.release_time.cmp(&other.release_time)
+    }
+}
+
+impl PartialOrd for VersionMetadata {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 pub async fn get_versions() -> anyhow::Result<Vec<VersionMetadata>> {

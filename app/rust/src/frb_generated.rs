@@ -45,13 +45,13 @@ fn wire_MinecraftSkin_get_head_file_path_impl(
                     })())
                 } })
 }
-fn wire_Collection_create_impl(
+fn wire_Collection_create_loader_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     display_name: impl CstDecode<String> + core::panic::UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Collection_create",
+            debug_name: "Collection_create_loader",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -61,9 +61,40 @@ fn wire_Collection_create_impl(
                 transform_result_dco((move || -> Result<_, anyhow::Error> {
                     Result::<_, anyhow::Error>::Ok(
                         flutter_rust_bridge::for_generated::rust_auto_opaque_encode(
-                            crate::api::shared_resources::collection::Collection::create(
+                            crate::api::shared_resources::collection::Collection::create_loader(
                                 api_display_name,
                             )?,
+                        ),
+                    )
+                })())
+            }
+        },
+    )
+}
+fn wire_Collection_game_directory_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+            flutter_rust_bridge::RustOpaque<
+                std::sync::RwLock<crate::api::shared_resources::collection::Collection>,
+            >,
+        > + core::panic::UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Collection_game_directory",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| {
+                transform_result_dco((move || {
+                    let api_that = api_that.rust_auto_opaque_decode_ref()?;
+                    Result::<_, anyhow::Error>::Ok(
+                        flutter_rust_bridge::for_generated::rust_auto_opaque_encode(
+                            crate::api::shared_resources::collection::Collection::game_directory(
+                                &api_that,
+                            ),
                         ),
                     )
                 })())
@@ -810,7 +841,7 @@ impl SseDecode for crate::api::shared_resources::collection::ModLoader {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_modLoaderType =
             <crate::api::shared_resources::collection::ModLoaderType>::sse_decode(deserializer);
-        let mut var_version = <String>::sse_decode(deserializer);
+        let mut var_version = <Option<String>>::sse_decode(deserializer);
         return crate::api::shared_resources::collection::ModLoader {
             mod_loader_type: var_modLoaderType,
             version: var_version,
@@ -828,6 +859,16 @@ impl SseDecode for crate::api::shared_resources::collection::ModLoaderType {
             3 => crate::api::shared_resources::collection::ModLoaderType::Quilt,
             _ => unreachable!("Invalid variant for ModLoaderType: {}", inner),
         };
+    }
+}
+
+impl SseDecode for Option<String> {
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<String>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
     }
 }
 
@@ -1787,13 +1828,22 @@ impl SseEncode for crate::api::shared_resources::collection::ModLoader {
             self.mod_loader_type,
             serializer,
         );
-        <String>::sse_encode(self.version, serializer);
+        <Option<String>>::sse_encode(self.version, serializer);
     }
 }
 
 impl SseEncode for crate::api::shared_resources::collection::ModLoaderType {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self as _, serializer);
+    }
+}
+
+impl SseEncode for Option<String> {
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <String>::sse_encode(value, serializer);
+        }
     }
 }
 

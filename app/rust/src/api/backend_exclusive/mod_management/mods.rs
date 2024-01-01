@@ -82,7 +82,7 @@ impl ModManager {
     pub async fn get_download(collection: &mut Collection) -> anyhow::Result<DownloadArgs> {
         let current_size = Arc::new(AtomicUsize::new(0));
         let total_size = Arc::new(AtomicUsize::new(0));
-        let base_path = collection.entry_path.join(".minecraft/mods");
+        let base_path = collection.game_directory().join("mods");
         if !base_path.exists() {
             create_dir_all(&base_path)?;
         }

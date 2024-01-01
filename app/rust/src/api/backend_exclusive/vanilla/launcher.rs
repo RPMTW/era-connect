@@ -109,11 +109,10 @@ pub async fn prepare_vanilla_download<'a>(
     collection: Collection,
     game_manifest: GameManifest,
 ) -> Result<(DownloadArgs<'a>, ProcessedArguments)> {
-    let version_id = collection.minecraft_version.id;
-    let entry_path = &collection.entry_path;
+    let version_id = collection.minecraft_version.id.clone();
     let shared_path = get_global_shared_path();
 
-    let game_directory = entry_path.join("game");
+    let game_directory = collection.game_directory();
     let asset_directory = shared_path.join("assets");
     let library_directory = shared_path.join("libraries");
     let version_directory = shared_path.join(format!("versions/{version_id}"));

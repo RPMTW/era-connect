@@ -1,3 +1,4 @@
+import 'package:era_connect/api/lib.dart';
 import 'package:flutter/material.dart';
 import 'package:era_connect/src/rust/frb_generated.dart';
 import 'dart:io';
@@ -22,6 +23,7 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
     await windowManager.setMinimumSize(const Size(1350, 820));
+    await initializeAPIs();
     runApp(const EraConnectApp());
   });
 }

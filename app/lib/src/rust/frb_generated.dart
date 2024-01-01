@@ -66,8 +66,11 @@ abstract class RustLibApi extends BaseApi {
   Future<PathBuf> minecraftSkinGetHeadFilePath(
       {required MinecraftSkin that, dynamic hint});
 
-  Future<StorageLoaderPathBuf> collectionCreate(
+  Future<StorageLoaderPathBuf> collectionCreateLoader(
       {required String displayName, dynamic hint});
+
+  Future<PathBuf> collectionGameDirectory(
+      {required Collection that, dynamic hint});
 
   Future<PathBuf> collectionGetBasePath({dynamic hint});
 
@@ -168,28 +171,55 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<StorageLoaderPathBuf> collectionCreate(
+  Future<StorageLoaderPathBuf> collectionCreateLoader(
       {required String displayName, dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         var arg0 = cst_encode_String(displayName);
-        return wire.wire_Collection_create(port_, arg0);
+        return wire.wire_Collection_create_loader(port_, arg0);
       },
       codec: DcoCodec(
         decodeSuccessData:
             dco_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf,
         decodeErrorData: dco_decode_AnyhowException,
       ),
-      constMeta: kCollectionCreateConstMeta,
+      constMeta: kCollectionCreateLoaderConstMeta,
       argValues: [displayName],
       apiImpl: this,
       hint: hint,
     ));
   }
 
-  TaskConstMeta get kCollectionCreateConstMeta => const TaskConstMeta(
-        debugName: "Collection_create",
+  TaskConstMeta get kCollectionCreateLoaderConstMeta => const TaskConstMeta(
+        debugName: "Collection_create_loader",
         argNames: ["displayName"],
+      );
+
+  @override
+  Future<PathBuf> collectionGameDirectory(
+      {required Collection that, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
+                that);
+        return wire.wire_Collection_game_directory(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData:
+            dco_decode_Auto_Owned_RustOpaque_stdsyncRwLockPathBuf,
+        decodeErrorData: null,
+      ),
+      constMeta: kCollectionGameDirectoryConstMeta,
+      argValues: [that],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCollectionGameDirectoryConstMeta => const TaskConstMeta(
+        debugName: "Collection_game_directory",
+        argNames: ["that"],
       );
 
   @override
@@ -836,13 +866,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ModLoader(
       modLoaderType: dco_decode_mod_loader_type(arr[0]),
-      version: dco_decode_String(arr[1]),
+      version: dco_decode_opt_String(arr[1]),
     );
   }
 
   @protected
   ModLoaderType dco_decode_mod_loader_type(dynamic raw) {
     return ModLoaderType.values[raw as int];
+  }
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    return raw == null ? null : dco_decode_String(raw);
   }
 
   @protected
@@ -1274,7 +1309,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ModLoader sse_decode_mod_loader(SseDeserializer deserializer) {
     var var_modLoaderType = sse_decode_mod_loader_type(deserializer);
-    var var_version = sse_decode_String(deserializer);
+    var var_version = sse_decode_opt_String(deserializer);
     return ModLoader(modLoaderType: var_modLoaderType, version: var_version);
   }
 
@@ -1282,6 +1317,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ModLoaderType sse_decode_mod_loader_type(SseDeserializer deserializer) {
     var inner = sse_decode_i_32(deserializer);
     return ModLoaderType.values[inner];
+  }
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
   }
 
   @protected
@@ -1823,13 +1867,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_mod_loader(ModLoader self, SseSerializer serializer) {
     sse_encode_mod_loader_type(self.modLoaderType, serializer);
-    sse_encode_String(self.version, serializer);
+    sse_encode_opt_String(self.version, serializer);
   }
 
   @protected
   void sse_encode_mod_loader_type(
       ModLoaderType self, SseSerializer serializer) {
     sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
   }
 
   @protected

@@ -623,8 +623,16 @@ pub extern "C" fn wire_MinecraftSkin_get_head_file_path(
 }
 
 #[no_mangle]
-pub extern "C" fn wire_Collection_create(port_: i64, display_name: *mut wire_cst_list_prim_u_8) {
-    wire_Collection_create_impl(port_, display_name)
+pub extern "C" fn wire_Collection_create_loader(
+    port_: i64,
+    display_name: *mut wire_cst_list_prim_u_8,
+) {
+    wire_Collection_create_loader_impl(port_, display_name)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_Collection_game_directory(port_: i64, that: *const std::ffi::c_void) {
+    wire_Collection_game_directory_impl(port_, that)
 }
 
 #[no_mangle]

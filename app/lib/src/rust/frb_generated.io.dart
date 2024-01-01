@@ -185,6 +185,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ModLoaderType dco_decode_mod_loader_type(dynamic raw);
 
   @protected
+  String? dco_decode_opt_String(dynamic raw);
+
+  @protected
   UuidValue? dco_decode_opt_Uuid(dynamic raw);
 
   @protected
@@ -385,6 +388,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ModLoaderType sse_decode_mod_loader_type(SseDeserializer deserializer);
 
   @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
   UuidValue? sse_decode_opt_Uuid(SseDeserializer deserializer);
 
   @protected
@@ -566,6 +572,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       cst_api_fill_to_wire_version_metadata(raw[i], ans.ref.ptr[i]);
     }
     return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8> cst_encode_opt_String(String? raw) {
+    return raw == null ? ffi.nullptr : cst_encode_String(raw);
   }
 
   @protected
@@ -772,7 +783,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_mod_loader(
       ModLoader apiObj, wire_cst_mod_loader wireObj) {
     wireObj.mod_loader_type = cst_encode_mod_loader_type(apiObj.modLoaderType);
-    wireObj.version = cst_encode_String(apiObj.version);
+    wireObj.version = cst_encode_opt_String(apiObj.version);
   }
 
   @protected
@@ -1043,6 +1054,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_mod_loader_type(ModLoaderType self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_Uuid(UuidValue? self, SseSerializer serializer);
 
   @protected
@@ -1153,22 +1167,41 @@ class RustLibWire implements BaseWire {
       _wire_MinecraftSkin_get_head_file_pathPtr.asFunction<
           void Function(int, ffi.Pointer<wire_cst_minecraft_skin>)>();
 
-  void wire_Collection_create(
+  void wire_Collection_create_loader(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8> display_name,
   ) {
-    return _wire_Collection_create(
+    return _wire_Collection_create_loader(
       port_,
       display_name,
     );
   }
 
-  late final _wire_Collection_createPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_cst_list_prim_u_8>)>>('wire_Collection_create');
-  late final _wire_Collection_create = _wire_Collection_createPtr
+  late final _wire_Collection_create_loaderPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8>)>>(
+      'wire_Collection_create_loader');
+  late final _wire_Collection_create_loader = _wire_Collection_create_loaderPtr
       .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8>)>();
+
+  void wire_Collection_game_directory(
+    int port_,
+    ffi.Pointer<ffi.Void> that,
+  ) {
+    return _wire_Collection_game_directory(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_Collection_game_directoryPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<ffi.Void>)>>(
+      'wire_Collection_game_directory');
+  late final _wire_Collection_game_directory =
+      _wire_Collection_game_directoryPtr
+          .asFunction<void Function(int, ffi.Pointer<ffi.Void>)>();
 
   void wire_Collection_get_base_path(
     int port_,

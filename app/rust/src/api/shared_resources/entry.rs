@@ -1,14 +1,15 @@
 use anyhow::Context;
 use dashmap::DashMap;
 use flutter_rust_bridge::frb;
-use log::{info, warn};
-use std::fs::create_dir_all;
+use log::{debug, info, warn};
 pub use std::path::PathBuf;
 use std::sync::Arc;
+use std::{fs::create_dir_all, panic::AssertUnwindSafe};
 
 use uuid::Uuid;
 
 use crate::api::backend_exclusive::{
+    mod_management::mods::ModManager,
     modding::forge::{prepare_forge_download, process_forge},
     vanilla::manifest::fetch_game_manifest,
 };
@@ -27,11 +28,11 @@ use crate::api::shared_resources::authentication::{self, account::MinecraftSkin}
 use crate::api::backend_exclusive::vanilla;
 use crate::api::backend_exclusive::vanilla::version::VersionMetadata;
 
-use crate::api::backend_exclusive::download::{run_download, DownloadBias, Progress};
+use crate::api::backend_exclusive::download::{run_parallel_download, DownloadBias, Progress};
 use crate::api::backend_exclusive::vanilla::launcher::{launch_game, prepare_vanilla_download};
 use crate::api::shared_resources::authentication::msa_flow::LoginFlowErrors;
 use crate::api::shared_resources::collection::{
-    AdvancedOptions, Collection, CollectionId, ModLoader,
+    AdvancedOptions, Collection, CollectionId, ModLoader, ModLoaderType,
 };
 use crate::frb_generated::StreamSink;
 
@@ -178,16 +179,17 @@ pub async fn create_collection(
 ) -> anyhow::Result<()> {
     use chrono::{Duration, Utc};
 
-    let (loader, entry_path) = Collection::create(display_name.clone())?;
+    let (loader, entry_path) = Collection::create_loader(display_name.clone())?;
     let now_time = Utc::now();
 
+    let mod_manager = ModManager::new();
     // NOTE: testing purposes
     let mod_loader = Some(ModLoader {
-        mod_loader_type: ModLoaderType::Fabric,
+        mod_loader_type: ModLoaderType::Forge,
         version: None,
     });
 
-    let collection = Collection {
+    let mut collection = Collection {
         display_name,
         minecraft_version: version_metadata,
         mod_loader,
@@ -196,7 +198,22 @@ pub async fn create_collection(
         played_time: Duration::seconds(0),
         advanced_options,
         entry_path,
+        mod_manager,
     };
+
+    // NOTE: testing purposes
+    AssertUnwindSafe(collection.add_mod("rpmtw-update-mod", vec![], None)).await?;
+    debug!(
+        "{:?}",
+        &collection
+            .mod_manager
+            .mods
+            .iter()
+            .map(|x| (&x.name, &x.mod_version, &x.incompatiable_mods))
+            .collect::<Vec<_>>()
+    );
+    AssertUnwindSafe(collection.download_mods()).await?;
+
     loader.save(&collection)?;
     info!(
         "Successfully created collection basic file at {}",
@@ -214,7 +231,7 @@ pub async fn create_collection(
         let (vanilla_download_args, vanilla_arguments) =
             prepare_vanilla_download(collection, game_manifest.clone()).await?;
 
-        run_download(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
+        run_parallel_download(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
 
         let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
             vanilla_arguments.launch_args,
@@ -228,7 +245,7 @@ pub async fn create_collection(
             end: 100.0,
         };
         info!("Starts Forge Downloading");
-        run_download(collection_id, forge_download_args, forge_bias).await?;
+        run_parallel_download(collection_id, forge_download_args, forge_bias).await?;
         info!("Starts Forge Processing");
         let processed_arguments = process_forge(
             forge_arguments.launch_args,

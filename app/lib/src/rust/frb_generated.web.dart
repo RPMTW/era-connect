@@ -184,6 +184,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ModLoaderType dco_decode_mod_loader_type(dynamic raw);
 
   @protected
+  String? dco_decode_opt_String(dynamic raw);
+
+  @protected
   UuidValue? dco_decode_opt_Uuid(dynamic raw);
 
   @protected
@@ -382,6 +385,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ModLoaderType sse_decode_mod_loader_type(SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
   UuidValue? sse_decode_opt_Uuid(SseDeserializer deserializer);
@@ -625,8 +631,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<dynamic> cst_encode_mod_loader(ModLoader raw) {
     return [
       cst_encode_mod_loader_type(raw.modLoaderType),
-      cst_encode_String(raw.version)
+      cst_encode_opt_String(raw.version)
     ];
+  }
+
+  @protected
+  String? cst_encode_opt_String(String? raw) {
+    return raw == null ? null : cst_encode_String(raw);
   }
 
   @protected
@@ -917,6 +928,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_mod_loader_type(ModLoaderType self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_Uuid(UuidValue? self, SseSerializer serializer);
 
   @protected
@@ -974,8 +988,12 @@ class RustLibWire extends BaseWire {
           NativePortType port_, List<dynamic> that) =>
       wasmModule.wire_MinecraftSkin_get_head_file_path(port_, that);
 
-  void wire_Collection_create(NativePortType port_, String display_name) =>
-      wasmModule.wire_Collection_create(port_, display_name);
+  void wire_Collection_create_loader(
+          NativePortType port_, String display_name) =>
+      wasmModule.wire_Collection_create_loader(port_, display_name);
+
+  void wire_Collection_game_directory(NativePortType port_, Object that) =>
+      wasmModule.wire_Collection_game_directory(port_, that);
 
   void wire_Collection_get_base_path(NativePortType port_) =>
       wasmModule.wire_Collection_get_base_path(port_);
@@ -1087,8 +1105,11 @@ class RustLibWasmModule implements WasmModule {
   external void wire_MinecraftSkin_get_head_file_path(
       NativePortType port_, List<dynamic> that);
 
-  external void wire_Collection_create(
+  external void wire_Collection_create_loader(
       NativePortType port_, String display_name);
+
+  external void wire_Collection_game_directory(
+      NativePortType port_, Object that);
 
   external void wire_Collection_get_base_path(NativePortType port_);
 

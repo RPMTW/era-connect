@@ -302,6 +302,11 @@ impl CstDecode<crate::api::shared_resources::collection::ModLoader>
         }
     }
 }
+impl CstDecode<Option<String>> for Option<String> {
+    fn cst_decode(self) -> Option<String> {
+        self.map(CstDecode::cst_decode)
+    }
+}
 impl CstDecode<Option<uuid::Uuid>> for Option<Box<[u8]>> {
     fn cst_decode(self) -> Option<uuid::Uuid> {
         self.map(CstDecode::cst_decode)
@@ -554,11 +559,19 @@ pub fn wire_MinecraftSkin_get_head_file_path(
 }
 
 #[wasm_bindgen]
-pub fn wire_Collection_create(
+pub fn wire_Collection_create_loader(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     display_name: String,
 ) {
-    wire_Collection_create_impl(port_, display_name)
+    wire_Collection_create_loader_impl(port_, display_name)
+}
+
+#[wasm_bindgen]
+pub fn wire_Collection_game_directory(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+) {
+    wire_Collection_game_directory_impl(port_, that)
 }
 
 #[wasm_bindgen]

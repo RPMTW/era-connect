@@ -124,6 +124,19 @@ expected: {}
 
     Ok(())
 }
+pub async fn get_hash(file_path: impl AsRef<Path> + Send + Sync) -> anyhow::Result<Vec<u8>> {
+    use sha1::{Digest, Sha1};
+    let file_path = file_path.as_ref();
+    let file = File::open(file_path).await?;
+    let mut buffer = Vec::new();
+    let mut reader = BufReader::new(file);
+    reader.read_to_end(&mut buffer).await?;
+    let mut hasher = Sha1::new();
+    hasher.update(&buffer);
+    let mut vec = Vec::new();
+    vec.extend_from_slice(&hasher.finalize()[..]);
+    Ok(vec)
+}
 
 #[derive(Clone, Debug)]
 pub struct Progress {
@@ -141,9 +154,17 @@ pub struct DownloadBias {
     pub start: f64,
     pub end: f64,
 }
+impl Default for DownloadBias {
+    fn default() -> Self {
+        Self {
+            start: 0.0,
+            end: 100.0,
+        }
+    }
+}
 
 // get progress and and launch download
-pub async fn run_download(
+pub async fn run_parallel_download(
     id: CollectionId,
     download_args: DownloadArgs<'_>,
     bias: DownloadBias,
