@@ -45,24 +45,36 @@ fn wire_MinecraftSkin_get_head_file_path_impl(
                     })())
                 } })
 }
-fn wire_Collection_create_loader_impl(
+fn wire_Collection_create_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     display_name: impl CstDecode<String> + core::panic::UnwindSafe,
+    version_metadata: impl CstDecode<crate::api::backend_exclusive::vanilla::version::VersionMetadata>
+        + core::panic::UnwindSafe,
+    mod_loader: impl CstDecode<Option<crate::api::shared_resources::collection::ModLoader>>
+        + core::panic::UnwindSafe,
+    advanced_options: impl CstDecode<Option<crate::api::shared_resources::collection::AdvancedOptions>>
+        + core::panic::UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Collection_create_loader",
+            debug_name: "Collection_create",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
             let api_display_name = display_name.cst_decode();
+            let api_version_metadata = version_metadata.cst_decode();
+            let api_mod_loader = mod_loader.cst_decode();
+            let api_advanced_options = advanced_options.cst_decode();
             move |context| {
                 transform_result_dco((move || -> Result<_, anyhow::Error> {
                     Result::<_, anyhow::Error>::Ok(
                         flutter_rust_bridge::for_generated::rust_auto_opaque_encode(
-                            crate::api::shared_resources::collection::Collection::create_loader(
+                            crate::api::shared_resources::collection::Collection::create(
                                 api_display_name,
+                                api_version_metadata,
+                                api_mod_loader,
+                                api_advanced_options,
                             )?,
                         ),
                     )
@@ -510,10 +522,7 @@ impl SseDecode
 
 impl SseDecode
     for flutter_rust_bridge::RustOpaque<
-        std::sync::RwLock<(
-            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-            PathBuf,
-        )>,
+        std::sync::RwLock<crate::api::shared_resources::collection::Collection>,
     >
 {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -524,7 +533,7 @@ impl SseDecode
 
 impl SseDecode
     for flutter_rust_bridge::RustOpaque<
-        std::sync::RwLock<crate::api::shared_resources::collection::Collection>,
+        std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
     >
 {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1576,10 +1585,7 @@ impl SseEncode
 
 impl SseEncode
     for flutter_rust_bridge::RustOpaque<
-        std::sync::RwLock<(
-            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-            PathBuf,
-        )>,
+        std::sync::RwLock<crate::api::shared_resources::collection::Collection>,
     >
 {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1591,7 +1597,7 @@ impl SseEncode
 
 impl SseEncode
     for flutter_rust_bridge::RustOpaque<
-        std::sync::RwLock<crate::api::shared_resources::collection::Collection>,
+        std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
     >
 {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {

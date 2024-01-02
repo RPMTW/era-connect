@@ -2,14 +2,13 @@ use anyhow::Context;
 use dashmap::DashMap;
 use flutter_rust_bridge::frb;
 use log::{debug, info, warn};
-pub use std::path::PathBuf;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::{fs::create_dir_all, panic::AssertUnwindSafe};
 
 use uuid::Uuid;
 
 use crate::api::backend_exclusive::{
-    mod_management::mods::ModManager,
     modding::forge::{prepare_forge_download, process_forge},
     vanilla::manifest::fetch_game_manifest,
 };
@@ -32,7 +31,7 @@ use crate::api::backend_exclusive::download::{run_parallel_download, DownloadBia
 use crate::api::backend_exclusive::vanilla::launcher::{launch_game, prepare_vanilla_download};
 use crate::api::shared_resources::authentication::msa_flow::LoginFlowErrors;
 use crate::api::shared_resources::collection::{
-    AdvancedOptions, Collection, CollectionId, ModLoader, ModLoaderType,
+    AdvancedOptions, Collection, CollectionId, ModLoader, ModLoaderType, TemporaryTuple,
 };
 use crate::frb_generated::StreamSink;
 
@@ -177,29 +176,14 @@ pub async fn create_collection(
     mod_loader: Option<ModLoader>,
     advanced_options: Option<AdvancedOptions>,
 ) -> anyhow::Result<()> {
-    use chrono::{Duration, Utc};
-
-    let (loader, entry_path) = Collection::create_loader(display_name.clone())?;
-    let now_time = Utc::now();
-
-    let mod_manager = ModManager::new();
     // NOTE: testing purposes
     let mod_loader = Some(ModLoader {
         mod_loader_type: ModLoaderType::Forge,
         version: None,
     });
 
-    let mut collection = Collection {
-        display_name,
-        minecraft_version: version_metadata,
-        mod_loader,
-        created_at: now_time,
-        updated_at: now_time,
-        played_time: Duration::seconds(0),
-        advanced_options,
-        entry_path,
-        mod_manager,
-    };
+    let TemporaryTuple(mut collection, loader) =
+        Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
 
     // NOTE: testing purposes
     AssertUnwindSafe(collection.add_mod("rpmtw-update-mod", vec![], None)).await?;
@@ -215,11 +199,12 @@ pub async fn create_collection(
     AssertUnwindSafe(collection.download_mods()).await?;
 
     loader.save(&collection)?;
+    let collection_id = collection.get_collection_id();
+
     info!(
         "Successfully created collection basic file at {}",
         collection.entry_path.display()
     );
-    let collection_id = collection.get_collection_id();
 
     let handle = tokio::spawn(async move {
         info!("Starts Vanilla Downloading");

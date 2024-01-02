@@ -1,5 +1,6 @@
 use std::panic::{RefUnwindSafe, UnwindSafe};
-pub use std::{borrow::Cow, fs::create_dir_all, path::PathBuf};
+pub use std::path::PathBuf;
+use std::{borrow::Cow, fs::create_dir_all};
 
 use chrono::{DateTime, Duration, Utc};
 use flutter_rust_bridge::frb;
@@ -7,11 +8,12 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
+pub use crate::api::backend_exclusive::storage::storage_loader::StorageLoader;
+
 use crate::api::{
     backend_exclusive::{
         download::{run_parallel_download, DownloadBias},
         mod_management::mods::{ModManager, ModOverride, Tag},
-        storage::storage_loader::StorageLoader,
         vanilla::version::VersionMetadata,
     },
     shared_resources::entry::DATA_DIR,
@@ -40,10 +42,48 @@ impl RefUnwindSafe for ModManager {}
 #[derive(Debug, Deserialize, Serialize, Clone, Default, Eq, PartialEq, Hash)]
 pub struct CollectionId(pub String);
 
+pub struct TemporaryTuple(pub Collection, pub StorageLoader);
+
 const COLLECTION_FILE_NAME: &str = "collection.json";
 const COLLECTION_BASE: &str = "collections";
 
 impl Collection {
+    pub fn game_directory(&self) -> PathBuf {
+        self.entry_path.join("minecraft_root")
+    }
+
+    /// Creates a collection and return a collection with its loader attached
+    pub fn create(
+        display_name: String,
+        version_metadata: VersionMetadata,
+        mod_loader: Option<ModLoader>,
+        advanced_options: Option<AdvancedOptions>,
+    ) -> anyhow::Result<TemporaryTuple> {
+        let now_time = Utc::now();
+        let loader = Collection::create_loader(display_name.clone())?;
+        let entry_path = loader.base_path.clone();
+        let mod_manager = ModManager::new(
+            entry_path.join("minecraft_root"),
+            mod_loader.clone(),
+            version_metadata.clone(),
+        );
+
+        let collection = Collection {
+            display_name,
+            minecraft_version: version_metadata,
+            mod_loader,
+            created_at: now_time,
+            updated_at: now_time,
+            played_time: Duration::seconds(0),
+            advanced_options,
+            entry_path,
+            mod_manager,
+        };
+
+        loader.save(&collection)?;
+
+        Ok(TemporaryTuple(collection, loader))
+    }
     /// use project id(slug also works) to add mod, will deal with dependencies insertion
     #[frb(ignore)]
     pub async fn add_mod(
@@ -54,14 +94,16 @@ impl Collection {
     ) -> anyhow::Result<()> {
         let project_id = project_id.as_ref();
         let project = self.mod_manager.ferinth.get_project(project_id).await?;
-        ModManager::add_project(project, tag, mod_override.unwrap_or(&Vec::new()), self).await?;
+        self.mod_manager
+            .add_project(project, tag, mod_override.unwrap_or(&Vec::new()))
+            .await?;
         Ok(())
     }
 
     #[frb(ignore)]
     pub async fn download_mods(&mut self) -> anyhow::Result<()> {
         let id = self.get_collection_id();
-        let download_args = ModManager::get_download(self).await?;
+        let download_args = self.mod_manager.get_download().await?;
         run_parallel_download(id, download_args, DownloadBias::default()).await?;
         Ok(())
     }
@@ -80,7 +122,8 @@ impl Collection {
         )
     }
 
-    pub fn create_loader(display_name: String) -> std::io::Result<(StorageLoader, PathBuf)> {
+    // HACK: temporary solution to
+    fn create_loader(display_name: String) -> std::io::Result<StorageLoader> {
         // Windows file and directory name restrictions.
         let invalid_chars_regex = Regex::new(r#"[\\/:*?\"<>|]"#).unwrap();
         let reserved_names = vec![
@@ -103,7 +146,7 @@ impl Collection {
         let loader =
             StorageLoader::new(COLLECTION_FILE_NAME.to_string(), Cow::Borrowed(&entry_path));
 
-        Ok((loader, entry_path))
+        Ok(loader)
     }
 
     fn handle_duplicate_dir(base_dir: PathBuf, dir_name: &str) -> PathBuf {
@@ -149,10 +192,6 @@ impl Collection {
             }
         }
         Ok(loaders)
-    }
-
-    pub fn game_directory(&self) -> PathBuf {
-        self.entry_path.join("minecraft_root")
     }
 }
 

@@ -32,12 +32,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       get rust_arc_decrement_strong_count_StorageLoaderPtr => wire
           ._rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockVeccrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr;
 
-  CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_StorageLoaderPathBufPtr => wire
-          ._rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBufPtr;
-
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_CollectionPtr =>
       wire._rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectionPtr;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_TemporaryTuplePtr => wire
+          ._rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuplePtr;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
@@ -51,8 +51,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
-  StorageLoaderPathBuf
-      dco_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
+  TemporaryTuple
+      dco_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
           dynamic raw);
 
   @protected
@@ -72,13 +72,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
-  StorageLoaderPathBuf
-      dco_decode_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
+  Collection
+      dco_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
           dynamic raw);
 
   @protected
-  Collection
-      dco_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
+  TemporaryTuple
+      dco_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
           dynamic raw);
 
   @protected
@@ -239,8 +239,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  StorageLoaderPathBuf
-      sse_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
+  TemporaryTuple
+      sse_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
           SseDeserializer deserializer);
 
   @protected
@@ -261,13 +261,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  StorageLoaderPathBuf
-      sse_decode_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
+  Collection
+      sse_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
           SseDeserializer deserializer);
 
   @protected
-  Collection
-      sse_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
+  TemporaryTuple
+      sse_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
           SseDeserializer deserializer);
 
   @protected
@@ -820,8 +820,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformPointer
-      cst_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-          StorageLoaderPathBuf raw);
+      cst_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+          TemporaryTuple raw);
 
   @protected
   PlatformPointer
@@ -838,13 +838,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformPointer
-      cst_encode_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-          StorageLoaderPathBuf raw);
+      cst_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection raw);
 
   @protected
   PlatformPointer
-      cst_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
-          Collection raw);
+      cst_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+          TemporaryTuple raw);
 
   @protected
   int cst_encode_account_storage_key(AccountStorageKey raw);
@@ -900,8 +900,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-      sse_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-          StorageLoaderPathBuf self, SseSerializer serializer);
+      sse_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+          TemporaryTuple self, SseSerializer serializer);
 
   @protected
   void
@@ -922,13 +922,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-      sse_encode_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-          StorageLoaderPathBuf self, SseSerializer serializer);
+      sse_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection self, SseSerializer serializer);
 
   @protected
   void
-      sse_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
-          Collection self, SseSerializer serializer);
+      sse_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+          TemporaryTuple self, SseSerializer serializer);
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
@@ -1167,23 +1167,38 @@ class RustLibWire implements BaseWire {
       _wire_MinecraftSkin_get_head_file_pathPtr.asFunction<
           void Function(int, ffi.Pointer<wire_cst_minecraft_skin>)>();
 
-  void wire_Collection_create_loader(
+  void wire_Collection_create(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8> display_name,
+    ffi.Pointer<wire_cst_version_metadata> version_metadata,
+    ffi.Pointer<wire_cst_mod_loader> mod_loader,
+    ffi.Pointer<wire_cst_advanced_options> advanced_options,
   ) {
-    return _wire_Collection_create_loader(
+    return _wire_Collection_create(
       port_,
       display_name,
+      version_metadata,
+      mod_loader,
+      advanced_options,
     );
   }
 
-  late final _wire_Collection_create_loaderPtr = _lookup<
+  late final _wire_Collection_createPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(
-                  ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8>)>>(
-      'wire_Collection_create_loader');
-  late final _wire_Collection_create_loader = _wire_Collection_create_loaderPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8>)>();
+                  ffi.Int64,
+                  ffi.Pointer<wire_cst_list_prim_u_8>,
+                  ffi.Pointer<wire_cst_version_metadata>,
+                  ffi.Pointer<wire_cst_mod_loader>,
+                  ffi.Pointer<wire_cst_advanced_options>)>>(
+      'wire_Collection_create');
+  late final _wire_Collection_create = _wire_Collection_createPtr.asFunction<
+      void Function(
+          int,
+          ffi.Pointer<wire_cst_list_prim_u_8>,
+          ffi.Pointer<wire_cst_version_metadata>,
+          ffi.Pointer<wire_cst_mod_loader>,
+          ffi.Pointer<wire_cst_advanced_options>)>();
 
   void wire_Collection_game_directory(
     int port_,
@@ -1467,38 +1482,6 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-      rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBufPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf');
-  late final _rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf =
-      _rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBufPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBufPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf');
-  late final _rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf =
-      _rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBufPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
       rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -1528,6 +1511,38 @@ class RustLibWire implements BaseWire {
           'rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection');
   late final _rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection =
       _rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectionPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuplePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple');
+  late final _rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple =
+      _rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuplePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuplePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple');
+  late final _rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple =
+      _rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuplePtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   ffi.Pointer<wire_cst_advanced_options>

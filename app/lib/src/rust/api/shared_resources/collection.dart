@@ -4,6 +4,7 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../frb_generated.dart';
+import '../backend_exclusive/vanilla/version.dart';
 import 'authentication/account.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -25,25 +26,6 @@ class StorageLoader extends RustOpaque {
   );
 }
 
-// Rust type: flutter_rust_bridge::RustOpaque<std::sync::RwLock<(crate::api::backend_exclusive::storage::storage_loader::StorageLoader,PathBuf,)>>
-@sealed
-class StorageLoaderPathBuf extends RustOpaque {
-  StorageLoaderPathBuf.dcoDecode(dynamic wire)
-      : super.dcoDecode(wire, _kStaticData);
-
-  StorageLoaderPathBuf.sseDecode(int ptr, int externalSizeOnNative)
-      : super.sseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount: RustLib
-        .instance.api.rust_arc_increment_strong_count_StorageLoaderPathBuf,
-    rustArcDecrementStrongCount: RustLib
-        .instance.api.rust_arc_decrement_strong_count_StorageLoaderPathBuf,
-    rustArcDecrementStrongCountPtr: RustLib
-        .instance.api.rust_arc_decrement_strong_count_StorageLoaderPathBufPtr,
-  );
-}
-
 // Rust type: flutter_rust_bridge::RustOpaque<std::sync::RwLock<crate::api::shared_resources::collection::Collection>>
 @sealed
 class Collection extends RustOpaque {
@@ -59,6 +41,24 @@ class Collection extends RustOpaque {
         RustLib.instance.api.rust_arc_decrement_strong_count_Collection,
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_CollectionPtr,
+  );
+}
+
+// Rust type: flutter_rust_bridge::RustOpaque<std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>>
+@sealed
+class TemporaryTuple extends RustOpaque {
+  TemporaryTuple.dcoDecode(dynamic wire) : super.dcoDecode(wire, _kStaticData);
+
+  TemporaryTuple.sseDecode(int ptr, int externalSizeOnNative)
+      : super.sseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_TemporaryTuple,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_TemporaryTuple,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_TemporaryTuplePtr,
   );
 }
 

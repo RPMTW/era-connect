@@ -390,27 +390,6 @@ impl
 impl
     CstDecode<
         flutter_rust_bridge::RustOpaque<
-            std::sync::RwLock<(
-                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-                PathBuf,
-            )>,
-        >,
-    > for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-{
-    fn cst_decode(
-        self,
-    ) -> flutter_rust_bridge::RustOpaque<
-        std::sync::RwLock<(
-            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-            PathBuf,
-        )>,
-    > {
-        unsafe { flutter_rust_bridge::for_generated::cst_decode_rust_opaque(self) }
-    }
-}
-impl
-    CstDecode<
-        flutter_rust_bridge::RustOpaque<
             std::sync::RwLock<crate::api::shared_resources::collection::Collection>,
         >,
     > for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
@@ -419,6 +398,21 @@ impl
         self,
     ) -> flutter_rust_bridge::RustOpaque<
         std::sync::RwLock<crate::api::shared_resources::collection::Collection>,
+    > {
+        unsafe { flutter_rust_bridge::for_generated::cst_decode_rust_opaque(self) }
+    }
+}
+impl
+    CstDecode<
+        flutter_rust_bridge::RustOpaque<
+            std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
+        >,
+    > for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
+{
+    fn cst_decode(
+        self,
+    ) -> flutter_rust_bridge::RustOpaque<
+        std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
     > {
         unsafe { flutter_rust_bridge::for_generated::cst_decode_rust_opaque(self) }
     }
@@ -559,11 +553,20 @@ pub fn wire_MinecraftSkin_get_head_file_path(
 }
 
 #[wasm_bindgen]
-pub fn wire_Collection_create_loader(
+pub fn wire_Collection_create(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     display_name: String,
+    version_metadata: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+    mod_loader: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+    advanced_options: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
 ) {
-    wire_Collection_create_loader_impl(port_, display_name)
+    wire_Collection_create_impl(
+        port_,
+        display_name,
+        version_metadata,
+        mod_loader,
+        advanced_options,
+    )
 }
 
 #[wasm_bindgen]
@@ -710,34 +713,6 @@ pub fn rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockVeccrateapibacken
 }
 
 #[wasm_bindgen]
-pub fn rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        flutter_rust_bridge::for_generated::rust_arc_increment_strong_count::<
-            std::sync::RwLock<(
-                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-                PathBuf,
-            )>,
-        >(ptr);
-    }
-}
-
-#[wasm_bindgen]
-pub fn rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        flutter_rust_bridge::for_generated::rust_arc_decrement_strong_count::<
-            std::sync::RwLock<(
-                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-                PathBuf,
-            )>,
-        >(ptr);
-    }
-}
-
-#[wasm_bindgen]
 pub fn rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
     ptr: *const std::ffi::c_void,
 ) {
@@ -755,6 +730,28 @@ pub fn rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_re
     unsafe {
         flutter_rust_bridge::for_generated::rust_arc_decrement_strong_count::<
             std::sync::RwLock<crate::api::shared_resources::collection::Collection>,
+        >(ptr);
+    }
+}
+
+#[wasm_bindgen]
+pub fn rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+    ptr: *const std::ffi::c_void,
+) {
+    unsafe {
+        flutter_rust_bridge::for_generated::rust_arc_increment_strong_count::<
+            std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
+        >(ptr);
+    }
+}
+
+#[wasm_bindgen]
+pub fn rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+    ptr: *const std::ffi::c_void,
+) {
+    unsafe {
+        flutter_rust_bridge::for_generated::rust_arc_decrement_strong_count::<
+            std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
         >(ptr);
     }
 }

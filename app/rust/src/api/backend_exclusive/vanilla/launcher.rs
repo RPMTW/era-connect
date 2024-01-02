@@ -3,7 +3,6 @@ use anyhow::{Context, Result};
 use log::error;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-pub use std::path::PathBuf;
 use std::sync::{atomic::AtomicUsize, atomic::Ordering, Arc};
 use tokio::fs::{self, create_dir_all};
 

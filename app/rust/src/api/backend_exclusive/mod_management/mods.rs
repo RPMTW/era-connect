@@ -3,6 +3,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 use std::fs::create_dir_all;
+use std::path::PathBuf;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -14,12 +15,13 @@ use log::error;
 use tokio::fs;
 
 use crate::api::backend_exclusive::vanilla::version::VersionMetadata;
+use crate::api::shared_resources::collection::ModLoader;
 use crate::api::{
     backend_exclusive::{
         download::{download_file, get_hash, validate_sha1, DownloadArgs, HandlesType},
         vanilla::version::{get_versions, VersionType},
     },
-    shared_resources::collection::{Collection, ModLoaderType},
+    shared_resources::collection::ModLoaderType,
 };
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct ModMetadata {
@@ -62,6 +64,10 @@ pub struct ModManager {
     pub ferinth: ferinth::Ferinth,
     #[serde(skip)]
     cache: Option<Vec<VersionMetadata>>,
+    #[serde(skip)]
+    game_directory: PathBuf,
+    mod_loader: Option<ModLoader>,
+    target_game_version: VersionMetadata,
 }
 
 impl PartialEq for ModManager {
@@ -72,22 +78,29 @@ impl PartialEq for ModManager {
 impl Eq for ModManager {}
 
 impl ModManager {
-    pub fn new() -> Self {
+    pub fn new(
+        game_directory: PathBuf,
+        mod_loader: Option<ModLoader>,
+        target_game_version: VersionMetadata,
+    ) -> Self {
         Self {
             ferinth: ferinth::Ferinth::default(),
             mods: Vec::new(),
             cache: None,
+            game_directory,
+            mod_loader,
+            target_game_version,
         }
     }
-    pub async fn get_download(collection: &mut Collection) -> anyhow::Result<DownloadArgs> {
+    pub async fn get_download(&mut self) -> anyhow::Result<DownloadArgs> {
         let current_size = Arc::new(AtomicUsize::new(0));
         let total_size = Arc::new(AtomicUsize::new(0));
-        let base_path = collection.game_directory().join("mods");
+        let base_path = self.game_directory.join("mods");
         if !base_path.exists() {
             create_dir_all(&base_path)?;
         }
         let mut handles = HandlesType::new();
-        for minecraft_mod in &collection.mod_manager.mods {
+        for minecraft_mod in &self.mods {
             for file in &minecraft_mod.mod_data.0.files {
                 let hash = &file.hashes.sha1;
                 let url = &file.url;
@@ -119,9 +132,9 @@ impl ModManager {
 
         Ok(download_args)
     }
-    pub async fn scan(collection: &mut Collection) -> anyhow::Result<()> {
-        let modrinth = collection.mod_manager.ferinth.clone();
-        let mod_path = collection.entry_path.join(".minecraft/mods");
+    pub async fn scan(&mut self) -> anyhow::Result<()> {
+        let modrinth = self.ferinth.clone();
+        let mod_path = self.game_directory.join("mods");
         if !mod_path.exists() {
             create_dir_all(&mod_path)?;
         }
@@ -131,7 +144,7 @@ impl ModManager {
             let path = mod_entry.path();
             let raw_hash = get_hash(&path).await?;
             let hash = hex::encode(raw_hash);
-            let already_contained_in_collection = collection.mod_manager.mods.iter().any(|x| {
+            let already_contained_in_collection = self.mods.iter().any(|x| {
                 x.mod_data
                     .0
                     .files
@@ -144,7 +157,8 @@ impl ModManager {
                     .get_version_from_hash(&hash)
                     .await
                     .context("Can't find jar")?;
-                Self::add_mod(version.into(), vec![Tag::Explicit], &Vec::new(), collection).await?;
+                self.add_mod(version.into(), vec![Tag::Explicit], &Vec::new())
+                    .await?;
             }
         }
 
@@ -153,37 +167,33 @@ impl ModManager {
 
     #[async_recursion]
     async fn mod_dependencies_resolve(
+        &mut self,
         minecraft_mod: &MinecraftModData,
         mod_override: &Vec<ModOverride>,
-        collection: &mut Collection,
     ) -> anyhow::Result<()> {
-        let modrinth = collection.mod_manager.ferinth.clone();
+        let modrinth = self.ferinth.clone();
         for dept in &minecraft_mod.0.dependencies {
             if let Some(dependency) = &dept.version_id {
                 let ver = modrinth.get_version(dependency).await?;
-                Self::add_mod(
-                    ver.into(),
-                    vec![Tag::Dependencies],
-                    &mod_override,
-                    collection,
-                )
-                .await?;
+                self.add_mod(ver.into(), vec![Tag::Dependencies], &mod_override)
+                    .await?;
             } else if let Some(project) = &dept.project_id {
                 let ver = modrinth.get_project(project).await?;
-                Self::add_project(ver, vec![Tag::Dependencies], &mod_override, collection).await?;
+                self.add_project(ver, vec![Tag::Dependencies], &mod_override)
+                    .await?;
             }
         }
         Ok(())
     }
 
     #[async_recursion]
-    pub async fn add_mod(
+    async fn add_mod(
+        &mut self,
         minecraft_mod_data: MinecraftModData,
         tag: Vec<Tag>,
         mod_override: &Vec<ModOverride>,
-        collection: &mut Collection,
     ) -> anyhow::Result<()> {
-        let modrinth = collection.mod_manager.ferinth.clone();
+        let modrinth = self.ferinth.clone();
         let project = modrinth
             .get_project(&minecraft_mod_data.0.project_id)
             .await?;
@@ -197,15 +207,14 @@ impl ModManager {
             overrides: mod_override.to_vec(),
             mod_data: minecraft_mod_data,
         };
-        if !collection
-            .mod_manager
+        if !self
             .mods
             .iter()
             .any(|x| x.mod_data == mod_metadata.mod_data)
         {
-            Self::mod_dependencies_resolve(&mod_metadata.mod_data, mod_override, collection)
+            self.mod_dependencies_resolve(&mod_metadata.mod_data, mod_override)
                 .await?;
-            collection.mod_manager.mods.push(mod_metadata);
+            self.mods.push(mod_metadata);
         }
         Ok(())
     }
@@ -213,25 +222,20 @@ impl ModManager {
     // NOTE: Hacky way of doing game version check
     #[async_recursion]
     pub async fn add_project(
+        &mut self,
         project: Project,
         tag: Vec<Tag>,
         mod_override: &Vec<ModOverride>,
-        collection: &mut Collection,
     ) -> anyhow::Result<()> {
-        let all_game_version = if let Some(x) = collection.mod_manager.cache.as_deref() {
+        let all_game_version = if let Some(x) = self.cache.as_deref() {
             info!("use cached game version!");
             x
         } else {
-            collection.mod_manager.cache = Some(get_versions().await?);
-            collection.mod_manager.cache.as_deref().unwrap()
+            self.cache = Some(get_versions().await?);
+            self.cache.as_deref().unwrap()
         };
-        let modrinth = collection.mod_manager.ferinth.clone();
+        let modrinth = self.ferinth.clone();
 
-        let mod_loader = collection
-            .mod_loader
-            .as_ref()
-            .context("wtf don't add mods in vanilla")?
-            .mod_loader_type;
         let versions = modrinth
             .get_multiple_versions(
                 project
@@ -242,6 +246,11 @@ impl ModManager {
                     .as_slice(),
             )
             .await?;
+
+        let mod_loader = self
+            .mod_loader
+            .as_ref()
+            .with_context(|| "don't add mod in vanilla")?;
 
         let version = versions
             .into_par_iter()
@@ -260,9 +269,9 @@ impl ModManager {
 
                         let quilt_compatible = mod_override
                             .contains(&ModOverride::QuiltFabricCompatibility)
-                            && mod_loader == ModLoaderType::Quilt
+                            && mod_loader.mod_loader_type == ModLoaderType::Quilt
                             && loader == Some(ModLoaderType::Fabric);
-                        loader.is_some_and(|x| x == mod_loader) || quilt_compatible
+                        loader.is_some_and(|x| x == mod_loader.mod_loader_type) || quilt_compatible
                     })
                 }
             })
@@ -275,10 +284,9 @@ impl ModManager {
                 if mod_override.contains(&ModOverride::IgnoreAllGameVersion) {
                     true
                 } else if mod_override.contains(&ModOverride::IgnoreMinorGameVersion) {
-                    let collection_minecraft_version = &collection.minecraft_version;
                     let collection_game_version = all_game_version
                         .iter()
-                        .find(|x| x.id == collection_minecraft_version.id)
+                        .find(|x| x.id == self.target_game_version.id)
                         .expect("somehow can't find game versions");
 
                     if collection_game_version.version_type == VersionType::Release {
@@ -303,11 +311,10 @@ impl ModManager {
             })
             .max_by(|x, y| x.date_published.cmp(&y.date_published));
 
-        Self::add_mod(
+        self.add_mod(
             version.context("Can't find suitible mod")?.into(),
             tag,
             mod_override,
-            collection,
         )
         .await?;
 
