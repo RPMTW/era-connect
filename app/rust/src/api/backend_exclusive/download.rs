@@ -127,10 +127,10 @@ expected: {}
 
 #[derive(Clone, Debug)]
 pub struct Progress {
-    pub speed: f64,
     pub percentages: f64,
-    pub current_size: f64,
-    pub total_size: f64,
+    pub speed: Option<f64>,
+    pub current_size: Option<f64>,
+    pub total_size: Option<f64>,
 }
 
 /// set percentages bias
@@ -142,35 +142,65 @@ pub struct DownloadBias {
     pub end: f64,
 }
 
-// get progress and and launch download
-pub async fn run_download(
+// get progress and and launch download, if HandlesType doesn't exist, does not calculate speed
+pub async fn execute_and_progress(
     id: CollectionId,
     download_args: DownloadArgs<'_>,
     bias: DownloadBias,
 ) -> anyhow::Result<()> {
     println!("run_download");
     let handles = download_args.handles;
+    let calculate_speed = download_args.is_size;
     let download_complete = Arc::new(AtomicBool::new(false));
 
     let download_complete_clone = Arc::clone(&download_complete);
-    let current_size_clone = Arc::clone(&download_args.current_size);
-    let total_size_clone = Arc::clone(&download_args.total_size);
-
-    let multiplier = (bias.end - bias.start) / 100.0;
-
-    let sleep_time = 250;
-    let rolling_average_window = 5000 / sleep_time;
-    let mut average_speed = VecDeque::with_capacity(rolling_average_window);
+    let current_size_clone = Arc::clone(&download_args.current);
+    let total_size_clone = Arc::clone(&download_args.total);
 
     let output = tokio::spawn(async move {
-        let mut instant = Instant::now();
-        let mut prev_bytes = 0.0;
-        while !download_complete_clone.load(Ordering::Acquire) {
-            time::sleep(Duration::from_millis(sleep_time.try_into().unwrap())).await;
-            let current_size = current_size_clone.load(Ordering::Relaxed) as f64;
-            let total_size = total_size_clone.load(Ordering::Relaxed) as f64;
-            let percentages = (current_size / total_size * 100.0).mul_add(multiplier, bias.start);
-            let speed = (current_size - prev_bytes) / instant.elapsed().as_secs_f64() / 1_000_000.0;
+        rolling_average(
+            download_complete_clone,
+            current_size_clone,
+            total_size_clone,
+            bias,
+            id,
+            calculate_speed,
+        )
+        .await;
+    });
+    // Create a semaphore with a limit on the number of concurrent downloads
+    join_futures(handles, 128).await?;
+    download_complete.store(true, Ordering::Release);
+    output.await?;
+
+    Ok(())
+}
+
+pub async fn rolling_average(
+    download_complete: Arc<AtomicBool>,
+    current: Arc<AtomicUsize>,
+    total: Arc<AtomicUsize>,
+    bias: DownloadBias,
+    id: CollectionId,
+    calculate_speed: bool,
+) {
+    let mut instant = Instant::now();
+    let mut prev_bytes = 0.0;
+    while !download_complete.load(Ordering::Acquire) {
+        let multiplier = (bias.end - bias.start) / 100.0;
+
+        let sleep_time = 250;
+
+        time::sleep(Duration::from_millis(sleep_time.try_into().unwrap())).await;
+        let current = current.load(Ordering::Relaxed) as f64;
+        let total = total.load(Ordering::Relaxed) as f64;
+        let percentages = (current / total * 100.0).mul_add(multiplier, bias.start);
+
+        let progress = if calculate_speed {
+            let rolling_average_window = 5000 / sleep_time;
+            let mut average_speed = VecDeque::with_capacity(rolling_average_window);
+
+            let speed = (current - prev_bytes) / instant.elapsed().as_secs_f64() / 1_000_000.0;
 
             if average_speed.len() < rolling_average_window {
                 average_speed.push_back(speed);
@@ -181,23 +211,25 @@ pub async fn run_download(
 
             let speed = average_speed.iter().sum::<f64>() / average_speed.len() as f64;
 
-            let progress = Progress {
-                speed,
+            Progress {
                 percentages,
-                current_size,
-                total_size,
-            };
-            prev_bytes = current_size;
-            instant = Instant::now();
-            DOWNLOAD_PROGRESS.insert(id.clone(), progress);
-        }
-    });
-    // Create a semaphore with a limit on the number of concurrent downloads
-    join_futures(handles, 128).await?;
-    download_complete.store(true, Ordering::Release);
-    output.await?;
+                speed: Some(speed),
+                current_size: Some(current),
+                total_size: Some(total),
+            }
+        } else {
+            Progress {
+                percentages,
+                speed: None,
+                current_size: None,
+                total_size: None,
+            }
+        };
 
-    Ok(())
+        prev_bytes = current;
+        instant = Instant::now();
+        DOWNLOAD_PROGRESS.insert(id.clone(), progress);
+    }
 }
 
 pub async fn join_futures(
@@ -212,7 +244,8 @@ pub async fn join_futures(
 }
 
 pub struct DownloadArgs<'a> {
-    pub current_size: Arc<AtomicUsize>,
-    pub total_size: Arc<AtomicUsize>,
+    pub current: Arc<AtomicUsize>,
+    pub total: Arc<AtomicUsize>,
     pub handles: HandlesType<'a>,
+    pub is_size: bool,
 }

@@ -27,7 +27,7 @@ use crate::api::shared_resources::authentication::{self, account::MinecraftSkin}
 use crate::api::backend_exclusive::vanilla;
 pub use crate::api::backend_exclusive::vanilla::version::VersionMetadata;
 
-use crate::api::backend_exclusive::download::{run_download, DownloadBias, Progress};
+use crate::api::backend_exclusive::download::{execute_and_progress, DownloadBias, Progress};
 use crate::api::backend_exclusive::vanilla::launcher::{launch_game, prepare_vanilla_download};
 use crate::api::shared_resources::authentication::msa_flow::LoginFlowErrors;
 use crate::api::shared_resources::collection::{
@@ -176,6 +176,13 @@ pub async fn create_collection(
     mod_loader: Option<ModLoader>,
     advanced_options: Option<AdvancedOptions>,
 ) -> anyhow::Result<()> {
+    tokio::spawn(async {
+        let p = DOWNLOAD_PROGRESS
+            .iter()
+            .map(|x| x.clone())
+            .collect::<Vec<_>>();
+        dbg!(p);
+    });
     use chrono::{Duration, Utc};
 
     let (loader, entry_path) = Collection::create(display_name.clone())?;
@@ -202,13 +209,13 @@ pub async fn create_collection(
         info!("Starts Vanilla Downloading");
         let vanilla_bias = DownloadBias {
             start: 0.0,
-            end: 90.0,
+            end: 80.0,
         };
         let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
         let (vanilla_download_args, vanilla_arguments) =
             prepare_vanilla_download(collection, game_manifest.clone()).await?;
 
-        run_download(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
+        execute_and_progress(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
 
         let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
             vanilla_arguments.launch_args,
@@ -217,19 +224,36 @@ pub async fn create_collection(
         )
         .await?;
 
-        let forge_bias = DownloadBias {
+        let forge_download_bias = DownloadBias {
+            start: 80.0,
+            end: 90.0,
+        };
+        info!("Starts Forge Downloading");
+        execute_and_progress(
+            collection_id.clone(),
+            forge_download_args,
+            forge_download_bias,
+        )
+        .await?;
+
+        info!("Starts Forge Processing");
+        let forge_processor_bias = DownloadBias {
             start: 90.0,
             end: 100.0,
         };
-        info!("Starts Forge Downloading");
-        run_download(collection_id, forge_download_args, forge_bias).await?;
-        info!("Starts Forge Processing");
-        let processed_arguments = process_forge(
+        let (processed_arguments, forge_processor_progress) = process_forge(
             forge_arguments.launch_args,
             forge_arguments.jvm_args,
             forge_arguments.game_args,
             game_manifest,
             manifest,
+        )
+        .await?;
+
+        execute_and_progress(
+            collection_id,
+            forge_processor_progress,
+            forge_processor_bias,
         )
         .await?;
 

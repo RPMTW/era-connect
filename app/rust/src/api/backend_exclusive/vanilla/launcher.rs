@@ -216,9 +216,10 @@ pub async fn prepare_vanilla_download<'a>(
 
     Ok((
         DownloadArgs {
-            current_size: Arc::clone(&current_size),
-            total_size: Arc::clone(&total_size),
+            current: Arc::clone(&current_size),
+            total: Arc::clone(&total_size),
             handles,
+            is_size: true,
         },
         ProcessedArguments {
             launch_args,
