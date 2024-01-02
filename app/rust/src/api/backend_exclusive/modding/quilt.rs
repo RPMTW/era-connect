@@ -20,11 +20,11 @@ pub struct QuiltLibrary {
 }
 
 pub async fn prepare_quilt_download<'a>(
-    game_version: String,
     launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
 ) -> Result<(DownloadArgs<'a>, ProcessedArguments)> {
+    let game_version = &game_options.game_version_name;
     let meta_url = format!("https://meta.quiltmc.org/v3/versions/loader/{game_version}");
     let bytes = download_file(&meta_url, None).await?;
     let version_manifest: Value = serde_json::from_slice(&bytes)?;
@@ -145,7 +145,7 @@ pub async fn prepare_quilt_download<'a>(
         },
     ))
 }
-pub fn convert_maven_to_path(input: &str) -> String {
+fn convert_maven_to_path(input: &str) -> String {
     let parts: Vec<&str> = input.split(':').collect();
     let org = parts[0].replace('.', "/");
     let package = parts[1];
