@@ -496,7 +496,7 @@ fn process_client(
     parsed_argument
 }
 
-pub fn pre_convert_maven_to_path(input: &str, extension: Option<&str>) -> Result<String> {
+fn pre_convert_maven_to_path(input: &str, extension: Option<&str>) -> Result<String> {
     let parts: Vec<&str> = input.split(':').collect();
     let org = parts
         .first()
@@ -518,7 +518,7 @@ pub fn pre_convert_maven_to_path(input: &str, extension: Option<&str>) -> Result
     Ok(format!("{path}/{file_name}"))
 }
 
-fn convert_maven_to_path(str: &str, folder: Option<&str>) -> Result<String> {
+pub fn convert_maven_to_path(str: &str, folder: Option<&str>) -> Result<String> {
     let pos = str.find(|x| x == '@');
     let mut pre_maven = pos.map_or_else(
         || pre_convert_maven_to_path(str, None),
