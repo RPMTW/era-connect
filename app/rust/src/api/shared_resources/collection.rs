@@ -12,7 +12,7 @@ pub use crate::api::backend_exclusive::storage::storage_loader::StorageLoader;
 
 use crate::api::{
     backend_exclusive::{
-        download::{run_parallel_download, DownloadBias},
+        download::{execute_and_progress, DownloadBias},
         mod_management::mods::{ModManager, ModOverride, Tag},
         vanilla::version::VersionMetadata,
     },
@@ -104,7 +104,7 @@ impl Collection {
     pub async fn download_mods(&mut self) -> anyhow::Result<()> {
         let id = self.get_collection_id();
         let download_args = self.mod_manager.get_download().await?;
-        run_parallel_download(id, download_args, DownloadBias::default()).await?;
+        execute_and_progress(id, download_args, DownloadBias::default()).await?;
         Ok(())
     }
 
