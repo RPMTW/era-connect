@@ -47,6 +47,7 @@ lazy_static::lazy_static! {
     pub static ref STORAGE: StorageState = StorageState::new();
 }
 
+#[frb(init)]
 pub fn setup_logger() -> anyhow::Result<()> {
     use chrono::Local;
 
@@ -131,18 +132,18 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
             storage.add_account(account.clone(), true);
             storage.save()?;
 
-            skin.add(LoginFlowEvent::Success(account));
+            skin.add(LoginFlowEvent::Success(account))?;
             info!("Successfully login minecraft account");
         }
         Err(e) => {
             skin.add(LoginFlowEvent::Error(LoginFlowErrors::UnknownError(
                 format!("{e:#}"),
-            )));
+            )))?;
             warn!("Failed to login minecraft account: {:#}", e);
         }
     }
 
-    skin.close();
+    skin.close()?;
     Ok(())
 }
 
