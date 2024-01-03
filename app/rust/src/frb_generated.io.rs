@@ -61,14 +61,20 @@ impl
 impl
     CstDecode<
         flutter_rust_bridge::RustOpaque<
-            std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
+            std::sync::RwLock<(
+                crate::api::shared_resources::collection::Collection,
+                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
+            )>,
         >,
     > for *const std::ffi::c_void
 {
     fn cst_decode(
         self,
     ) -> flutter_rust_bridge::RustOpaque<
-        std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
+        std::sync::RwLock<(
+            crate::api::shared_resources::collection::Collection,
+            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
+        )>,
     > {
         unsafe { flutter_rust_bridge::for_generated::cst_decode_rust_opaque(self) }
     }
@@ -799,23 +805,29 @@ pub extern "C" fn frbgen_era_connect_rust_arc_decrement_strong_count_RustOpaque_
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_era_connect_rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+pub extern "C" fn frbgen_era_connect_rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
     ptr: *const std::ffi::c_void,
 ) {
     unsafe {
         flutter_rust_bridge::for_generated::rust_arc_increment_strong_count::<
-            std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
+            std::sync::RwLock<(
+                crate::api::shared_resources::collection::Collection,
+                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
+            )>,
         >(ptr);
     }
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_era_connect_rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+pub extern "C" fn frbgen_era_connect_rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
     ptr: *const std::ffi::c_void,
 ) {
     unsafe {
         flutter_rust_bridge::for_generated::rust_arc_decrement_strong_count::<
-            std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
+            std::sync::RwLock<(
+                crate::api::shared_resources::collection::Collection,
+                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
+            )>,
         >(ptr);
     }
 }

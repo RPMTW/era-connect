@@ -71,7 +71,7 @@ abstract class RustLibApi extends BaseApi {
   Future<PathBuf> minecraftSkinGetHeadFilePath(
       {required MinecraftSkin that, dynamic hint});
 
-  Future<TemporaryTuple> collectionCreate(
+  Future<CollectionStorageLoader> collectionCreate(
       {required String displayName,
       required VersionMetadata versionMetadata,
       ModLoader? modLoader,
@@ -136,13 +136,13 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_CollectionPtr;
 
   RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_TemporaryTuple;
+      get rust_arc_increment_strong_count_CollectionStorageLoader;
 
   RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_TemporaryTuple;
+      get rust_arc_decrement_strong_count_CollectionStorageLoader;
 
   CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_TemporaryTuplePtr;
+      get rust_arc_decrement_strong_count_CollectionStorageLoaderPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -180,7 +180,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<TemporaryTuple> collectionCreate(
+  Future<CollectionStorageLoader> collectionCreate(
       {required String displayName,
       required VersionMetadata versionMetadata,
       ModLoader? modLoader,
@@ -196,7 +196,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       },
       codec: DcoCodec(
         decodeSuccessData:
-            dco_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple,
+            dco_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader,
         decodeErrorData: dco_decode_AnyhowException,
       ),
       constMeta: kCollectionCreateConstMeta,
@@ -559,12 +559,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           .rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection;
 
   RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_TemporaryTuple => wire
-          .rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple;
+      get rust_arc_increment_strong_count_CollectionStorageLoader => wire
+          .rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader;
 
   RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_TemporaryTuple => wire
-          .rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple;
+      get rust_arc_decrement_strong_count_CollectionStorageLoader => wire
+          .rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -584,10 +584,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TemporaryTuple
-      dco_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+  CollectionStorageLoader
+      dco_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic raw) {
-    return TemporaryTuple.dcoDecode(raw as List<dynamic>);
+    return CollectionStorageLoader.dcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -622,10 +622,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TemporaryTuple
-      dco_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+  CollectionStorageLoader
+      dco_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic raw) {
-    return TemporaryTuple.dcoDecode(raw as List<dynamic>);
+    return CollectionStorageLoader.dcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1006,10 +1006,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TemporaryTuple
-      sse_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+  CollectionStorageLoader
+      sse_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           SseDeserializer deserializer) {
-    return TemporaryTuple.sseDecode(
+    return CollectionStorageLoader.sseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -1051,10 +1051,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TemporaryTuple
-      sse_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+  CollectionStorageLoader
+      sse_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           SseDeserializer deserializer) {
-    return TemporaryTuple.sseDecode(
+    return CollectionStorageLoader.sseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -1472,8 +1472,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   PlatformPointer
-      cst_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
-          TemporaryTuple raw) {
+      cst_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          CollectionStorageLoader raw) {
     // ignore: invalid_use_of_internal_member
     return raw.cstEncode(move: true);
   }
@@ -1510,8 +1510,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   PlatformPointer
-      cst_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
-          TemporaryTuple raw) {
+      cst_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          CollectionStorageLoader raw) {
     // ignore: invalid_use_of_internal_member
     return raw.cstEncode();
   }
@@ -1603,8 +1603,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
-          TemporaryTuple self, SseSerializer serializer) {
+      sse_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          CollectionStorageLoader self, SseSerializer serializer) {
     sse_encode_usize(self.sseEncode(move: true), serializer);
   }
 
@@ -1643,8 +1643,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
-          TemporaryTuple self, SseSerializer serializer) {
+      sse_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          CollectionStorageLoader self, SseSerializer serializer) {
     sse_encode_usize(self.sseEncode(move: null), serializer);
   }
 

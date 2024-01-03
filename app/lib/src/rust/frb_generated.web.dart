@@ -35,8 +35,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wire.rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection;
 
   CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_TemporaryTuplePtr => wire
-          .rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple;
+      get rust_arc_decrement_strong_count_CollectionStorageLoaderPtr => wire
+          .rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
@@ -50,8 +50,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
-  TemporaryTuple
-      dco_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+  CollectionStorageLoader
+      dco_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic raw);
 
   @protected
@@ -76,8 +76,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
-  TemporaryTuple
-      dco_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+  CollectionStorageLoader
+      dco_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic raw);
 
   @protected
@@ -238,8 +238,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  TemporaryTuple
-      sse_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+  CollectionStorageLoader
+      sse_decode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           SseDeserializer deserializer);
 
   @protected
@@ -265,8 +265,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  TemporaryTuple
-      sse_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+  CollectionStorageLoader
+      sse_decode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           SseDeserializer deserializer);
 
   @protected
@@ -694,8 +694,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformPointer
-      cst_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
-          TemporaryTuple raw);
+      cst_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          CollectionStorageLoader raw);
 
   @protected
   PlatformPointer
@@ -717,8 +717,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformPointer
-      cst_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
-          TemporaryTuple raw);
+      cst_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          CollectionStorageLoader raw);
 
   @protected
   int cst_encode_account_storage_key(AccountStorageKey raw);
@@ -774,8 +774,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-      sse_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
-          TemporaryTuple self, SseSerializer serializer);
+      sse_encode_Auto_Owned_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          CollectionStorageLoader self, SseSerializer serializer);
 
   @protected
   void
@@ -801,8 +801,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-      sse_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
-          TemporaryTuple self, SseSerializer serializer);
+      sse_encode_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          CollectionStorageLoader self, SseSerializer serializer);
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
@@ -1079,16 +1079,16 @@ class RustLibWire extends BaseWire {
           .rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollection(
               ptr);
 
-  void rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+  void rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic ptr) =>
       wasmModule
-          .rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+          .rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
               ptr);
 
-  void rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+  void rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic ptr) =>
       wasmModule
-          .rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+          .rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
               ptr);
 }
 
@@ -1178,10 +1178,10 @@ class RustLibWasmModule implements WasmModule {
           dynamic ptr);
 
   external void
-      rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+      rust_arc_increment_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic ptr);
 
   external void
-      rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionTemporaryTuple(
+      rust_arc_decrement_strong_count_RustOpaque_stdsyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic ptr);
 }

@@ -42,8 +42,6 @@ impl RefUnwindSafe for ModManager {}
 #[derive(Debug, Deserialize, Serialize, Clone, Default, Eq, PartialEq, Hash)]
 pub struct CollectionId(pub String);
 
-pub struct TemporaryTuple(pub Collection, pub StorageLoader);
-
 const COLLECTION_FILE_NAME: &str = "collection.json";
 const COLLECTION_BASE: &str = "collections";
 
@@ -58,7 +56,7 @@ impl Collection {
         version_metadata: VersionMetadata,
         mod_loader: Option<ModLoader>,
         advanced_options: Option<AdvancedOptions>,
-    ) -> anyhow::Result<TemporaryTuple> {
+    ) -> anyhow::Result<(Collection, StorageLoader)> {
         let now_time = Utc::now();
         let loader = Collection::create_loader(display_name.clone())?;
         let entry_path = loader.base_path.clone();
@@ -82,8 +80,9 @@ impl Collection {
 
         loader.save(&collection)?;
 
-        Ok(TemporaryTuple(collection, loader))
+        Ok((collection, loader))
     }
+
     /// use project id(slug also works) to add mod, will deal with dependencies insertion
     #[frb(ignore)]
     pub async fn add_mod(

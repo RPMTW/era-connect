@@ -46,22 +46,22 @@ class Collection extends RustOpaque {
   );
 }
 
-// Rust type: flutter_rust_bridge::RustOpaque<std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>>
+// Rust type: flutter_rust_bridge::RustOpaque<std::sync::RwLock<(crate::api::shared_resources::collection::Collection,crate::api::backend_exclusive::storage::storage_loader::StorageLoader,)>>
 @sealed
-class TemporaryTuple extends RustOpaque {
-  TemporaryTuple.dcoDecode(List<dynamic> wire)
+class CollectionStorageLoader extends RustOpaque {
+  CollectionStorageLoader.dcoDecode(List<dynamic> wire)
       : super.dcoDecode(wire, _kStaticData);
 
-  TemporaryTuple.sseDecode(int ptr, int externalSizeOnNative)
+  CollectionStorageLoader.sseDecode(int ptr, int externalSizeOnNative)
       : super.sseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_TemporaryTuple,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_TemporaryTuple,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_TemporaryTuplePtr,
+    rustArcIncrementStrongCount: RustLib
+        .instance.api.rust_arc_increment_strong_count_CollectionStorageLoader,
+    rustArcDecrementStrongCount: RustLib
+        .instance.api.rust_arc_decrement_strong_count_CollectionStorageLoader,
+    rustArcDecrementStrongCountPtr: RustLib.instance.api
+        .rust_arc_decrement_strong_count_CollectionStorageLoaderPtr,
   );
 }
 

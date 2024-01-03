@@ -272,17 +272,20 @@ fn wire_get_ui_layout_storage_impl(
     )
 }
 fn wire_get_vanilla_versions_impl(port_: flutter_rust_bridge::for_generated::MessagePort) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "get_vanilla_versions",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            move |context| {
-                transform_result_dco((move || {
-                    crate::api::shared_resources::entry::get_vanilla_versions()
-                })())
+            move |context| async move {
+                transform_result_dco(
+                    (move || async move {
+                        crate::api::shared_resources::entry::get_vanilla_versions().await
+                    })()
+                    .await,
+                )
             }
         },
     )
@@ -522,7 +525,10 @@ impl SseDecode
 
 impl SseDecode
     for flutter_rust_bridge::RustOpaque<
-        std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
+        std::sync::RwLock<(
+            crate::api::shared_resources::collection::Collection,
+            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
+        )>,
     >
 {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1586,7 +1592,10 @@ impl SseEncode
 
 impl SseEncode
     for flutter_rust_bridge::RustOpaque<
-        std::sync::RwLock<crate::api::shared_resources::collection::TemporaryTuple>,
+        std::sync::RwLock<(
+            crate::api::shared_resources::collection::Collection,
+            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
+        )>,
     >
 {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {

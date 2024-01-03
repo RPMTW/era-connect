@@ -34,7 +34,7 @@ use crate::api::backend_exclusive::download::{execute_and_progress, DownloadBias
 use crate::api::backend_exclusive::vanilla::launcher::{launch_game, prepare_vanilla_download};
 use crate::api::shared_resources::authentication::msa_flow::LoginFlowErrors;
 use crate::api::shared_resources::collection::{
-    AdvancedOptions, Collection, CollectionId, ModLoader, ModLoaderType, TemporaryTuple,
+    AdvancedOptions, Collection, CollectionId, ModLoader, ModLoaderType,
 };
 use crate::frb_generated::StreamSink;
 
@@ -161,11 +161,11 @@ pub async fn create_collection(
         dbg!(p);
     });
 
-    let TemporaryTuple(mut collection, loader) =
+    let (mut collection, loader) =
         Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
 
     // NOTE: testing purposes
-    collection.add_mod("rpmtw-update-mod", vec![], None).await?;
+    collection.add_mod("rpmtw-pdate-mod", vec![], None).await?;
     debug!(
         "{:?}",
         &collection
@@ -178,7 +178,6 @@ pub async fn create_collection(
     collection.download_mods().await?;
 
     loader.save(&collection)?;
-    let collection_id = collection.get_collection_id();
 
     info!(
         "Successfully created collection basic file at {}",
