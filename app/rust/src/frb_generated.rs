@@ -232,26 +232,29 @@ fn wire_get_ui_layout_storage_impl(
     )
 }
 fn wire_get_vanilla_versions_impl(port_: flutter_rust_bridge::for_generated::MessagePort) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "get_vanilla_versions",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            move |context| {
-                transform_result_dco((move || {
-                    crate::api::shared_resources::entry::get_vanilla_versions()
-                })())
+            move |context| async move {
+                transform_result_dco(
+                    (move || async move {
+                        crate::api::shared_resources::entry::get_vanilla_versions().await
+                    })()
+                    .await,
+                )
             }
         },
     )
 }
 fn wire_minecraft_login_flow_impl(port_: flutter_rust_bridge::for_generated::MessagePort) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "minecraft_login_flow", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Stream }, move || {  move |context|  {
-                    transform_result_dco((move ||   {
-                         crate::api::shared_resources::entry::minecraft_login_flow(StreamSink::new(context.rust2dart_context().stream_sink::<_,crate::api::shared_resources::authentication::msa_flow::LoginFlowEvent>()))
-                    })())
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "minecraft_login_flow", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Stream }, move || {  move |context| async move {
+                    transform_result_dco((move ||  async move {
+                         crate::api::shared_resources::entry::minecraft_login_flow(StreamSink::new(context.rust2dart_context().stream_sink::<_,crate::api::shared_resources::authentication::msa_flow::LoginFlowEvent>())).await
+                    })().await)
                 } })
 }
 fn wire_remove_minecraft_account_impl(

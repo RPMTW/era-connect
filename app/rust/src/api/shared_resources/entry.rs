@@ -90,7 +90,6 @@ pub fn get_ui_layout_storage(key: UILayoutKey) -> UILayoutValue {
     value
 }
 
-#[tokio::main(flavor = "current_thread")]
 pub async fn get_vanilla_versions() -> anyhow::Result<Vec<VersionMetadata>> {
     vanilla::version::get_versions().await
 }
@@ -119,7 +118,6 @@ pub fn remove_minecraft_account(uuid: Uuid) -> anyhow::Result<()> {
     Ok(())
 }
 
-#[tokio::main()]
 pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::Result<()> {
     let result = authentication::msa_flow::login_flow(&skin).await;
     match result {
