@@ -185,6 +185,7 @@ impl Collection {
                     let path = collection_base_dir.join(&base_entry_path);
                     let loader = StorageLoader::new(file_name.clone(), Cow::Borrowed(&path));
                     let mut a = loader.load::<Collection>()?;
+                    dbg!(&a);
                     a.entry_path = path;
                     loader.save(&a)?;
                     loaders.push(loader);

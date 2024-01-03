@@ -2,21 +2,18 @@ use anyhow::{bail, Context};
 use dashmap::DashMap;
 use flutter_rust_bridge::frb;
 use log::{debug, info, warn};
+use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::{fs::create_dir_all, panic::AssertUnwindSafe};
 
 use uuid::Uuid;
 
-use crate::api::{
-    backend_exclusive::{
-        modding::{
-            forge::{prepare_forge_download, process_forge},
-            quilt::prepare_quilt_download,
-        },
-        vanilla::manifest::fetch_game_manifest,
+use crate::api::backend_exclusive::{
+    modding::{
+        forge::{prepare_forge_download, process_forge},
+        quilt::prepare_quilt_download,
     },
-    shared_resources::collection::ModLoaderType,
+    vanilla::manifest::fetch_game_manifest,
 };
 
 pub use crate::api::backend_exclusive::storage::{
@@ -47,6 +44,7 @@ lazy_static::lazy_static! {
     pub static ref STORAGE: StorageState = StorageState::new();
 }
 
+#[frb(init)]
 pub fn setup_logger() -> anyhow::Result<()> {
     use chrono::Local;
 
@@ -89,7 +87,6 @@ pub fn get_ui_layout_storage(key: UILayoutKey) -> UILayoutValue {
     value
 }
 
-#[tokio::main(flavor = "current_thread")]
 pub async fn get_vanilla_versions() -> anyhow::Result<Vec<VersionMetadata>> {
     vanilla::version::get_versions().await
 }
@@ -118,7 +115,6 @@ pub fn remove_minecraft_account(uuid: Uuid) -> anyhow::Result<()> {
     Ok(())
 }
 
-#[tokio::main()]
 pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::Result<()> {
     let result = authentication::msa_flow::login_flow(&skin).await;
     match result {
@@ -131,18 +127,18 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
             storage.add_account(account.clone(), true);
             storage.save()?;
 
-            skin.add(LoginFlowEvent::Success(account));
+            skin.add(LoginFlowEvent::Success(account))?;
             info!("Successfully login minecraft account");
         }
         Err(e) => {
             skin.add(LoginFlowEvent::Error(LoginFlowErrors::UnknownError(
                 format!("{e:#}"),
-            )));
+            )))?;
             warn!("Failed to login minecraft account: {:#}", e);
         }
     }
 
-    skin.close();
+    skin.close()?;
     Ok(())
 }
 
@@ -169,7 +165,7 @@ pub async fn create_collection(
         Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
 
     // NOTE: testing purposes
-    AssertUnwindSafe(collection.add_mod("rpmtw-update-mod", vec![], None)).await?;
+    collection.add_mod("rpmtw-update-mod", vec![], None).await?;
     debug!(
         "{:?}",
         &collection
@@ -179,7 +175,7 @@ pub async fn create_collection(
             .map(|x| (&x.name, &x.mod_version, &x.incompatiable_mods))
             .collect::<Vec<_>>()
     );
-    AssertUnwindSafe(collection.download_mods()).await?;
+    collection.download_mods().await?;
 
     loader.save(&collection)?;
     let collection_id = collection.get_collection_id();
