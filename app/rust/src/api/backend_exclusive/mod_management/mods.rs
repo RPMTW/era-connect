@@ -1,3 +1,4 @@
+use log::debug;
 use log::info;
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -145,14 +146,10 @@ impl ModManager {
             let path = mod_entry.path();
             let raw_hash = get_hash(&path).await?;
             let hash = hex::encode(raw_hash);
-            let already_contained_in_collection = self.mods.iter().any(|x| {
-                x.mod_data
-                    .0
-                    .files
-                    .iter()
-                    .map(|x| &x.hashes.sha1)
-                    .any(|x| x == &hash)
-            });
+            let already_contained_in_collection = self
+                .mods
+                .iter()
+                .any(|x| x.mod_data.0.files.iter().any(|x| &x.hashes.sha1 == &hash));
             if !already_contained_in_collection {
                 let version = modrinth
                     .get_version_from_hash(&hash)
@@ -208,11 +205,7 @@ impl ModManager {
             overrides: mod_override.to_vec(),
             mod_data: minecraft_mod_data,
         };
-        if !self
-            .mods
-            .iter()
-            .any(|x| x.mod_data == mod_metadata.mod_data)
-        {
+        if !self.mods.contains(&mod_metadata) {
             self.mod_dependencies_resolve(&mod_metadata.mod_data, mod_override)
                 .await?;
             self.mods.push(mod_metadata);
@@ -277,7 +270,7 @@ impl ModManager {
                 }
             })
             .filter(|x| {
-                let versions = x
+                let supported_game_versions = x
                     .game_versions
                     .iter()
                     .filter_map(|x| all_game_version.iter().find(|y| &y.id == x))
@@ -293,7 +286,7 @@ impl ModManager {
                     if collection_game_version.version_type == VersionType::Release {
                         let target_semver =
                             semver::Version::parse(&collection_game_version.id).map(|x| x.minor);
-                        versions.iter().any(|x| {
+                        supported_game_versions.iter().any(|x| {
                             if let (Ok(supported_version), Ok(target)) = (
                                 semver::Version::parse(&x.id).map(|x| x.minor),
                                 target_semver.as_ref(),
@@ -304,13 +297,15 @@ impl ModManager {
                             }
                         })
                     } else {
-                        versions.iter().any(|x| x.id == collection_game_version.id)
+                        supported_game_versions
+                            .iter()
+                            .any(|x| x.id == collection_game_version.id)
                     }
                 } else {
                     true
                 }
             })
-            .max_by(|x, y| x.date_published.cmp(&y.date_published));
+            .max_by_key(|x| x.date_published);
 
         self.add_mod(
             version.context("Can't find suitible mod")?.into(),
@@ -327,8 +322,8 @@ impl ModManager {
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ModOverride {
     IgnoreMinorGameVersion,
-    QuiltFabricCompatibility,
     IgnoreAllGameVersion,
+    QuiltFabricCompatibility,
     IgnoreModLoader,
 }
 
