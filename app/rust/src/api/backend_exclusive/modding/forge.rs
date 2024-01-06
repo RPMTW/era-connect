@@ -209,7 +209,7 @@ pub async fn prepare_forge_download<'a>(
             .context("the next argument of -cp doesn't exist")?;
         let mut a = classpaths
             .split(':')
-            .map(|x| x.to_string())
+            .map(ToString::to_string)
             .collect::<HashSet<_>>();
         a.extend(classpath);
         *classpaths = a.into_iter().collect::<Vec<_>>().join(":");
@@ -260,14 +260,9 @@ pub async fn process_forge<'a>(
         .find(|x| x.name.contains("client"))
         .context("client installer doesn't exist")?
         .name
-        .as_str()
-        .to_string();
-    let minecraft_jar = jvm_options.primary_jar.to_owned();
-    let game_directory = jvm_options
-        .game_directory
-        .clone()
-        .to_string_lossy()
-        .to_string();
+        .clone();
+    let minecraft_jar = jvm_options.primary_jar.clone();
+    let game_directory = jvm_options.game_directory.to_string_lossy().to_string();
     data.merged_mappings
         .convert_maven_to_path(&libraries_folder)?;
     data.mappings.convert_maven_to_path(&libraries_folder)?;
@@ -385,7 +380,7 @@ pub async fn process_forge<'a>(
 fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmOptions) -> Vec<String> {
     let mut parsed_argument = Vec::new();
 
-    for argument in jvm_flags.iter() {
+    for argument in jvm_flags {
         let mut s = argument.as_str();
         let mut buf = String::with_capacity(s.len());
 
@@ -434,7 +429,7 @@ fn process_client(
 ) -> Vec<String> {
     let mut parsed_argument = Vec::new();
 
-    for argument in jvm_flags.iter() {
+    for argument in jvm_flags {
         let mut s = argument.as_str();
         let mut buf = String::with_capacity(s.len());
 

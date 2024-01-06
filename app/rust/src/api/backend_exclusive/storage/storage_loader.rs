@@ -14,11 +14,14 @@ pub struct StorageLoader {
     file_name: String,
     base_path: PathBuf,
 }
+
+#[must_use]
 pub fn get_global_shared_path() -> PathBuf {
     DATA_DIR.join("shared")
 }
 
 impl StorageLoader {
+    #[must_use]
     pub fn new(file_name: String, base_path: Cow<Path>) -> Self {
         let base_path = match base_path {
             Cow::Borrowed(c) => c.to_path_buf(),
