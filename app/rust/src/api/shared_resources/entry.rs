@@ -166,15 +166,6 @@ pub async fn create_collection(
 
     // NOTE: testing purposes
     collection.add_mod("rpmtw-pdate-mod", vec![], None).await?;
-    debug!(
-        "{:?}",
-        &collection
-            .mod_manager
-            .mods
-            .iter()
-            .map(|x| (&x.name, &x.mod_version, &x.incompatiable_mods))
-            .collect::<Vec<_>>()
-    );
     collection.download_mods().await?;
 
     loader.save(&collection)?;

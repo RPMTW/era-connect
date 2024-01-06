@@ -1,4 +1,3 @@
-use log::debug;
 use log::info;
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -79,6 +78,7 @@ impl PartialEq for ModManager {
 impl Eq for ModManager {}
 
 impl ModManager {
+    #[must_use]
     pub fn new(
         game_directory: PathBuf,
         mod_loader: Option<ModLoader>,
@@ -149,7 +149,7 @@ impl ModManager {
             let already_contained_in_collection = self
                 .mods
                 .iter()
-                .any(|x| x.mod_data.0.files.iter().any(|x| &x.hashes.sha1 == &hash));
+                .any(|x| x.mod_data.0.files.iter().any(|x| x.hashes.sha1 == hash));
             if !already_contained_in_collection {
                 let version = modrinth
                     .get_version_from_hash(&hash)
@@ -173,11 +173,11 @@ impl ModManager {
         for dept in &minecraft_mod.0.dependencies {
             if let Some(dependency) = &dept.version_id {
                 let ver = modrinth.get_version(dependency).await?;
-                self.add_mod(ver.into(), vec![Tag::Dependencies], &mod_override)
+                self.add_mod(ver.into(), vec![Tag::Dependencies], mod_override)
                     .await?;
             } else if let Some(project) = &dept.project_id {
                 let ver = modrinth.get_project(project).await?;
-                self.add_project(ver, vec![Tag::Dependencies], &mod_override)
+                self.add_project(ver, vec![Tag::Dependencies], mod_override)
                     .await?;
             }
         }
@@ -202,7 +202,7 @@ impl ModManager {
             mod_version: minecraft_mod_data.0.version_number.clone(),
             tag,
             incompatiable_mods: None,
-            overrides: mod_override.to_vec(),
+            overrides: mod_override.clone(),
             mod_data: minecraft_mod_data,
         };
         if !self.mods.contains(&mod_metadata) {

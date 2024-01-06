@@ -1,4 +1,3 @@
-use std::panic::{RefUnwindSafe, UnwindSafe};
 pub use std::path::PathBuf;
 use std::{borrow::Cow, fs::create_dir_all};
 
@@ -35,9 +34,6 @@ pub struct Collection {
     pub entry_path: PathBuf,
     pub mod_manager: ModManager,
 }
-
-impl UnwindSafe for ModManager {}
-impl RefUnwindSafe for ModManager {}
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default, Eq, PartialEq, Hash)]
 pub struct CollectionId(pub String);
