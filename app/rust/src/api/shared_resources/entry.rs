@@ -1,0 +1,192 @@
+use anyhow::{bail, Context};
+use dashmap::DashMap;
+use flutter_rust_bridge::frb;
+use log::{info, warn};
+use once_cell::sync::Lazy;
+use std::fs::create_dir_all;
+pub use std::path::PathBuf;
+use std::sync::Arc;
+
+use uuid::Uuid;
+
+pub use crate::api::backend_exclusive::storage::{
+    account_storage::{AccountStorage, AccountStorageKey, AccountStorageValue},
+    ui_layout::{UILayout, UILayoutKey, UILayoutValue},
+};
+
+use crate::api::backend_exclusive::{
+    download::Progress,
+    modding::{forge::launch_forge, quilt::launch_quilt},
+    storage::{storage_loader::StorageInstance, storage_state::StorageState},
+    vanilla::launcher::launch_vanilla,
+};
+use crate::api::shared_resources::authentication::msa_flow::LoginFlowEvent;
+use crate::api::shared_resources::authentication::{self, account::MinecraftSkin};
+
+use crate::api::backend_exclusive::vanilla;
+pub use crate::api::backend_exclusive::vanilla::version::VersionMetadata;
+
+use crate::api::shared_resources::authentication::msa_flow::LoginFlowErrors;
+use crate::api::shared_resources::collection::{
+    AdvancedOptions, Collection, CollectionId, ModLoader,
+};
+use crate::frb_generated::StreamSink;
+
+use super::collection::ModLoaderType;
+
+pub static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    dirs::data_dir()
+        .expect("Can't find data_dir")
+        .join("era-connect")
+});
+pub static DOWNLOAD_PROGRESS: Lazy<Arc<DashMap<CollectionId, Progress>>> =
+    Lazy::new(|| Arc::new(DashMap::default()));
+pub static STORAGE: Lazy<StorageState> = Lazy::new(|| StorageState::new());
+
+#[frb(init)]
+pub fn setup_logger() -> anyhow::Result<()> {
+    use chrono::Local;
+
+    let file_name = format!("{}.log", Local::now().format("%Y-%m-%d-%H-%M-%S"));
+    let file_path = DATA_DIR.join("logs").join(file_name);
+    let parent = file_path
+        .parent()
+        .context("Failed to get the parent directory of logs directory")?;
+    create_dir_all(parent)?;
+
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "[{}] {} | {}:{} | {}",
+                Local::now().format("%Y-%m-%d %H:%M:%S"),
+                record.level(),
+                record.file().unwrap_or_else(|| record.target()),
+                record.line().unwrap_or(0),
+                message
+            ));
+        })
+        .chain(std::io::stdout())
+        .chain(fern::log_file(file_path)?)
+        .filter(|metadata| {
+            if cfg!(debug_assertions) {
+                metadata.level() <= log::LevelFilter::Debug
+            } else {
+                metadata.level() <= log::LevelFilter::Info
+            }
+        })
+        .apply()?;
+
+    info!("Successfully setup logger");
+    Ok(())
+}
+
+#[frb(sync)]
+pub fn get_ui_layout_storage(key: UILayoutKey) -> UILayoutValue {
+    let value = STORAGE.ui_layout.blocking_read().get_value(key);
+    value
+}
+
+pub async fn get_vanilla_versions() -> anyhow::Result<Vec<VersionMetadata>> {
+    vanilla::version::get_versions().await
+}
+
+pub fn set_ui_layout_storage(value: UILayoutValue) -> anyhow::Result<()> {
+    let mut storage = STORAGE.ui_layout.blocking_write();
+    storage.set_value(value);
+    storage.save()?;
+    Ok(())
+}
+
+#[frb(sync)]
+pub fn get_account_storage(key: AccountStorageKey) -> AccountStorageValue {
+    STORAGE.account_storage.blocking_read().get_value(key)
+}
+
+#[frb(sync)]
+pub fn get_skin_file_path(skin: MinecraftSkin) -> String {
+    skin.get_head_file_path().to_string_lossy().to_string()
+}
+
+pub fn remove_minecraft_account(uuid: Uuid) -> anyhow::Result<()> {
+    let mut storage = STORAGE.account_storage.blocking_write();
+    storage.remove_account(uuid);
+    storage.save()?;
+    Ok(())
+}
+
+pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::Result<()> {
+    let result = authentication::msa_flow::login_flow(&skin).await;
+    match result {
+        Ok(account) => {
+            if let Some(skin) = account.skins.first() {
+                skin.download_skin().await?;
+            }
+
+            let mut storage = STORAGE.account_storage.write().await;
+            storage.add_account(account.clone(), true);
+            storage.save()?;
+
+            skin.add(LoginFlowEvent::Success(account))?;
+            info!("Successfully login minecraft account");
+        }
+        Err(e) => {
+            skin.add(LoginFlowEvent::Error(LoginFlowErrors::UnknownError(
+                format!("{e:#}"),
+            )))?;
+            warn!("Failed to login minecraft account: {:#}", e);
+        }
+    }
+
+    skin.close()?;
+    Ok(())
+}
+
+pub async fn create_collection(
+    display_name: String,
+    version_metadata: VersionMetadata,
+    mod_loader: Option<ModLoader>,
+    advanced_options: Option<AdvancedOptions>,
+) -> anyhow::Result<()> {
+    use chrono::{Duration, Utc};
+
+    let (loader, entry_path) = Collection::create(display_name.clone())?;
+    let now_time = Utc::now();
+
+    let collection = Collection {
+        display_name,
+        minecraft_version: version_metadata,
+        mod_loader,
+        created_at: now_time,
+        updated_at: now_time,
+        played_time: Duration::seconds(0),
+        advanced_options,
+        entry_path,
+    };
+    loader.save(&collection)?;
+    info!(
+        "Successfully created collection basic file at {}",
+        collection.entry_path.display()
+    );
+
+    Ok(())
+}
+
+pub async fn launch_game(collection: Collection) -> anyhow::Result<()> {
+    let collection_id = collection.get_collection_id();
+    let mod_loader_clone = collection.mod_loader.clone();
+    let handle = tokio::spawn(async move {
+        if let Some(mod_loader) = mod_loader_clone {
+            match mod_loader.mod_loader_type {
+                ModLoaderType::Forge | ModLoaderType::NeoForge => {
+                    launch_forge(collection, collection_id).await?
+                }
+                ModLoaderType::Quilt => launch_quilt(collection, collection_id).await?,
+                _ => bail!("you useless!"),
+            }
+        } else {
+            launch_vanilla(collection, collection_id).await?
+        }
+    });
+    handle.await??;
+    Ok(())
+}

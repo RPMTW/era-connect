@@ -43,7 +43,7 @@ class LoginAccountDialog extends StatelessWidget {
             description: '您的帳號（${account.username}）已成功登入！',
             actions: [
               EraPrimaryButton.icon(
-                icon: const Icon(Icons.check_rounded),
+                icon: EraIcon.material(Icons.check_rounded),
                 onPressed: () {
                   callback?.call();
                   Navigator.of(context).pop();
@@ -61,8 +61,8 @@ class LoginAccountDialog extends StatelessWidget {
             if (stageSnapshot.hasData) {
               final stage = stageSnapshot.data!;
               final userAlreadyLogin =
-                  stage != LoginFlowStage.FetchingDeviceCode &&
-                      stage != LoginFlowStage.WaitingForUser;
+                  stage != LoginFlowStage.fetchingDeviceCode &&
+                      stage != LoginFlowStage.waitingForUser;
 
               if (userAlreadyLogin) {
                 return const EraAlertDialog(
@@ -111,13 +111,13 @@ class LoginAccountDialog extends StatelessWidget {
       ),
       actions: [
         EraSecondaryButton.icon(
-          icon: const Icon(Icons.content_copy_rounded),
+          icon: EraIcon.material(Icons.content_copy_rounded),
           onPressed: () {
             _copyCode(userCode);
           },
         ),
         EraPrimaryButton.icon(
-            icon: const EraIcon(name: 'open_jam'),
+            icon: EraIcon.assets('open_jam'),
             onPressed: () {
               _copyCode(userCode);
               launchUrlString(deviceCode.verificationUri);
@@ -148,20 +148,20 @@ class _LoginErrorDialog extends StatelessWidget {
           '本帳號需要在 [Xbox 頁面](live.xbox.com/ageverification) 完成成人驗證（僅限南韓）。';
 
       switch (error.field0) {
-        case XstsTokenErrorType.DoesNotHaveXboxAccount:
+        case XstsTokenErrorType.doesNotHaveXboxAccount:
           title = '未連結 Xbox 帳號';
           description =
               '您的 Microsoft 帳號尚未連結 Xbox 帳號。請確認您登入的帳號是否正確，並且您至少在官方啟動器中登入過一次這個帳號。';
-        case XstsTokenErrorType.CountryNotAvailable:
+        case XstsTokenErrorType.countryNotAvailable:
           title = '國家或地區不受支援';
           description = '本帳號所在的國家或地區不受 Xbox Live 支援，因此無法登入 Minecraft 帳號。';
-        case XstsTokenErrorType.NeedsAdultVerificationKR1:
+        case XstsTokenErrorType.needsAdultVerificationKr1:
           title = '未完成成人驗證';
           description = needsAdultVerification;
-        case XstsTokenErrorType.NeedsAdultVerificationKR2:
+        case XstsTokenErrorType.needsAdultVerificationKr2:
           title = '未完成成人驗證';
           description = needsAdultVerification;
-        case XstsTokenErrorType.ChildAccount:
+        case XstsTokenErrorType.childAccount:
           title = '未成年帳號';
           description = '''您的帳號為未成年帳號，根據 Microsoft (微軟) 政策限制，不允許未成年帳號透過第三方啟動器登入。
           \\
@@ -213,7 +213,7 @@ class _LoginErrorDialog extends StatelessWidget {
       ),
       actions: [
         EraSecondaryButton.icon(
-          icon: const Icon(Icons.close_rounded),
+          icon: EraIcon.material(Icons.close_rounded),
           onPressed: () {
             callback?.call();
             Navigator.of(context).pop();

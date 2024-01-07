@@ -1,5 +1,3 @@
-import 'package:era_connect/api/ffi.dart' as ffi;
-import 'package:era_connect/api/gen/bridge_generated.dart' as bridge;
 import 'package:era_connect/api/lib.dart';
 import 'package:era_connect/api/storage/account_storage.dart';
 import 'package:era_connect/dialog/setup/login_account.dart';
@@ -9,11 +7,11 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../pages/main_page_test.mocks.dart';
 import '../../test_util.dart';
-import 'login_account_test.mocks.dart';
 
 @GenerateMocks([StorageApi, AccountStorage, AccountToken, MinecraftSkin])
-@GenerateNiceMocks([MockSpec<bridge.NativeImpl>()])
+@GenerateNiceMocks([MockSpec<NativeImpl>()])
 void main() {
   testWidgets('renders a login button when the user isn\'t logged in',
       (tester) async {
@@ -33,7 +31,7 @@ void main() {
   testWidgets('renders an account tile when the user is logged in',
       (tester) async {
     // Arrange
-    ffi.api = MockNativeImpl();
+    api = MockNativeImpl();
     storageApi = MockStorageApi();
     final accountStorage = MockAccountStorage();
     const uuid = UuidValue('00000000-0000-0000-0000-000000000000');

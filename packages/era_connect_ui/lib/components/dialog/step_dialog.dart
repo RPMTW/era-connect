@@ -21,7 +21,7 @@ class _StepDialogState extends State<StepDialog> {
   /// Calls the event handler of the current step and if it returns true, calls the callback.
   void _callEvent(StepData step, StepEvent event, VoidCallback callback) {
     final eventHandler = step.onEvent;
-    final success = eventHandler == null ? true : eventHandler(event);
+    final success = eventHandler?.call(event, _contentPageIndex) ?? true;
 
     if (success) {
       callback();
@@ -39,8 +39,10 @@ class _StepDialogState extends State<StepDialog> {
     final step = _getCurrentStep();
 
     if (_contentPageIndex < step.contentPages.length - 1) {
-      setState(() {
-        _contentPageIndex++;
+      _callEvent(step, StepEvent.next, () {
+        setState(() {
+          _contentPageIndex++;
+        });
       });
       return;
     }
@@ -58,14 +60,17 @@ class _StepDialogState extends State<StepDialog> {
   }
 
   void _previousStep() {
+    final step = _getCurrentStep();
+
     if (_contentPageIndex > 0) {
-      setState(() {
-        _contentPageIndex--;
+      _callEvent(step, StepEvent.previous, () {
+        setState(() {
+          _contentPageIndex--;
+        });
       });
       return;
     }
 
-    final step = _getCurrentStep();
     _callEvent(step, StepEvent.previous, () {
       final previousStep = widget.steps[_currentStep - 1];
       _moveToStep(_currentStep - 1, previousStep.contentPages.length - 1);
@@ -172,7 +177,7 @@ class _StepDialogState extends State<StepDialog> {
             )
           ],
         ),
-        Icon(
+        EraIcon.material(
           isCurrentStep ? Icons.play_arrow_rounded : Icons.done_all_rounded,
           size: 25,
           color: context.theme.accentColor,
@@ -185,7 +190,7 @@ class _StepDialogState extends State<StepDialog> {
     final step = _getCurrentStep();
 
     return Padding(
-      key: ValueKey(_currentStep),
+      key: ValueKey('$_currentStep.$_contentPageIndex'),
       padding: const EdgeInsets.only(top: 45, bottom: 35, left: 45, right: 45),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,17 +206,19 @@ class _StepDialogState extends State<StepDialog> {
               children: [
                 if (!_isFirstStep())
                   EraSecondaryButton.icon(
-                    icon: const Icon(Icons.skip_previous_rounded,
+                    icon: EraIcon.material(Icons.skip_previous_rounded,
                         size: _iconSize),
                     isWide: _isLastStep(),
                     onPressed: () {
+                      if (_isFirstStep()) return;
                       _previousStep();
                     },
                   ),
                 EraPrimaryButton.icon(
                   icon: _isLastStep()
-                      ? const Icon(Icons.check_rounded, size: _iconSize)
-                      : const Icon(Icons.skip_next_rounded, size: _iconSize),
+                      ? EraIcon.material(Icons.check_rounded, size: _iconSize)
+                      : EraIcon.material(Icons.skip_next_rounded,
+                          size: _iconSize),
                   onPressed: () {
                     _nextStep();
                   },
@@ -233,7 +240,7 @@ class StepData {
   final String? logoBoxText;
   final bool hasBrandText;
   final List<Widget> contentPages;
-  final bool Function(StepEvent event)? onEvent;
+  final bool Function(StepEvent event, int contentPageIndex)? onEvent;
 
   const StepData(
       {this.stepName,
