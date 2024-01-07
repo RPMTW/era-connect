@@ -2,6 +2,7 @@ use anyhow::{bail, Context};
 use dashmap::DashMap;
 use flutter_rust_bridge::frb;
 use log::{info, warn};
+use once_cell::sync::Lazy;
 use std::fs::create_dir_all;
 pub use std::path::PathBuf;
 use std::sync::Arc;
@@ -41,11 +42,14 @@ use crate::api::shared_resources::collection::{
 };
 use crate::frb_generated::StreamSink;
 
-lazy_static::lazy_static! {
-    pub static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
-    pub static ref DOWNLOAD_PROGRESS: Arc<DashMap<CollectionId, Progress>> = Arc::new(DashMap::default());
-    pub static ref STORAGE: StorageState = StorageState::new();
-}
+pub static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    dirs::data_dir()
+        .expect("Can't find data_dir")
+        .join("era-connect")
+});
+pub static DOWNLOAD_PROGRESS: Lazy<Arc<DashMap<CollectionId, Progress>>> =
+    Lazy::new(|| Arc::new(DashMap::default()));
+pub static STORAGE: Lazy<StorageState> = Lazy::new(|| StorageState::new());
 
 #[frb(init)]
 pub fn setup_logger() -> anyhow::Result<()> {
