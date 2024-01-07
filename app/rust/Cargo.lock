@@ -1801,7 +1801,6 @@ dependencies = [
  "glob",
  "hex",
  "image",
- "lazy_static",
  "log",
  "oauth2",
  "once_cell",
