@@ -1804,6 +1804,7 @@ dependencies = [
  "lazy_static",
  "log",
  "oauth2",
+ "once_cell",
  "os-version",
  "rand",
  "rayon",

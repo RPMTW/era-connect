@@ -12,7 +12,7 @@ pub use crate::api::backend_exclusive::storage::storage_loader::StorageLoader;
 use crate::api::{
     backend_exclusive::{
         download::{execute_and_progress, DownloadBias},
-        mod_management::mods::{ModManager, ModOverride, Tag},
+        mod_management::mods::{ModManager, ModOverride, Tag, FERINTH},
         vanilla::version::VersionMetadata,
     },
     shared_resources::entry::DATA_DIR,
@@ -88,7 +88,7 @@ impl Collection {
         mod_override: Option<&Vec<ModOverride>>,
     ) -> anyhow::Result<()> {
         let project_id = project_id.as_ref();
-        let project = self.mod_manager.ferinth.get_project(project_id).await?;
+        let project = (&FERINTH).get_project(project_id).await?;
         self.mod_manager
             .add_project(project, tag, mod_override.unwrap_or(&Vec::new()))
             .await?;

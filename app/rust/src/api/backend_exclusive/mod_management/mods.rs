@@ -1,4 +1,5 @@
 use log::info;
+use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
@@ -61,14 +62,14 @@ impl Eq for MinecraftModData {}
 pub struct ModManager {
     pub mods: Vec<ModMetadata>,
     #[serde(skip)]
-    pub ferinth: ferinth::Ferinth,
-    #[serde(skip)]
     cache: Option<Vec<VersionMetadata>>,
     #[serde(skip)]
     game_directory: PathBuf,
     mod_loader: Option<ModLoader>,
     target_game_version: VersionMetadata,
 }
+
+pub static FERINTH: Lazy<ferinth::Ferinth> = Lazy::new(|| ferinth::Ferinth::default());
 
 impl PartialEq for ModManager {
     fn eq(&self, other: &Self) -> bool {
@@ -85,7 +86,6 @@ impl ModManager {
         target_game_version: VersionMetadata,
     ) -> Self {
         Self {
-            ferinth: ferinth::Ferinth::default(),
             mods: Vec::new(),
             cache: None,
             game_directory,
@@ -135,7 +135,7 @@ impl ModManager {
         Ok(download_args)
     }
     pub async fn scan(&mut self) -> anyhow::Result<()> {
-        let modrinth = self.ferinth.clone();
+        let modrinth = &FERINTH;
         let mod_path = self.game_directory.join("mods");
         if !mod_path.exists() {
             create_dir_all(&mod_path)?;
@@ -169,7 +169,7 @@ impl ModManager {
         minecraft_mod: &MinecraftModData,
         mod_override: &Vec<ModOverride>,
     ) -> anyhow::Result<()> {
-        let modrinth = self.ferinth.clone();
+        let modrinth = &FERINTH;
         for dept in &minecraft_mod.0.dependencies {
             if let Some(dependency) = &dept.version_id {
                 let ver = modrinth.get_version(dependency).await?;
@@ -191,7 +191,7 @@ impl ModManager {
         tag: Vec<Tag>,
         mod_override: &Vec<ModOverride>,
     ) -> anyhow::Result<()> {
-        let modrinth = self.ferinth.clone();
+        let modrinth = &FERINTH;
         let project = modrinth
             .get_project(&minecraft_mod_data.0.project_id)
             .await?;
@@ -228,7 +228,7 @@ impl ModManager {
             self.cache = Some(get_versions().await?);
             self.cache.as_deref().unwrap()
         };
-        let modrinth = self.ferinth.clone();
+        let modrinth = &FERINTH;
 
         let versions = modrinth
             .get_multiple_versions(
