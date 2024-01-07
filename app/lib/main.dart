@@ -26,15 +26,6 @@ void main() async {
   });
 }
 
-// void testRust() async {
-//   final t = await api.getVanillaVersions();
-//   final p = t.elementAt(0);
-//   final forge = await api.createCollection(
-//     displayName: "fuck",
-//     versionMetadata: p,
-//   );
-// }
-
 class EraConnectApp extends StatefulWidget {
   const EraConnectApp({Key? key}) : super(key: key);
 

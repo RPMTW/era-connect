@@ -1,6 +1,6 @@
 use anyhow::bail;
 use anyhow::{Context, Result};
-use log::error;
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 pub use std::path::PathBuf;
@@ -11,11 +11,13 @@ use super::assets::{extract_assets, parallel_assets_download};
 use super::library::{os_match, parallel_library, Library};
 use super::manifest::{self, Argument, GameManifest};
 use super::rules::{ActionType, OsName};
+use crate::api::backend_exclusive::download::{execute_and_progress, DownloadBias};
+use crate::api::backend_exclusive::vanilla::manifest::fetch_game_manifest;
 use crate::api::backend_exclusive::{
     download::{download_file, extract_filename, validate_sha1, DownloadArgs},
     storage::storage_loader::get_global_shared_path,
 };
-use crate::api::shared_resources::collection::Collection;
+use crate::api::shared_resources::collection::{Collection, CollectionId};
 use crate::api::shared_resources::entry::STORAGE;
 
 #[derive(Debug, PartialEq, Deserialize)]
@@ -91,6 +93,22 @@ pub async fn launch_game(launch_args: LaunchArgs) -> Result<()> {
         .spawn();
     b?.wait().await?;
     Ok(())
+}
+pub async fn launch_vanilla(
+    collection: Collection,
+    collection_id: CollectionId,
+) -> anyhow::Result<anyhow::Result<()>> {
+    info!("Starts Vanilla Downloading");
+    let vanilla_bias = DownloadBias {
+        start: 0.0,
+        end: 100.0,
+    };
+    let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
+    let (vanilla_download_args, vanilla_arguments) =
+        prepare_vanilla_download(collection, game_manifest.clone()).await?;
+    execute_and_progress(collection_id, vanilla_download_args, vanilla_bias).await?;
+
+    Ok(launch_game(vanilla_arguments.launch_args).await)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
