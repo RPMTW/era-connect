@@ -1,3 +1,4 @@
+import 'package:era_connect/src/rust/api/shared_resources/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:era_connect/src/rust/frb_generated.dart';
 import 'dart:io';
@@ -25,15 +26,6 @@ void main() async {
     runApp(const EraConnectApp());
   });
 }
-
-// void testRust() async {
-//   final t = await api.getVanillaVersions();
-//   final p = t.elementAt(0);
-//   final forge = await api.createCollection(
-//     displayName: "fuck",
-//     versionMetadata: p,
-//   );
-// }
 
 class EraConnectApp extends StatefulWidget {
   const EraConnectApp({Key? key}) : super(key: key);

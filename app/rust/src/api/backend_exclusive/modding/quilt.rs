@@ -1,6 +1,7 @@
 use std::sync::{atomic::AtomicUsize, Arc};
 
 use anyhow::{anyhow, Context, Result};
+use log::info;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::{
@@ -8,9 +9,20 @@ use tokio::{
     io::AsyncReadExt,
 };
 
-use crate::api::backend_exclusive::{
-    download::{download_file, validate_sha1, DownloadArgs, HandlesType},
-    vanilla::launcher::{GameOptions, JvmOptions, LaunchArgs, ProcessedArguments},
+use crate::api::{
+    backend_exclusive::{
+        download::{
+            download_file, execute_and_progress, validate_sha1, DownloadArgs, DownloadBias,
+            HandlesType,
+        },
+        vanilla::{
+            launcher::{
+                prepare_vanilla_download, GameOptions, JvmOptions, LaunchArgs, ProcessedArguments,
+            },
+            manifest::fetch_game_manifest,
+        },
+    },
+    shared_resources::collection::Collection,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -145,6 +157,41 @@ pub async fn prepare_quilt_download<'a>(
         },
     ))
 }
+
+pub async fn full_quilt_download(collection: &Collection) -> anyhow::Result<LaunchArgs> {
+    let collection_id = collection.get_collection_id();
+    info!("Starts Vanilla Downloading");
+    let vanilla_bias = DownloadBias {
+        start: 0.0,
+        end: 80.0,
+    };
+    let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
+    let (vanilla_download_args, vanilla_arguments) =
+        prepare_vanilla_download(&collection, game_manifest.clone()).await?;
+    execute_and_progress(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
+
+    info!("Starts Quilt Downloading");
+    let quilt_download_bias = DownloadBias {
+        start: 90.0,
+        end: 100.0,
+    };
+
+    let (quilt_download_args, processed_arguments) = prepare_quilt_download(
+        vanilla_arguments.launch_args,
+        vanilla_arguments.jvm_args,
+        vanilla_arguments.game_args,
+    )
+    .await?;
+    execute_and_progress(
+        collection_id.clone(),
+        quilt_download_args,
+        quilt_download_bias,
+    )
+    .await?;
+
+    Ok(processed_arguments.launch_args)
+}
+
 fn convert_maven_to_path(input: &str) -> String {
     let parts: Vec<&str> = input.split(':').collect();
     let org = parts[0].replace('.', "/");

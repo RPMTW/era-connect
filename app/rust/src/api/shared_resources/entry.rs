@@ -1,28 +1,22 @@
-use anyhow::{bail, Context};
+use anyhow::Context;
 use dashmap::DashMap;
 use flutter_rust_bridge::frb;
 use log::{debug, info, warn};
-use std::fs::create_dir_all;
+use once_cell::sync::Lazy;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::{fs::create_dir_all, time::Duration};
 
 use uuid::Uuid;
-
-use crate::api::backend_exclusive::{
-    modding::{
-        forge::{prepare_forge_download, process_forge},
-        quilt::prepare_quilt_download,
-    },
-    vanilla::manifest::fetch_game_manifest,
-};
 
 pub use crate::api::backend_exclusive::storage::{
     account_storage::{AccountStorage, AccountStorageKey, AccountStorageValue},
     ui_layout::{UILayout, UILayoutKey, UILayoutValue},
 };
 
-use crate::api::backend_exclusive::storage::{
-    storage_loader::StorageInstance, storage_state::StorageState,
+use crate::api::backend_exclusive::{
+    download::Progress,
+    storage::{storage_loader::StorageInstance, storage_state::StorageState},
 };
 use crate::api::shared_resources::authentication::msa_flow::LoginFlowEvent;
 use crate::api::shared_resources::authentication::{self, account::MinecraftSkin};
@@ -30,19 +24,20 @@ use crate::api::shared_resources::authentication::{self, account::MinecraftSkin}
 use crate::api::backend_exclusive::vanilla;
 use crate::api::backend_exclusive::vanilla::version::VersionMetadata;
 
-use crate::api::backend_exclusive::download::{execute_and_progress, DownloadBias, Progress};
-use crate::api::backend_exclusive::vanilla::launcher::{launch_game, prepare_vanilla_download};
 use crate::api::shared_resources::authentication::msa_flow::LoginFlowErrors;
 use crate::api::shared_resources::collection::{
     AdvancedOptions, Collection, CollectionId, ModLoader, ModLoaderType,
 };
 use crate::frb_generated::StreamSink;
 
-lazy_static::lazy_static! {
-    pub static ref DATA_DIR : PathBuf = dirs::data_dir().expect("Can't find data_dir").join("era-connect");
-    pub static ref DOWNLOAD_PROGRESS: Arc<DashMap<CollectionId, Progress>> = Arc::new(DashMap::default());
-    pub static ref STORAGE: StorageState = StorageState::new();
-}
+pub static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    dirs::data_dir()
+        .expect("Can't find data_dir")
+        .join("era-connect")
+});
+pub static DOWNLOAD_PROGRESS: Lazy<Arc<DashMap<CollectionId, Progress>>> =
+    Lazy::new(|| Arc::new(DashMap::default()));
+pub static STORAGE: Lazy<StorageState> = Lazy::new(|| StorageState::new());
 
 #[frb(init)]
 pub fn setup_logger() -> anyhow::Result<()> {
@@ -153,20 +148,9 @@ pub async fn create_collection(
         mod_loader_type: ModLoaderType::Forge,
         version: None,
     });
-    tokio::spawn(async {
-        let p = DOWNLOAD_PROGRESS
-            .iter()
-            .map(|x| x.clone())
-            .collect::<Vec<_>>();
-        dbg!(p);
-    });
-
-    let (mut collection, loader) =
-        Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
-
-    // NOTE: testing purposes
-    collection.add_mod("rpmtw-pdate-mod", vec![], None).await?;
-    collection.download_mods().await?;
+    let mut collection =
+        Collection::create(display_name, version_metadata, mod_loader, advanced_options).await?;
+    let loader = collection.get_loader()?;
 
     loader.save(&collection)?;
 
@@ -174,130 +158,28 @@ pub async fn create_collection(
         "Successfully created collection basic file at {}",
         collection.entry_path.display()
     );
-    let collection_id = collection.get_collection_id();
-    let mod_loader_clone = collection.mod_loader.clone();
-
-    let handle = tokio::spawn(async move {
-        if let Some(mod_loader) = mod_loader_clone {
-            match mod_loader.mod_loader_type {
-                ModLoaderType::Forge | ModLoaderType::NeoForge => {
-                    launch_forge(collection, collection_id).await?
+    let id = collection.get_collection_id();
+    let download_handle = tokio::spawn(async move {
+        loop {
+            let p = (DOWNLOAD_PROGRESS).clone();
+            let a = p.get(&id);
+            if let Some(x) = a {
+                if x.percentages >= 100.0 {
+                    break;
                 }
-                ModLoaderType::Quilt => launch_quilt(collection, collection_id).await?,
-                _ => bail!("you useless!"),
+                debug!("{:#?}", &*x);
             }
-        } else {
-            launch_vanilla(collection, collection_id).await?
+            tokio::time::sleep(Duration::from_millis(500)).await;
         }
     });
 
-    handle.await??;
+    collection.download_game().await?;
+
+    download_handle.await?;
+
+    info!("Successfully finished downloading game");
+
+    collection.launch_game().await?;
+
     Ok(())
-}
-async fn launch_forge(
-    collection: Collection,
-    collection_id: CollectionId,
-) -> anyhow::Result<anyhow::Result<()>> {
-    info!("Starts Vanilla Downloading");
-    let vanilla_bias = DownloadBias {
-        start: 0.0,
-        end: 80.0,
-    };
-    let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
-    let (vanilla_download_args, vanilla_arguments) =
-        prepare_vanilla_download(collection, game_manifest.clone()).await?;
-    execute_and_progress(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
-
-    info!("Starts Forge Downloading");
-    let forge_download_bias = DownloadBias {
-        start: 80.0,
-        end: 90.0,
-    };
-    let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
-        vanilla_arguments.launch_args,
-        vanilla_arguments.jvm_args,
-        vanilla_arguments.game_args,
-    )
-    .await?;
-    execute_and_progress(
-        collection_id.clone(),
-        forge_download_args,
-        forge_download_bias,
-    )
-    .await?;
-
-    info!("Starts Forge Processing");
-    let forge_processor_bias = DownloadBias {
-        start: 90.0,
-        end: 100.0,
-    };
-
-    let (processed_arguments, forge_processor_progress) = process_forge(
-        forge_arguments.launch_args,
-        forge_arguments.jvm_args,
-        forge_arguments.game_args,
-        game_manifest,
-        manifest,
-    )
-    .await?;
-    execute_and_progress(
-        collection_id,
-        forge_processor_progress,
-        forge_processor_bias,
-    )
-    .await?;
-    Ok(launch_game(processed_arguments).await)
-}
-
-async fn launch_quilt(
-    collection: Collection,
-    collection_id: CollectionId,
-) -> anyhow::Result<anyhow::Result<()>> {
-    info!("Starts Vanilla Downloading");
-    let vanilla_bias = DownloadBias {
-        start: 0.0,
-        end: 80.0,
-    };
-    let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
-    let (vanilla_download_args, vanilla_arguments) =
-        prepare_vanilla_download(collection, game_manifest.clone()).await?;
-    execute_and_progress(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
-
-    info!("Starts Quilt Downloading");
-    let quilt_download_bias = DownloadBias {
-        start: 90.0,
-        end: 100.0,
-    };
-
-    let (quilt_download_args, processed_arguments) = prepare_quilt_download(
-        vanilla_arguments.launch_args,
-        vanilla_arguments.jvm_args,
-        vanilla_arguments.game_args,
-    )
-    .await?;
-    execute_and_progress(
-        collection_id.clone(),
-        quilt_download_args,
-        quilt_download_bias,
-    )
-    .await?;
-
-    Ok(launch_game(processed_arguments.launch_args).await)
-}
-
-async fn launch_vanilla(
-    collection: Collection,
-    collection_id: CollectionId,
-) -> anyhow::Result<anyhow::Result<()>> {
-    info!("Starts Vanilla Downloading");
-    let vanilla_bias = DownloadBias {
-        start: 0.0,
-        end: 100.0,
-    };
-    let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
-    let (vanilla_download_args, vanilla_arguments) =
-        prepare_vanilla_download(collection, game_manifest.clone()).await?;
-    execute_and_progress(collection_id, vanilla_download_args, vanilla_bias).await?;
-
-    Ok(launch_game(vanilla_arguments.launch_args).await)
 }

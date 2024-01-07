@@ -11,17 +11,25 @@ use std::{
 
 use anyhow::{anyhow, Context, Result};
 use bytes::Bytes;
-use log::{debug, error, warn};
+use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::{fs, io::AsyncBufReadExt};
 
-use crate::api::backend_exclusive::{
-    download::{download_file, validate_sha1, DownloadArgs, HandlesType},
-    vanilla::{
-        launcher::{GameOptions, JvmOptions, LaunchArgs, ProcessedArguments},
-        manifest::GameManifest,
+use crate::api::{
+    backend_exclusive::{
+        download::{
+            download_file, execute_and_progress, validate_sha1, DownloadArgs, DownloadBias,
+            HandlesType,
+        },
+        vanilla::{
+            launcher::{
+                prepare_vanilla_download, GameOptions, JvmOptions, LaunchArgs, ProcessedArguments,
+            },
+            manifest::{fetch_game_manifest, GameManifest},
+        },
     },
+    shared_resources::collection::Collection,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -279,7 +287,7 @@ pub async fn process_forge<'a>(
     data.binpatch.convert_maven_to_path(&libraries_folder)?;
     let index = Arc::new(AtomicUsize::new(0));
     let index_cloned = Arc::clone(&index);
-    let max = Arc::new(AtomicUsize::new(processors.len()));
+    let max = Arc::new(AtomicUsize::new(processors.len() - 1));
     let mut handles: HandlesType = Vec::new();
 
     handles.push(Box::pin(async move {
@@ -549,4 +557,56 @@ pub async fn get_processor_main_class(path: String) -> Result<Option<String>> {
         }
     }
     Ok(None)
+}
+pub async fn full_forge_download(collection: &Collection) -> anyhow::Result<LaunchArgs> {
+    let collection_id = collection.get_collection_id();
+    info!("Starts Vanilla Downloading");
+    let vanilla_bias = DownloadBias {
+        start: 0.0,
+        end: 80.0,
+    };
+    let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
+    let (vanilla_download_args, vanilla_arguments) =
+        prepare_vanilla_download(collection, game_manifest.clone()).await?;
+    execute_and_progress(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
+
+    info!("Starts Forge Downloading");
+    let forge_download_bias = DownloadBias {
+        start: 80.0,
+        end: 90.0,
+    };
+    let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
+        vanilla_arguments.launch_args,
+        vanilla_arguments.jvm_args,
+        vanilla_arguments.game_args,
+    )
+    .await?;
+    execute_and_progress(
+        collection_id.clone(),
+        forge_download_args,
+        forge_download_bias,
+    )
+    .await?;
+
+    info!("Starts Forge Processing");
+    let forge_processor_bias = DownloadBias {
+        start: 90.0,
+        end: 100.0,
+    };
+
+    let (processed_arguments, forge_processor_progress) = process_forge(
+        forge_arguments.launch_args,
+        forge_arguments.jvm_args,
+        forge_arguments.game_args,
+        game_manifest,
+        manifest,
+    )
+    .await?;
+    execute_and_progress(
+        collection_id,
+        forge_processor_progress,
+        forge_processor_bias,
+    )
+    .await?;
+    Ok(processed_arguments)
 }

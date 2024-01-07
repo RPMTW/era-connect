@@ -1,6 +1,6 @@
 use anyhow::bail;
 use anyhow::{Context, Result};
-use log::error;
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::{atomic::AtomicUsize, atomic::Ordering, Arc};
@@ -10,6 +10,8 @@ use super::assets::{extract_assets, parallel_assets_download};
 use super::library::{os_match, parallel_library, Library};
 use super::manifest::{self, Argument, GameManifest};
 use super::rules::{ActionType, OsName};
+use crate::api::backend_exclusive::download::{execute_and_progress, DownloadBias};
+use crate::api::backend_exclusive::vanilla::manifest::fetch_game_manifest;
 use crate::api::backend_exclusive::{
     download::{download_file, extract_filename, validate_sha1, DownloadArgs},
     storage::storage_loader::get_global_shared_path,
@@ -73,23 +75,37 @@ pub struct GameOptions {
     pub version_type: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct LaunchArgs {
     pub jvm_args: Vec<String>,
     pub main_class: String,
     pub game_args: Vec<String>,
 }
 
-pub async fn launch_game(launch_args: LaunchArgs) -> Result<()> {
+pub async fn launch_game(launch_args: &LaunchArgs) -> Result<()> {
     let mut launch_vec = Vec::new();
-    launch_vec.extend(launch_args.jvm_args);
-    launch_vec.push(launch_args.main_class);
-    launch_vec.extend(launch_args.game_args);
+    launch_vec.extend(&launch_args.jvm_args);
+    launch_vec.push(&launch_args.main_class);
+    launch_vec.extend(&launch_args.game_args);
     let b = tokio::process::Command::new("java")
         .args(launch_vec)
         .spawn();
     b?.wait().await?;
     Ok(())
+}
+pub async fn full_vanilla_download(collection: &Collection) -> anyhow::Result<LaunchArgs> {
+    info!("Starts Vanilla Downloading");
+    let collection_id = collection.get_collection_id();
+    let vanilla_bias = DownloadBias {
+        start: 0.0,
+        end: 100.0,
+    };
+    let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
+    let (vanilla_download_args, vanilla_arguments) =
+        prepare_vanilla_download(collection, game_manifest.clone()).await?;
+    execute_and_progress(collection_id, vanilla_download_args, vanilla_bias).await?;
+
+    Ok(vanilla_arguments.launch_args)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -105,7 +121,7 @@ pub struct ProcessedArguments {
 }
 
 pub async fn prepare_vanilla_download<'a>(
-    collection: Collection,
+    collection: &Collection,
     game_manifest: GameManifest,
 ) -> Result<(DownloadArgs<'a>, ProcessedArguments)> {
     let version_id = collection.minecraft_version.id.clone();
@@ -200,7 +216,7 @@ pub async fn prepare_vanilla_download<'a>(
     let asset_settings = extract_assets(&game_manifest.asset_index, asset_directory).await?;
     parallel_assets_download(asset_settings, &current_size, &total_size, &mut handles).await?;
 
-    if let Some(advanced_option) = collection.advanced_options {
+    if let Some(advanced_option) = &collection.advanced_options {
         if let Some(max_memory) = advanced_option.jvm_max_memory {
             jvm_flags.arguments.push(format!("-Xmx{}M", max_memory))
         }
