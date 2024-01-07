@@ -1,6 +1,7 @@
+use ferinth::structures::search::Facet;
+use ferinth::structures::search::Sort;
 use log::info;
 use once_cell::sync::Lazy;
-use rayon::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 use std::fs::create_dir_all;
@@ -24,6 +25,9 @@ use crate::api::{
     },
     shared_resources::collection::ModLoaderType,
 };
+
+pub type ModrinthSearchResponse = ferinth::structures::search::Response;
+
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct ModMetadata {
     pub name: String,
@@ -213,6 +217,23 @@ impl ModManager {
         Ok(())
     }
 
+    pub async fn search_project(&self, query: &str) -> anyhow::Result<ModrinthSearchResponse> {
+        let mod_loader = self
+            .mod_loader
+            .as_ref()
+            .with_context(|| "don't add mods in vanilla")?;
+        let mod_loader_facet = Facet::Categories(mod_loader.to_string());
+        let version_facet = Facet::Versions(self.target_game_version.id.to_string());
+        let search_hits = (&FERINTH)
+            .search(
+                query,
+                &Sort::Relevance,
+                vec![vec![mod_loader_facet, version_facet]],
+            )
+            .await?;
+        Ok(search_hits)
+    }
+
     // NOTE: Hacky way of doing game version check
     #[async_recursion]
     pub async fn add_project(
@@ -247,7 +268,7 @@ impl ModManager {
             .with_context(|| "don't add mod in vanilla")?;
 
         let version = versions
-            .into_par_iter()
+            .into_iter()
             .filter(|x| {
                 if mod_override.contains(&ModOverride::IgnoreModLoader) {
                     true
@@ -275,9 +296,7 @@ impl ModManager {
                     .iter()
                     .filter_map(|x| all_game_version.iter().find(|y| &y.id == x))
                     .collect::<Vec<_>>();
-                if mod_override.contains(&ModOverride::IgnoreAllGameVersion) {
-                    true
-                } else if mod_override.contains(&ModOverride::IgnoreMinorGameVersion) {
+                if mod_override.contains(&ModOverride::IgnoreMinorGameVersion) {
                     let collection_game_version = all_game_version
                         .iter()
                         .find(|x| x.id == self.target_game_version.id)
@@ -301,14 +320,16 @@ impl ModManager {
                             .iter()
                             .any(|x| x.id == collection_game_version.id)
                     }
-                } else {
+                } else if mod_override.contains(&ModOverride::IgnoreAllGameVersion) {
                     true
+                } else {
+                    false
                 }
             })
             .max_by_key(|x| x.date_published);
 
         self.add_mod(
-            version.context("Can't find suitible mod")?.into(),
+            version.context("Can't find suitible mod.")?.into(),
             tag,
             mod_override,
         )

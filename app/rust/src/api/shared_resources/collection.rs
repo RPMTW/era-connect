@@ -51,7 +51,7 @@ impl Collection {
     }
 
     /// Creates a collection and return a collection with its loader attached
-    pub fn create(
+    pub async fn create(
         display_name: String,
         version_metadata: VersionMetadata,
         mod_loader: Option<ModLoader>,
@@ -244,10 +244,12 @@ impl Collection {
                 if file_name == COLLECTION_FILE_NAME {
                     let path = collection_base_dir.join(&base_entry_path);
                     let loader = StorageLoader::new(file_name.clone(), Cow::Borrowed(&path));
-                    let mut a = loader.load::<Collection>()?;
-                    dbg!(&a);
-                    a.entry_path = path;
-                    loader.save(&a)?;
+                    let mut collection = loader.load::<Collection>()?;
+
+                    block_on(collection.mod_manager.scan())?;
+                    info!("Succesfully scanned the mods");
+                    collection.entry_path = path;
+                    loader.save(&collection)?;
                     loaders.push(loader);
                 }
             }
@@ -261,6 +263,17 @@ pub struct ModLoader {
     #[serde(rename = "type")]
     pub mod_loader_type: ModLoaderType,
     pub version: Option<String>,
+}
+
+impl ToString for ModLoader {
+    fn to_string(&self) -> String {
+        match self.mod_loader_type {
+            ModLoaderType::Forge => String::from("forge"),
+            ModLoaderType::NeoForge => String::from("neoforge"),
+            ModLoaderType::Fabric => String::from("fabric"),
+            ModLoaderType::Quilt => String::from("quilt"),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
