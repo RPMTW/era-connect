@@ -431,7 +431,7 @@ void main() {
               children: [Text('Test 1'), Icon(Icons.flutter_dash_rounded)],
             ),
           ],
-          onEvent: (event) {
+          onEvent: (event, _) {
             if (event == StepEvent.next) {
               nextEventCalled = true;
             }
@@ -447,7 +447,7 @@ void main() {
             const Text('Test 2'),
             const Icon(Icons.flutter_dash_sharp),
           ],
-          onEvent: (event) {
+          onEvent: (event, _) {
             if (event == StepEvent.previous) {
               previousEventCalled = true;
             }

@@ -30,12 +30,12 @@ class ImportProfilesStep extends StatelessWidget {
             tabs: [
               TabItem(
                 title: context.i18n['dialog.setup.01.content.tabs.empty.title'],
-                icon: 'deployed_code',
+                icon: EraIcon.assets('deployed_code'),
               ),
               TabItem(
                   title:
                       context.i18n['dialog.setup.01.content.tabs.import.title'],
-                  icon: 'deployed_code_update',
+                  icon: EraIcon.assets('deployed_code_update'),
                   content: const DialogContentBox(
                     title: '匯入平台',
                     content: SizedBox.shrink(),
