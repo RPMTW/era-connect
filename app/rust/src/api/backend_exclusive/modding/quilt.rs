@@ -17,13 +17,12 @@ use crate::api::{
         },
         vanilla::{
             launcher::{
-                launch_game, prepare_vanilla_download, GameOptions, JvmOptions, LaunchArgs,
-                ProcessedArguments,
+                prepare_vanilla_download, GameOptions, JvmOptions, LaunchArgs, ProcessedArguments,
             },
             manifest::fetch_game_manifest,
         },
     },
-    shared_resources::collection::{Collection, CollectionId},
+    shared_resources::collection::Collection,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -159,10 +158,8 @@ pub async fn prepare_quilt_download<'a>(
     ))
 }
 
-pub async fn launch_quilt(
-    collection: Collection,
-    collection_id: CollectionId,
-) -> anyhow::Result<anyhow::Result<()>> {
+pub async fn full_quilt_download(collection: &Collection) -> anyhow::Result<LaunchArgs> {
+    let collection_id = collection.get_collection_id();
     info!("Starts Vanilla Downloading");
     let vanilla_bias = DownloadBias {
         start: 0.0,
@@ -170,7 +167,7 @@ pub async fn launch_quilt(
     };
     let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
     let (vanilla_download_args, vanilla_arguments) =
-        prepare_vanilla_download(collection, game_manifest.clone()).await?;
+        prepare_vanilla_download(&collection, game_manifest.clone()).await?;
     execute_and_progress(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
 
     info!("Starts Quilt Downloading");
@@ -192,7 +189,7 @@ pub async fn launch_quilt(
     )
     .await?;
 
-    Ok(launch_game(processed_arguments.launch_args).await)
+    Ok(processed_arguments.launch_args)
 }
 
 fn convert_maven_to_path(input: &str) -> String {

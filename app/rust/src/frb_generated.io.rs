@@ -56,20 +56,18 @@ impl
 impl
     CstDecode<
         flutter_rust_bridge::RustOpaque<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<(
+            flutter_rust_bridge::for_generated::rust_async::RwLock<
                 crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-                PathBuf,
-            )>,
+            >,
         >,
     > for *const std::ffi::c_void
 {
     fn cst_decode(
         self,
     ) -> flutter_rust_bridge::RustOpaque<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<(
+        flutter_rust_bridge::for_generated::rust_async::RwLock<
             crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-            PathBuf,
-        )>,
+        >,
     > {
         unsafe { flutter_rust_bridge::for_generated::cst_decode_rust_opaque(self) }
     }
@@ -640,8 +638,33 @@ pub extern "C" fn frbgen_era_connect_wire_MinecraftSkin_get_head_file_path(
 pub extern "C" fn frbgen_era_connect_wire_Collection_create(
     port_: i64,
     display_name: *mut wire_cst_list_prim_u_8_strict,
+    version_metadata: *mut wire_cst_version_metadata,
+    mod_loader: *mut wire_cst_mod_loader,
+    advanced_options: *mut wire_cst_advanced_options,
 ) {
-    wire_Collection_create_impl(port_, display_name)
+    wire_Collection_create_impl(
+        port_,
+        display_name,
+        version_metadata,
+        mod_loader,
+        advanced_options,
+    )
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_era_connect_wire_Collection_download_game(
+    port_: i64,
+    that: *const std::ffi::c_void,
+) {
+    wire_Collection_download_game_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_era_connect_wire_Collection_game_directory(
+    port_: i64,
+    that: *const std::ffi::c_void,
+) {
+    wire_Collection_game_directory_impl(port_, that)
 }
 
 #[no_mangle]
@@ -655,6 +678,22 @@ pub extern "C" fn frbgen_era_connect_wire_Collection_get_collection_id(
     that: *const std::ffi::c_void,
 ) {
     wire_Collection_get_collection_id_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_era_connect_wire_Collection_get_loader(
+    port_: i64,
+    that: *const std::ffi::c_void,
+) {
+    wire_Collection_get_loader_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_era_connect_wire_Collection_launch_game(
+    port_: i64,
+    that: *const std::ffi::c_void,
+) {
+    wire_Collection_launch_game_impl(port_, that)
 }
 
 #[no_mangle]
@@ -780,29 +819,27 @@ pub extern "C" fn frbgen_era_connect_rust_arc_decrement_strong_count_RustOpaque_
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_era_connect_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
+pub extern "C" fn frbgen_era_connect_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
     ptr: *const std::ffi::c_void,
 ) {
     unsafe {
         flutter_rust_bridge::for_generated::rust_arc_increment_strong_count::<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<(
+            flutter_rust_bridge::for_generated::rust_async::RwLock<
                 crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-                PathBuf,
-            )>,
+            >,
         >(ptr);
     }
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_era_connect_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
+pub extern "C" fn frbgen_era_connect_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
     ptr: *const std::ffi::c_void,
 ) {
     unsafe {
         flutter_rust_bridge::for_generated::rust_arc_decrement_strong_count::<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<(
+            flutter_rust_bridge::for_generated::rust_async::RwLock<
                 crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-                PathBuf,
-            )>,
+            >,
         >(ptr);
     }
 }
