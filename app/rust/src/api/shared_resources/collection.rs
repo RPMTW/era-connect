@@ -4,6 +4,7 @@ use std::{borrow::Cow, fs::create_dir_all};
 use anyhow::bail;
 use chrono::{DateTime, Duration, Utc};
 use flutter_rust_bridge::frb;
+use futures::executor::block_on;
 use log::info;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -15,7 +16,12 @@ use crate::api::{
     backend_exclusive::{
         download::{execute_and_progress, DownloadBias},
         mod_management::mods::{ModManager, ModOverride, Tag, FERINTH},
-        vanilla::version::VersionMetadata,
+        modding::{forge::full_forge_download, quilt::full_quilt_download},
+        vanilla::{
+            self,
+            launcher::{full_vanilla_download, LaunchArgs},
+            version::VersionMetadata,
+        },
     },
     shared_resources::entry::DATA_DIR,
 };
@@ -46,19 +52,15 @@ const COLLECTION_FILE_NAME: &str = "collection.json";
 const COLLECTION_BASE: &str = "collections";
 
 impl Collection {
-    pub fn game_directory(&self) -> PathBuf {
-        self.entry_path.join("minecraft_root")
-    }
-
     /// Creates a collection and return a collection with its loader attached
     pub async fn create(
         display_name: String,
         version_metadata: VersionMetadata,
         mod_loader: Option<ModLoader>,
         advanced_options: Option<AdvancedOptions>,
-    ) -> anyhow::Result<(Collection, StorageLoader)> {
+    ) -> anyhow::Result<Collection> {
         let now_time = Utc::now();
-        let loader = Collection::create_loader(display_name.clone())?;
+        let loader = Self::create_loader(&display_name)?;
         let entry_path = loader.base_path.clone();
         let mod_manager = ModManager::new(
             entry_path.join("minecraft_root"),
@@ -76,11 +78,12 @@ impl Collection {
             advanced_options,
             entry_path,
             mod_manager,
+            launch_args: None,
         };
 
         loader.save(&collection)?;
 
-        Ok((collection, loader))
+        Ok(collection)
     }
 
     /// use project id(slug also works) to add mod, will deal with dependencies insertion
@@ -134,34 +137,6 @@ impl Collection {
 
     pub fn game_directory(&self) -> PathBuf {
         self.entry_path.join("minecraft_root")
-    }
-
-    /// Creates a collection and return a collection
-    pub async fn create(
-        display_name: String,
-        version_metadata: VersionMetadata,
-        mod_loader: Option<ModLoader>,
-        advanced_options: Option<AdvancedOptions>,
-    ) -> anyhow::Result<Collection> {
-        let now_time = Utc::now();
-        let loader = Self::create_loader(&display_name)?;
-        let entry_path = loader.base_path.clone();
-
-        let collection = Collection {
-            display_name,
-            minecraft_version: version_metadata,
-            mod_loader,
-            created_at: now_time,
-            updated_at: now_time,
-            played_time: Duration::seconds(0),
-            advanced_options,
-            entry_path,
-            launch_args: None,
-        };
-
-        loader.save(&collection)?;
-
-        Ok(collection)
     }
 
     pub fn get_base_path() -> PathBuf {

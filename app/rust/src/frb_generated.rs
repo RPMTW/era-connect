@@ -83,6 +83,39 @@ fn wire_Collection_create_impl(
         },
     )
 }
+fn wire_Collection_download_game_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        flutter_rust_bridge::RustOpaque<
+            flutter_rust_bridge::for_generated::rust_async::RwLock<
+                crate::api::shared_resources::collection::Collection,
+            >,
+        >,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Collection_download_game",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| async move {
+                transform_result_dco(
+                    (move || async move {
+                        let mut api_that = api_that.rust_auto_opaque_decode_async_ref_mut().await;
+                        crate::api::shared_resources::collection::Collection::download_game(
+                            &mut api_that,
+                        )
+                        .await
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire_Collection_game_directory_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -163,6 +196,72 @@ fn wire_Collection_get_collection_id_impl(
                         ),
                     )
                 })())
+            }
+        },
+    )
+}
+fn wire_Collection_get_loader_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        flutter_rust_bridge::RustOpaque<
+            flutter_rust_bridge::for_generated::rust_async::RwLock<
+                crate::api::shared_resources::collection::Collection,
+            >,
+        >,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Collection_get_loader",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| {
+                transform_result_dco((move || {
+                    let api_that = api_that.rust_auto_opaque_decode_sync_ref();
+                    Result::<_, flutter_rust_bridge::for_generated::anyhow::Error>::Ok(
+                        flutter_rust_bridge::for_generated::rust_auto_opaque_encode(
+                            crate::api::shared_resources::collection::Collection::get_loader(
+                                &api_that,
+                            )?,
+                        ),
+                    )
+                })())
+            }
+        },
+    )
+}
+fn wire_Collection_launch_game_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        flutter_rust_bridge::RustOpaque<
+            flutter_rust_bridge::for_generated::rust_async::RwLock<
+                crate::api::shared_resources::collection::Collection,
+            >,
+        >,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Collection_launch_game",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| async move {
+                transform_result_dco(
+                    (move || async move {
+                        let mut api_that = api_that.rust_auto_opaque_decode_async_ref_mut().await;
+                        crate::api::shared_resources::collection::Collection::launch_game(
+                            &mut api_that,
+                        )
+                        .await
+                    })()
+                    .await,
+                )
             }
         },
     )
@@ -527,7 +626,7 @@ impl SseDecode
 impl SseDecode
     for flutter_rust_bridge::RustOpaque<
         flutter_rust_bridge::for_generated::rust_async::RwLock<
-            crate::api::shared_resources::collection::Collection,
+            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
         >,
     >
 {
@@ -539,10 +638,9 @@ impl SseDecode
 
 impl SseDecode
     for flutter_rust_bridge::RustOpaque<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<(
+        flutter_rust_bridge::for_generated::rust_async::RwLock<
             crate::api::shared_resources::collection::Collection,
-            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-        )>,
+        >,
     >
 {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1599,7 +1697,7 @@ impl SseEncode
 impl SseEncode
     for flutter_rust_bridge::RustOpaque<
         flutter_rust_bridge::for_generated::rust_async::RwLock<
-            crate::api::shared_resources::collection::Collection,
+            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
         >,
     >
 {
@@ -1612,10 +1710,9 @@ impl SseEncode
 
 impl SseEncode
     for flutter_rust_bridge::RustOpaque<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<(
+        flutter_rust_bridge::for_generated::rust_async::RwLock<
             crate::api::shared_resources::collection::Collection,
-            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-        )>,
+        >,
     >
 {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {

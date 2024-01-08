@@ -32,12 +32,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       get rust_arc_decrement_strong_count_VecStorageLoaderPtr => wire
           ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockVeccrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr;
 
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_StorageLoaderPtr => wire
+          ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr;
+
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_CollectionPtr =>
       wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectionPtr;
-
-  CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_CollectionStorageLoaderPtr => wire
-          ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
@@ -53,8 +53,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
-  CollectionStorageLoader
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+  StorageLoader
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          dynamic raw);
+
+  @protected
+  Collection
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          dynamic raw);
+
+  @protected
+  Collection
+      dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
           dynamic raw);
 
   @protected
@@ -76,13 +86,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
-  Collection
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+  StorageLoader
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic raw);
 
   @protected
-  CollectionStorageLoader
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+  Collection
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
           dynamic raw);
 
   @protected
@@ -244,8 +254,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  CollectionStorageLoader
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+  StorageLoader
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          SseDeserializer deserializer);
+
+  @protected
+  Collection
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          SseDeserializer deserializer);
+
+  @protected
+  Collection
+      sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
           SseDeserializer deserializer);
 
   @protected
@@ -267,13 +287,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  Collection
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+  StorageLoader
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           SseDeserializer deserializer);
 
   @protected
-  CollectionStorageLoader
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+  Collection
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
           SseDeserializer deserializer);
 
   @protected
@@ -830,8 +850,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformPointer
-      cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
-          CollectionStorageLoader raw);
+      cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          StorageLoader raw);
+
+  @protected
+  PlatformPointer
+      cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection raw);
+
+  @protected
+  PlatformPointer
+      cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection raw);
 
   @protected
   PlatformPointer
@@ -850,13 +880,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformPointer
-      cst_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
-          Collection raw);
+      cst_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          StorageLoader raw);
 
   @protected
   PlatformPointer
-      cst_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
-          CollectionStorageLoader raw);
+      cst_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection raw);
 
   @protected
   int cst_encode_account_storage_key(AccountStorageKey raw);
@@ -913,8 +943,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
-          CollectionStorageLoader self, SseSerializer serializer);
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          StorageLoader self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection self, SseSerializer serializer);
 
   @protected
   void
@@ -936,13 +976,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
-          Collection self, SseSerializer serializer);
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          StorageLoader self, SseSerializer serializer);
 
   @protected
   void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
-          CollectionStorageLoader self, SseSerializer serializer);
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection self, SseSerializer serializer);
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
@@ -1215,6 +1255,23 @@ class RustLibWire implements BaseWire {
           ffi.Pointer<wire_cst_mod_loader>,
           ffi.Pointer<wire_cst_advanced_options>)>();
 
+  void wire_Collection_download_game(
+    int port_,
+    ffi.Pointer<ffi.Void> that,
+  ) {
+    return _wire_Collection_download_game(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_Collection_download_gamePtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<ffi.Void>)>>(
+      'frbgen_era_connect_wire_Collection_download_game');
+  late final _wire_Collection_download_game = _wire_Collection_download_gamePtr
+      .asFunction<void Function(int, ffi.Pointer<ffi.Void>)>();
+
   void wire_Collection_game_directory(
     int port_,
     ffi.Pointer<ffi.Void> that,
@@ -1264,6 +1321,40 @@ class RustLibWire implements BaseWire {
   late final _wire_Collection_get_collection_id =
       _wire_Collection_get_collection_idPtr
           .asFunction<void Function(int, ffi.Pointer<ffi.Void>)>();
+
+  void wire_Collection_get_loader(
+    int port_,
+    ffi.Pointer<ffi.Void> that,
+  ) {
+    return _wire_Collection_get_loader(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_Collection_get_loaderPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<ffi.Void>)>>(
+      'frbgen_era_connect_wire_Collection_get_loader');
+  late final _wire_Collection_get_loader = _wire_Collection_get_loaderPtr
+      .asFunction<void Function(int, ffi.Pointer<ffi.Void>)>();
+
+  void wire_Collection_launch_game(
+    int port_,
+    ffi.Pointer<ffi.Void> that,
+  ) {
+    return _wire_Collection_launch_game(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_Collection_launch_gamePtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<ffi.Void>)>>(
+      'frbgen_era_connect_wire_Collection_launch_game');
+  late final _wire_Collection_launch_game = _wire_Collection_launch_gamePtr
+      .asFunction<void Function(int, ffi.Pointer<ffi.Void>)>();
 
   void wire_Collection_scan(
     int port_,
@@ -1500,6 +1591,38 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_era_connect_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader');
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_era_connect_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader');
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
       rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -1529,38 +1652,6 @@ class RustLibWire implements BaseWire {
           'frbgen_era_connect_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection');
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectionPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_era_connect_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader');
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_era_connect_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader');
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoaderPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   ffi.Pointer<wire_cst_advanced_options>

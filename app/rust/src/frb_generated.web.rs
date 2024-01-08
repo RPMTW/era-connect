@@ -401,6 +401,25 @@ impl
     CstDecode<
         flutter_rust_bridge::RustOpaque<
             flutter_rust_bridge::for_generated::rust_async::RwLock<
+                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
+            >,
+        >,
+    > for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
+{
+    fn cst_decode(
+        self,
+    ) -> flutter_rust_bridge::RustOpaque<
+        flutter_rust_bridge::for_generated::rust_async::RwLock<
+            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
+        >,
+    > {
+        unsafe { flutter_rust_bridge::for_generated::cst_decode_rust_opaque(self) }
+    }
+}
+impl
+    CstDecode<
+        flutter_rust_bridge::RustOpaque<
+            flutter_rust_bridge::for_generated::rust_async::RwLock<
                 crate::api::shared_resources::collection::Collection,
             >,
         >,
@@ -412,27 +431,6 @@ impl
         flutter_rust_bridge::for_generated::rust_async::RwLock<
             crate::api::shared_resources::collection::Collection,
         >,
-    > {
-        unsafe { flutter_rust_bridge::for_generated::cst_decode_rust_opaque(self) }
-    }
-}
-impl
-    CstDecode<
-        flutter_rust_bridge::RustOpaque<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<(
-                crate::api::shared_resources::collection::Collection,
-                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-            )>,
-        >,
-    > for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-{
-    fn cst_decode(
-        self,
-    ) -> flutter_rust_bridge::RustOpaque<
-        flutter_rust_bridge::for_generated::rust_async::RwLock<(
-            crate::api::shared_resources::collection::Collection,
-            crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-        )>,
     > {
         unsafe { flutter_rust_bridge::for_generated::cst_decode_rust_opaque(self) }
     }
@@ -590,6 +588,14 @@ pub fn wire_Collection_create(
 }
 
 #[wasm_bindgen]
+pub fn wire_Collection_download_game(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+) {
+    wire_Collection_download_game_impl(port_, that)
+}
+
+#[wasm_bindgen]
 pub fn wire_Collection_game_directory(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
@@ -608,6 +614,22 @@ pub fn wire_Collection_get_collection_id(
     that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
 ) {
     wire_Collection_get_collection_id_impl(port_, that)
+}
+
+#[wasm_bindgen]
+pub fn wire_Collection_get_loader(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+) {
+    wire_Collection_get_loader_impl(port_, that)
+}
+
+#[wasm_bindgen]
+pub fn wire_Collection_launch_game(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+) {
+    wire_Collection_launch_game_impl(port_, that)
 }
 
 #[wasm_bindgen]
@@ -733,6 +755,32 @@ pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generat
 }
 
 #[wasm_bindgen]
+pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+    ptr: *const std::ffi::c_void,
+) {
+    unsafe {
+        flutter_rust_bridge::for_generated::rust_arc_increment_strong_count::<
+            flutter_rust_bridge::for_generated::rust_async::RwLock<
+                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
+            >,
+        >(ptr);
+    }
+}
+
+#[wasm_bindgen]
+pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+    ptr: *const std::ffi::c_void,
+) {
+    unsafe {
+        flutter_rust_bridge::for_generated::rust_arc_decrement_strong_count::<
+            flutter_rust_bridge::for_generated::rust_async::RwLock<
+                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
+            >,
+        >(ptr);
+    }
+}
+
+#[wasm_bindgen]
 pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
     ptr: *const std::ffi::c_void,
 ) {
@@ -754,34 +802,6 @@ pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generat
             flutter_rust_bridge::for_generated::rust_async::RwLock<
                 crate::api::shared_resources::collection::Collection,
             >,
-        >(ptr);
-    }
-}
-
-#[wasm_bindgen]
-pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        flutter_rust_bridge::for_generated::rust_arc_increment_strong_count::<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<(
-                crate::api::shared_resources::collection::Collection,
-                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-            )>,
-        >(ptr);
-    }
-}
-
-#[wasm_bindgen]
-pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollectioncrateapibackend_exclusivestoragestorage_loaderStorageLoader(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        flutter_rust_bridge::for_generated::rust_arc_decrement_strong_count::<
-            flutter_rust_bridge::for_generated::rust_async::RwLock<(
-                crate::api::shared_resources::collection::Collection,
-                crate::api::backend_exclusive::storage::storage_loader::StorageLoader,
-            )>,
         >(ptr);
     }
 }

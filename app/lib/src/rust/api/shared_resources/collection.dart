@@ -27,6 +27,25 @@ class VecStorageLoader extends RustOpaque {
   );
 }
 
+// Rust type: flutter_rust_bridge::RustOpaque<flutter_rust_bridge::for_generated::rust_async::RwLock<crate::api::backend_exclusive::storage::storage_loader::StorageLoader>>
+@sealed
+class StorageLoader extends RustOpaque {
+  StorageLoader.dcoDecode(List<dynamic> wire)
+      : super.dcoDecode(wire, _kStaticData);
+
+  StorageLoader.sseDecode(int ptr, int externalSizeOnNative)
+      : super.sseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_StorageLoader,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_StorageLoader,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_StorageLoaderPtr,
+  );
+}
+
 // Rust type: flutter_rust_bridge::RustOpaque<flutter_rust_bridge::for_generated::rust_async::RwLock<crate::api::shared_resources::collection::Collection>>
 @sealed
 class Collection extends RustOpaque {
@@ -43,25 +62,6 @@ class Collection extends RustOpaque {
         RustLib.instance.api.rust_arc_decrement_strong_count_Collection,
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_CollectionPtr,
-  );
-}
-
-// Rust type: flutter_rust_bridge::RustOpaque<flutter_rust_bridge::for_generated::rust_async::RwLock<(crate::api::shared_resources::collection::Collection,crate::api::backend_exclusive::storage::storage_loader::StorageLoader,)>>
-@sealed
-class CollectionStorageLoader extends RustOpaque {
-  CollectionStorageLoader.dcoDecode(List<dynamic> wire)
-      : super.dcoDecode(wire, _kStaticData);
-
-  CollectionStorageLoader.sseDecode(int ptr, int externalSizeOnNative)
-      : super.sseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount: RustLib
-        .instance.api.rust_arc_increment_strong_count_CollectionStorageLoader,
-    rustArcDecrementStrongCount: RustLib
-        .instance.api.rust_arc_decrement_strong_count_CollectionStorageLoader,
-    rustArcDecrementStrongCountPtr: RustLib.instance.api
-        .rust_arc_decrement_strong_count_CollectionStorageLoaderPtr,
   );
 }
 
