@@ -133,7 +133,6 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
         }
     }
 
-    skin.close()?;
     Ok(())
 }
 

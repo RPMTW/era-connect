@@ -176,7 +176,7 @@ pub async fn execute_and_progress(
     download_complete.store(true, Ordering::Release);
     output.await?;
 
-    DOWNLOAD_PROGRESS.remove(&id);
+    // DOWNLOAD_PROGRESS.remove(&id);
 
     Ok(())
 }

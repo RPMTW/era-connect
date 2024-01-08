@@ -145,7 +145,7 @@ impl Collection {
         let loader =
             StorageLoader::new(COLLECTION_FILE_NAME.to_string(), Cow::Borrowed(&entry_path));
 
-        Ok((loader, entry_path))
+        Ok(loader)
     }
 
     fn handle_duplicate_dir(base_dir: PathBuf, dir_name: &str) -> PathBuf {
