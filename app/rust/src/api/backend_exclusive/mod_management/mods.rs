@@ -296,12 +296,11 @@ impl ModManager {
                     .iter()
                     .filter_map(|x| all_game_version.iter().find(|y| &y.id == x))
                     .collect::<Vec<_>>();
+                let collection_game_version = all_game_version
+                    .iter()
+                    .find(|x| x.id == self.target_game_version.id)
+                    .expect("somehow can't find game versions");
                 if mod_override.contains(&ModOverride::IgnoreMinorGameVersion) {
-                    let collection_game_version = all_game_version
-                        .iter()
-                        .find(|x| x.id == self.target_game_version.id)
-                        .expect("somehow can't find game versions");
-
                     if collection_game_version.version_type == VersionType::Release {
                         let target_semver =
                             semver::Version::parse(&collection_game_version.id).map(|x| x.minor);
@@ -323,7 +322,9 @@ impl ModManager {
                 } else if mod_override.contains(&ModOverride::IgnoreAllGameVersion) {
                     true
                 } else {
-                    false
+                    supported_game_versions
+                        .iter()
+                        .any(|x| x.id == collection_game_version.id)
                 }
             })
             .max_by_key(|x| x.date_published);
