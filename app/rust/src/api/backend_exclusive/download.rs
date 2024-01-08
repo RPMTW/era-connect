@@ -131,12 +131,14 @@ pub struct Progress {
     pub speed: Option<f64>,
     pub current_size: Option<f64>,
     pub total_size: Option<f64>,
+    pub bias: DownloadBias,
 }
 
 /// set percentages bias
 /// example:
 /// start: 30.0
 /// end: 100.0
+#[derive(Clone, Copy, Debug)]
 pub struct DownloadBias {
     pub start: f64,
     pub end: f64,
@@ -156,6 +158,7 @@ pub async fn execute_and_progress(
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&download_args.current);
     let total_size_clone = Arc::clone(&download_args.total);
+    let id_clone = id.clone();
 
     let output = tokio::spawn(async move {
         rolling_average(
@@ -163,7 +166,7 @@ pub async fn execute_and_progress(
             current_size_clone,
             total_size_clone,
             bias,
-            id,
+            id_clone,
             calculate_speed,
         )
         .await;
@@ -172,6 +175,8 @@ pub async fn execute_and_progress(
     join_futures(handles, 128).await?;
     download_complete.store(true, Ordering::Release);
     output.await?;
+
+    DOWNLOAD_PROGRESS.remove(&id);
 
     Ok(())
 }
@@ -187,17 +192,17 @@ pub async fn rolling_average(
     let mut instant = Instant::now();
     let mut prev_bytes = 0.0;
     while !download_complete.load(Ordering::Acquire) {
-        let multiplier = (bias.end - bias.start) / 100.0;
+        let multiplier = bias.end - bias.start;
 
         let sleep_time = 250;
 
         time::sleep(Duration::from_millis(sleep_time.try_into().unwrap())).await;
         let current = current.load(Ordering::Relaxed) as f64;
         let total = total.load(Ordering::Relaxed) as f64;
-        let percentages = (current / total * 100.0).mul_add(multiplier, bias.start);
+        let percentages = (current / total).mul_add(multiplier, bias.start);
 
         let progress = if calculate_speed {
-            let rolling_average_window = 5000 / sleep_time;
+            let rolling_average_window = 5000 / sleep_time; // 5000/250 = 20
             let mut average_speed = VecDeque::with_capacity(rolling_average_window);
 
             let speed = (current - prev_bytes) / instant.elapsed().as_secs_f64() / 1_000_000.0;
@@ -216,6 +221,7 @@ pub async fn rolling_average(
                 speed: Some(speed),
                 current_size: Some(current),
                 total_size: Some(total),
+                bias,
             }
         } else {
             Progress {
@@ -223,6 +229,7 @@ pub async fn rolling_average(
                 speed: None,
                 current_size: None,
                 total_size: None,
+                bias,
             }
         };
 

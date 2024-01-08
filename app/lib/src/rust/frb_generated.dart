@@ -71,13 +71,27 @@ abstract class RustLibApi extends BaseApi {
   Future<PathBuf> minecraftSkinGetHeadFilePath(
       {required MinecraftSkin that, dynamic hint});
 
-  Future<StorageLoaderPathBuf> collectionCreate(
-      {required String displayName, dynamic hint});
+  Future<Collection> collectionCreate(
+      {required String displayName,
+      required VersionMetadata versionMetadata,
+      ModLoader? modLoader,
+      AdvancedOptions? advancedOptions,
+      dynamic hint});
+
+  Future<void> collectionDownloadGame({required Collection that, dynamic hint});
+
+  Future<PathBuf> collectionGameDirectory(
+      {required Collection that, dynamic hint});
 
   Future<PathBuf> collectionGetBasePath({dynamic hint});
 
   Future<CollectionId> collectionGetCollectionId(
       {required Collection that, dynamic hint});
+
+  Future<StorageLoader> collectionGetLoader(
+      {required Collection that, dynamic hint});
+
+  Future<void> collectionLaunchGame({required Collection that, dynamic hint});
 
   Future<VecStorageLoader> collectionScan({dynamic hint});
 
@@ -121,13 +135,13 @@ abstract class RustLibApi extends BaseApi {
       get rust_arc_decrement_strong_count_VecStorageLoaderPtr;
 
   RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_StorageLoaderPathBuf;
+      get rust_arc_increment_strong_count_StorageLoader;
 
   RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_StorageLoaderPathBuf;
+      get rust_arc_decrement_strong_count_StorageLoader;
 
   CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_StorageLoaderPathBufPtr;
+      get rust_arc_decrement_strong_count_StorageLoaderPtr;
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_Collection;
@@ -173,20 +187,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<StorageLoaderPathBuf> collectionCreate(
-      {required String displayName, dynamic hint}) {
+  Future<Collection> collectionCreate(
+      {required String displayName,
+      required VersionMetadata versionMetadata,
+      ModLoader? modLoader,
+      AdvancedOptions? advancedOptions,
+      dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         var arg0 = cst_encode_String(displayName);
-        return wire.wire_Collection_create(port_, arg0);
+        var arg1 = cst_encode_box_autoadd_version_metadata(versionMetadata);
+        var arg2 = cst_encode_opt_box_autoadd_mod_loader(modLoader);
+        var arg3 = cst_encode_opt_box_autoadd_advanced_options(advancedOptions);
+        return wire.wire_Collection_create(port_, arg0, arg1, arg2, arg3);
       },
       codec: DcoCodec(
         decodeSuccessData:
-            dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf,
+            dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection,
         decodeErrorData: dco_decode_AnyhowException,
       ),
       constMeta: kCollectionCreateConstMeta,
-      argValues: [displayName],
+      argValues: [displayName, versionMetadata, modLoader, advancedOptions],
       apiImpl: this,
       hint: hint,
     ));
@@ -194,7 +215,65 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCollectionCreateConstMeta => const TaskConstMeta(
         debugName: "Collection_create",
-        argNames: ["displayName"],
+        argNames: [
+          "displayName",
+          "versionMetadata",
+          "modLoader",
+          "advancedOptions"
+        ],
+      );
+
+  @override
+  Future<void> collectionDownloadGame(
+      {required Collection that, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+                that);
+        return wire.wire_Collection_download_game(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_AnyhowException,
+      ),
+      constMeta: kCollectionDownloadGameConstMeta,
+      argValues: [that],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCollectionDownloadGameConstMeta => const TaskConstMeta(
+        debugName: "Collection_download_game",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<PathBuf> collectionGameDirectory(
+      {required Collection that, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+                that);
+        return wire.wire_Collection_game_directory(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData:
+            dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockPathBuf,
+        decodeErrorData: null,
+      ),
+      constMeta: kCollectionGameDirectoryConstMeta,
+      argValues: [that],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCollectionGameDirectoryConstMeta => const TaskConstMeta(
+        debugName: "Collection_game_directory",
+        argNames: ["that"],
       );
 
   @override
@@ -243,6 +322,58 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCollectionGetCollectionIdConstMeta => const TaskConstMeta(
         debugName: "Collection_get_collection_id",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<StorageLoader> collectionGetLoader(
+      {required Collection that, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+                that);
+        return wire.wire_Collection_get_loader(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData:
+            dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader,
+        decodeErrorData: dco_decode_AnyhowException,
+      ),
+      constMeta: kCollectionGetLoaderConstMeta,
+      argValues: [that],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCollectionGetLoaderConstMeta => const TaskConstMeta(
+        debugName: "Collection_get_loader",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<void> collectionLaunchGame({required Collection that, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+                that);
+        return wire.wire_Collection_launch_game(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_AnyhowException,
+      ),
+      constMeta: kCollectionLaunchGameConstMeta,
+      argValues: [that],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCollectionLaunchGameConstMeta => const TaskConstMeta(
+        debugName: "Collection_launch_game",
         argNames: ["that"],
       );
 
@@ -505,12 +636,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockVeccrateapibackend_exclusivestoragestorage_loaderStorageLoader;
 
   RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_StorageLoaderPathBuf => wire
-          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf;
+      get rust_arc_increment_strong_count_StorageLoader => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader;
 
   RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_StorageLoaderPathBuf => wire
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf;
+      get rust_arc_decrement_strong_count_StorageLoader => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader;
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_Collection => wire
@@ -540,10 +671,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  StorageLoaderPathBuf
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
+  StorageLoader
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic raw) {
-    return StorageLoaderPathBuf.dcoDecode(raw as List<dynamic>);
+    return StorageLoader.dcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  Collection
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          dynamic raw) {
+    return Collection.dcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  Collection
+      dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          dynamic raw) {
+    return Collection.dcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -573,10 +718,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  StorageLoaderPathBuf
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
+  StorageLoader
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           dynamic raw) {
-    return StorageLoaderPathBuf.dcoDecode(raw as List<dynamic>);
+    return StorageLoader.dcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -960,10 +1105,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  StorageLoaderPathBuf
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
+  StorageLoader
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           SseDeserializer deserializer) {
-    return StorageLoaderPathBuf.sseDecode(
+    return StorageLoader.sseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  Collection
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          SseDeserializer deserializer) {
+    return Collection.sseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  Collection
+      sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          SseDeserializer deserializer) {
+    return Collection.sseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -998,10 +1159,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  StorageLoaderPathBuf
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
+  StorageLoader
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
           SseDeserializer deserializer) {
-    return StorageLoaderPathBuf.sseDecode(
+    return StorageLoader.sseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -1419,10 +1580,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   PlatformPointer
-      cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-          StorageLoaderPathBuf raw) {
+      cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          StorageLoader raw) {
     // ignore: invalid_use_of_internal_member
     return raw.cstEncode(move: true);
+  }
+
+  @protected
+  PlatformPointer
+      cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection raw) {
+    // ignore: invalid_use_of_internal_member
+    return raw.cstEncode(move: true);
+  }
+
+  @protected
+  PlatformPointer
+      cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection raw) {
+    // ignore: invalid_use_of_internal_member
+    return raw.cstEncode(move: false);
   }
 
   @protected
@@ -1451,8 +1628,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   PlatformPointer
-      cst_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-          StorageLoaderPathBuf raw) {
+      cst_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          StorageLoader raw) {
     // ignore: invalid_use_of_internal_member
     return raw.cstEncode();
   }
@@ -1553,9 +1730,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-          StorageLoaderPathBuf self, SseSerializer serializer) {
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          StorageLoader self, SseSerializer serializer) {
     sse_encode_usize(self.sseEncode(move: true), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection self, SseSerializer serializer) {
+    sse_encode_usize(self.sseEncode(move: true), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapishared_resourcescollectionCollection(
+          Collection self, SseSerializer serializer) {
+    sse_encode_usize(self.sseEncode(move: false), serializer);
   }
 
   @protected
@@ -1587,8 +1778,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoaderPathBuf(
-          StorageLoaderPathBuf self, SseSerializer serializer) {
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockcrateapibackend_exclusivestoragestorage_loaderStorageLoader(
+          StorageLoader self, SseSerializer serializer) {
     sse_encode_usize(self.sseEncode(move: null), serializer);
   }
 

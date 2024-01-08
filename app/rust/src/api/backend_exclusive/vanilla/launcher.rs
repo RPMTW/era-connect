@@ -17,7 +17,7 @@ use crate::api::backend_exclusive::{
     download::{download_file, extract_filename, validate_sha1, DownloadArgs},
     storage::storage_loader::get_global_shared_path,
 };
-use crate::api::shared_resources::collection::{Collection, CollectionId};
+use crate::api::shared_resources::collection::Collection;
 use crate::api::shared_resources::entry::STORAGE;
 
 #[derive(Debug, PartialEq, Deserialize)]
@@ -76,29 +76,27 @@ pub struct GameOptions {
     pub version_type: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct LaunchArgs {
     pub jvm_args: Vec<String>,
     pub main_class: String,
     pub game_args: Vec<String>,
 }
 
-pub async fn launch_game(launch_args: LaunchArgs) -> Result<()> {
+pub async fn launch_game(launch_args: &LaunchArgs) -> Result<()> {
     let mut launch_vec = Vec::new();
-    launch_vec.extend(launch_args.jvm_args);
-    launch_vec.push(launch_args.main_class);
-    launch_vec.extend(launch_args.game_args);
+    launch_vec.extend(&launch_args.jvm_args);
+    launch_vec.push(&launch_args.main_class);
+    launch_vec.extend(&launch_args.game_args);
     let b = tokio::process::Command::new("java")
         .args(launch_vec)
         .spawn();
     b?.wait().await?;
     Ok(())
 }
-pub async fn launch_vanilla(
-    collection: Collection,
-    collection_id: CollectionId,
-) -> anyhow::Result<anyhow::Result<()>> {
+pub async fn full_vanilla_download(collection: &Collection) -> anyhow::Result<LaunchArgs> {
     info!("Starts Vanilla Downloading");
+    let collection_id = collection.get_collection_id();
     let vanilla_bias = DownloadBias {
         start: 0.0,
         end: 100.0,
@@ -108,7 +106,7 @@ pub async fn launch_vanilla(
         prepare_vanilla_download(collection, game_manifest.clone()).await?;
     execute_and_progress(collection_id, vanilla_download_args, vanilla_bias).await?;
 
-    Ok(launch_game(vanilla_arguments.launch_args).await)
+    Ok(vanilla_arguments.launch_args)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -124,10 +122,10 @@ pub struct ProcessedArguments {
 }
 
 pub async fn prepare_vanilla_download<'a>(
-    collection: Collection,
+    collection: &Collection,
     game_manifest: GameManifest,
 ) -> Result<(DownloadArgs<'a>, ProcessedArguments)> {
-    let version_id = collection.minecraft_version.id;
+    let version_id = collection.minecraft_version.id.clone();
     let entry_path = &collection.entry_path;
     let shared_path = get_global_shared_path();
 
@@ -220,7 +218,7 @@ pub async fn prepare_vanilla_download<'a>(
     let asset_settings = extract_assets(&game_manifest.asset_index, asset_directory).await?;
     parallel_assets_download(asset_settings, &current_size, &total_size, &mut handles).await?;
 
-    if let Some(advanced_option) = collection.advanced_options {
+    if let Some(advanced_option) = &collection.advanced_options {
         if let Some(max_memory) = advanced_option.jvm_max_memory {
             jvm_flags.arguments.push(format!("-Xmx{}M", max_memory))
         }

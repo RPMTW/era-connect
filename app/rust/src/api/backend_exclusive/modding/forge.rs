@@ -24,13 +24,12 @@ use crate::api::{
         },
         vanilla::{
             launcher::{
-                launch_game, prepare_vanilla_download, GameOptions, JvmOptions, LaunchArgs,
-                ProcessedArguments,
+                prepare_vanilla_download, GameOptions, JvmOptions, LaunchArgs, ProcessedArguments,
             },
             manifest::{fetch_game_manifest, GameManifest},
         },
     },
-    shared_resources::collection::{Collection, CollectionId},
+    shared_resources::collection::Collection,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -288,7 +287,7 @@ pub async fn process_forge<'a>(
     data.binpatch.convert_maven_to_path(&libraries_folder)?;
     let index = Arc::new(AtomicUsize::new(0));
     let index_cloned = Arc::clone(&index);
-    let max = Arc::new(AtomicUsize::new(processors.len()));
+    let max = Arc::new(AtomicUsize::new(processors.len() - 1));
     let mut handles: HandlesType = Vec::new();
 
     handles.push(Box::pin(async move {
@@ -559,10 +558,8 @@ pub async fn get_processor_main_class(path: String) -> Result<Option<String>> {
     }
     Ok(None)
 }
-pub async fn launch_forge(
-    collection: Collection,
-    collection_id: CollectionId,
-) -> anyhow::Result<anyhow::Result<()>> {
+pub async fn full_forge_download(collection: &Collection) -> anyhow::Result<LaunchArgs> {
+    let collection_id = collection.get_collection_id();
     info!("Starts Vanilla Downloading");
     let vanilla_bias = DownloadBias {
         start: 0.0,
@@ -611,5 +608,5 @@ pub async fn launch_forge(
         forge_processor_bias,
     )
     .await?;
-    Ok(launch_game(processed_arguments).await)
+    Ok(processed_arguments)
 }

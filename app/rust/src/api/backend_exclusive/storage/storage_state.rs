@@ -9,8 +9,6 @@ use super::{
     storage_loader::{StorageInstance, StorageLoader},
     ui_layout::UILayout,
 };
-use anyhow::Error;
-use log::error;
 
 pub struct StorageState {
     pub account_storage: Arc<RwLock<AccountStorage>>,
@@ -20,9 +18,9 @@ pub struct StorageState {
 
 impl StorageState {
     pub fn new() -> Self {
-        let account_storage = Self::load_storage(AccountStorage::load());
-        let ui_layout = Self::load_storage(UILayout::load());
-        let collection_loaders = Self::load_storage(Collection::scan());
+        let account_storage = AccountStorage::load().unwrap_or_default();
+        let ui_layout = UILayout::load().unwrap_or_default();
+        let collection_loaders = Collection::scan().unwrap_or_default();
 
         Self {
             account_storage: Arc::new(RwLock::new(account_storage)),
@@ -33,20 +31,6 @@ impl StorageState {
                     .flat_map(StorageLoader::load)
                     .collect(),
             )),
-        }
-    }
-
-    fn load_storage<T: Default>(result: Result<T, Error>) -> T {
-        match result {
-            Ok(storage) => storage,
-            Err(e) => {
-                error!(
-                    "Failed to load {} storage file: {:#?}",
-                    std::any::type_name::<T>(),
-                    e
-                );
-                T::default()
-            }
         }
     }
 }

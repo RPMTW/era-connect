@@ -1,11 +1,11 @@
-use anyhow::{bail, Context};
+use anyhow::Context;
 use dashmap::DashMap;
 use flutter_rust_bridge::frb;
-use log::{info, warn};
+use log::{debug, info, warn};
 use once_cell::sync::Lazy;
-use std::fs::create_dir_all;
-pub use std::path::PathBuf;
+use std::path::PathBuf;
 use std::sync::Arc;
+use std::{fs::create_dir_all, time::Duration};
 
 use uuid::Uuid;
 
@@ -16,9 +16,7 @@ pub use crate::api::backend_exclusive::storage::{
 
 use crate::api::backend_exclusive::{
     download::Progress,
-    modding::{forge::launch_forge, quilt::launch_quilt},
     storage::{storage_loader::StorageInstance, storage_state::StorageState},
-    vanilla::launcher::launch_vanilla,
 };
 use crate::api::shared_resources::authentication::msa_flow::LoginFlowEvent;
 use crate::api::shared_resources::authentication::{self, account::MinecraftSkin};
@@ -31,8 +29,6 @@ use crate::api::shared_resources::collection::{
     AdvancedOptions, Collection, CollectionId, ModLoader,
 };
 use crate::frb_generated::StreamSink;
-
-use super::collection::ModLoaderType;
 
 pub static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
     dirs::data_dir()
@@ -147,46 +143,37 @@ pub async fn create_collection(
     mod_loader: Option<ModLoader>,
     advanced_options: Option<AdvancedOptions>,
 ) -> anyhow::Result<()> {
-    use chrono::{Duration, Utc};
+    let mut collection =
+        Collection::create(display_name, version_metadata, mod_loader, advanced_options).await?;
+    let loader = collection.get_loader()?;
 
-    let (loader, entry_path) = Collection::create(display_name.clone())?;
-    let now_time = Utc::now();
-
-    let collection = Collection {
-        display_name,
-        minecraft_version: version_metadata,
-        mod_loader,
-        created_at: now_time,
-        updated_at: now_time,
-        played_time: Duration::seconds(0),
-        advanced_options,
-        entry_path,
-    };
     loader.save(&collection)?;
     info!(
         "Successfully created collection basic file at {}",
         collection.entry_path.display()
     );
-
-    Ok(())
-}
-
-pub async fn launch_game(collection: Collection) -> anyhow::Result<()> {
-    let collection_id = collection.get_collection_id();
-    let mod_loader_clone = collection.mod_loader.clone();
-    let handle = tokio::spawn(async move {
-        if let Some(mod_loader) = mod_loader_clone {
-            match mod_loader.mod_loader_type {
-                ModLoaderType::Forge | ModLoaderType::NeoForge => {
-                    launch_forge(collection, collection_id).await?
+    let id = collection.get_collection_id();
+    let download_handle = tokio::spawn(async move {
+        loop {
+            let p = (DOWNLOAD_PROGRESS).clone();
+            let a = p.get(&id);
+            if let Some(x) = a {
+                if x.percentages >= 100.0 {
+                    break;
                 }
-                ModLoaderType::Quilt => launch_quilt(collection, collection_id).await?,
-                _ => bail!("you useless!"),
+                debug!("{:#?}", &*x);
             }
-        } else {
-            launch_vanilla(collection, collection_id).await?
+            tokio::time::sleep(Duration::from_millis(500)).await;
         }
     });
-    handle.await??;
+
+    collection.download_game().await?;
+
+    download_handle.await?;
+
+    info!("Successfully finished downloading game");
+
+    collection.launch_game().await?;
+
     Ok(())
 }

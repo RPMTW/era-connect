@@ -11,8 +11,8 @@ use serde::Serialize;
 use crate::api::shared_resources::entry::DATA_DIR;
 
 pub struct StorageLoader {
-    file_name: String,
-    base_path: PathBuf,
+    pub file_name: String,
+    pub base_path: PathBuf,
 }
 
 #[must_use]

@@ -4,6 +4,7 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../frb_generated.dart';
+import '../backend_exclusive/vanilla/version.dart';
 import 'authentication/account.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -26,22 +27,22 @@ class VecStorageLoader extends RustOpaque {
   );
 }
 
-// Rust type: flutter_rust_bridge::RustOpaque<flutter_rust_bridge::for_generated::rust_async::RwLock<(crate::api::backend_exclusive::storage::storage_loader::StorageLoader,PathBuf,)>>
+// Rust type: flutter_rust_bridge::RustOpaque<flutter_rust_bridge::for_generated::rust_async::RwLock<crate::api::backend_exclusive::storage::storage_loader::StorageLoader>>
 @sealed
-class StorageLoaderPathBuf extends RustOpaque {
-  StorageLoaderPathBuf.dcoDecode(List<dynamic> wire)
+class StorageLoader extends RustOpaque {
+  StorageLoader.dcoDecode(List<dynamic> wire)
       : super.dcoDecode(wire, _kStaticData);
 
-  StorageLoaderPathBuf.sseDecode(int ptr, int externalSizeOnNative)
+  StorageLoader.sseDecode(int ptr, int externalSizeOnNative)
       : super.sseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount: RustLib
-        .instance.api.rust_arc_increment_strong_count_StorageLoaderPathBuf,
-    rustArcDecrementStrongCount: RustLib
-        .instance.api.rust_arc_decrement_strong_count_StorageLoaderPathBuf,
-    rustArcDecrementStrongCountPtr: RustLib
-        .instance.api.rust_arc_decrement_strong_count_StorageLoaderPathBufPtr,
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_StorageLoader,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_StorageLoader,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_StorageLoaderPtr,
   );
 }
 

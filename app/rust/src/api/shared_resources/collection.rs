@@ -1,13 +1,22 @@
 pub use std::{borrow::Cow, fs::create_dir_all, path::PathBuf};
 
+use anyhow::bail;
 use chrono::{DateTime, Duration, Utc};
+use flutter_rust_bridge::frb;
+use log::info;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
 use crate::api::{
     backend_exclusive::{
-        storage::storage_loader::StorageLoader, vanilla::version::VersionMetadata,
+        modding::{forge::full_forge_download, quilt::full_quilt_download},
+        storage::storage_loader::StorageLoader,
+        vanilla::{
+            self,
+            launcher::{full_vanilla_download, LaunchArgs},
+            version::VersionMetadata,
+        },
     },
     shared_resources::entry::DATA_DIR,
 };
@@ -26,6 +35,8 @@ pub struct Collection {
 
     #[serde(skip)]
     pub entry_path: PathBuf,
+    #[serde(skip)]
+    launch_args: Option<LaunchArgs>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default, Eq, PartialEq, Hash)]
@@ -35,6 +46,63 @@ const COLLECTION_FILE_NAME: &str = "collection.json";
 const COLLECTION_BASE: &str = "collections";
 
 impl Collection {
+    pub async fn launch_game(&mut self) -> anyhow::Result<()> {
+        if self.launch_args.is_none() {
+            self.download_game().await?;
+        }
+        vanilla::launcher::launch_game(&self.launch_args.as_ref().unwrap()).await
+    }
+
+    /// SIDE-EFFECT: put launch_args into Struct; download game, but also verifies
+    pub async fn download_game(&mut self) -> anyhow::Result<()> {
+        let mod_loader_clone = self.mod_loader.clone();
+        let p = if let Some(mod_loader) = mod_loader_clone {
+            match mod_loader.mod_loader_type {
+                ModLoaderType::Forge | ModLoaderType::NeoForge => {
+                    full_forge_download(&self).await?
+                }
+                ModLoaderType::Quilt => full_quilt_download(&self).await?,
+                _ => bail!("you useless!"),
+            }
+        } else {
+            full_vanilla_download(&self).await?
+        };
+        self.launch_args = Some(p);
+        Ok(())
+    }
+
+    pub fn game_directory(&self) -> PathBuf {
+        self.entry_path.join("minecraft_root")
+    }
+
+    /// Creates a collection and return a collection
+    pub async fn create(
+        display_name: String,
+        version_metadata: VersionMetadata,
+        mod_loader: Option<ModLoader>,
+        advanced_options: Option<AdvancedOptions>,
+    ) -> anyhow::Result<Collection> {
+        let now_time = Utc::now();
+        let loader = Self::create_loader(&display_name)?;
+        let entry_path = loader.base_path.clone();
+
+        let collection = Collection {
+            display_name,
+            minecraft_version: version_metadata,
+            mod_loader,
+            created_at: now_time,
+            updated_at: now_time,
+            played_time: Duration::seconds(0),
+            advanced_options,
+            entry_path,
+            launch_args: None,
+        };
+
+        loader.save(&collection)?;
+
+        Ok(collection)
+    }
+
     pub fn get_base_path() -> PathBuf {
         DATA_DIR.join(COLLECTION_BASE)
     }
@@ -49,7 +117,12 @@ impl Collection {
         )
     }
 
-    pub fn create(display_name: String) -> std::io::Result<(StorageLoader, PathBuf)> {
+    pub fn get_loader(&self) -> anyhow::Result<StorageLoader> {
+        let p = Self::create_loader(&self.display_name)?;
+        Ok(p)
+    }
+
+    fn create_loader(display_name: &str) -> std::io::Result<StorageLoader> {
         // Windows file and directory name restrictions.
         let invalid_chars_regex = Regex::new(r#"[\\/:*?\"<>|]"#).unwrap();
         let reserved_names = vec![
@@ -58,7 +131,7 @@ impl Collection {
         ];
 
         let mut dir_name = invalid_chars_regex
-            .replace_all(&display_name, "")
+            .replace_all(display_name, "")
             .to_string();
         if reserved_names.contains(&dir_name.to_uppercase().as_str()) {
             dir_name = format!("{}_", dir_name);

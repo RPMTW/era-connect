@@ -1,3 +1,4 @@
+import 'package:era_connect/src/rust/api/shared_resources/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:era_connect/src/rust/frb_generated.dart';
 import 'dart:io';
