@@ -2,7 +2,7 @@ use anyhow::bail;
 use anyhow::{Context, Result};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{atomic::AtomicUsize, atomic::Ordering, Arc};
 use tokio::fs::{self, create_dir_all};
 
@@ -146,6 +146,7 @@ pub async fn prepare_vanilla_download<'a>(
         .await
         .context("fail to create native directory (vanilla)")?;
 
+    let logging_arguments = setup_logging(&game_manifest, &game_directory).await?;
     let game_flags = setup_game_flags(game_manifest.arguments.game);
     let jvm_flags = setup_jvm_flags(game_manifest.arguments.jvm);
 
@@ -178,6 +179,7 @@ pub async fn prepare_vanilla_download<'a>(
         jvm_flags,
     )?;
 
+    jvm_flags.arguments.push(logging_arguments);
     jvm_flags.arguments = jvm_args_parse(&jvm_flags.arguments, &jvm_options);
 
     let mut handles = Vec::new();
@@ -241,6 +243,28 @@ pub async fn prepare_vanilla_download<'a>(
             game_args: game_options,
         },
     ))
+}
+
+async fn setup_logging(game_manifest: &GameManifest, game_directory: &PathBuf) -> Result<String> {
+    let logging_url = &game_manifest.logging.client.file.url;
+    let logging_path =
+        game_directory.join(&game_manifest.logging.client.logging_type.replace("-", "."));
+    if !logging_path.exists() {
+        let p = download_file(logging_url, None).await?;
+        fs::write(&logging_path, p).await?;
+    } else if validate_sha1(&logging_path, &game_manifest.logging.client.file.sha1)
+        .await
+        .is_err()
+    {
+        let p = download_file(logging_url, None).await?;
+        fs::write(&logging_path, p).await?;
+    }
+    let logging_argument = game_manifest
+        .logging
+        .client
+        .argument
+        .replace("${path}", &logging_path.to_string_lossy().to_string());
+    Ok(logging_argument)
 }
 
 fn add_jvm_rules(

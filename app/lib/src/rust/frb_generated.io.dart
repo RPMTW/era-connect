@@ -1850,8 +1850,8 @@ final class wire_cst_advanced_options extends ffi.Struct {
 }
 
 final class wire_cst_UILayoutValue_CompletedSetup extends ffi.Struct {
-  @ffi.Int()
-  external int field0;
+  @ffi.Bool()
+  external bool field0;
 }
 
 final class UILayoutValueKind extends ffi.Union {
