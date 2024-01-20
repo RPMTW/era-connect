@@ -239,7 +239,7 @@ pub async fn prepare_forge_download<'a>(
     ))
 }
 
-pub async fn process_forge<'a>(
+pub fn process_forge<'a>(
     mut launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
@@ -600,8 +600,7 @@ pub async fn full_forge_download(collection: &Collection) -> anyhow::Result<Laun
         forge_arguments.game_args,
         game_manifest,
         manifest,
-    )
-    .await?;
+    )?;
     execute_and_progress(
         collection_id,
         forge_processor_progress,

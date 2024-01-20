@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use core::fmt;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -48,16 +48,17 @@ pub struct Rule {
 }
 
 pub fn get_rules(argument: &[Value]) -> Result<Vec<Rule>> {
-    let rules: Result<Vec<Rule>, _> = argument
+    let rules: anyhow::Result<Vec<Rule>> = argument
         .iter()
         .filter(|x| x["rules"][0].is_object())
         .map(|x| {
             Rule::deserialize(
                 x.get("rules")
-                    .expect("rules doen't exists")
+                    .context("rules doen't exists")?
                     .get(0)
-                    .expect("somehow rules exist but its empty"),
+                    .context("somehow rules exist but its empty")?,
             )
+            .map_err(|x| anyhow!(x))
         })
         .collect();
     rules.context("Failed to collect/serialize rules")

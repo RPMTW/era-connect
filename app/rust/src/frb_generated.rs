@@ -57,7 +57,7 @@ fn wire_Collection_create_impl(
     mod_loader: impl CstDecode<Option<crate::api::shared_resources::collection::ModLoader>>,
     advanced_options: impl CstDecode<Option<crate::api::shared_resources::collection::AdvancedOptions>>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "Collection_create",
             port: Some(port_),
@@ -68,19 +68,15 @@ fn wire_Collection_create_impl(
             let api_version_metadata = version_metadata.cst_decode();
             let api_mod_loader = mod_loader.cst_decode();
             let api_advanced_options = advanced_options.cst_decode();
-            move |context| async move {
-                transform_result_dco(
-                    (move || async move {
-                        crate::api::shared_resources::collection::Collection::create(
-                            api_display_name,
-                            api_version_metadata,
-                            api_mod_loader,
-                            api_advanced_options,
-                        )
-                        .await
-                    })()
-                    .await,
-                )
+            move |context| {
+                transform_result_dco((move || {
+                    crate::api::shared_resources::collection::Collection::create(
+                        api_display_name,
+                        api_version_metadata,
+                        api_mod_loader,
+                        api_advanced_options,
+                    )
+                })())
             }
         },
     )
@@ -102,9 +98,9 @@ fn wire_Collection_download_game_impl(
             move |context| async move {
                 transform_result_dco(
                     (move || async move {
-                        let mut api_that = api_that.rust_auto_opaque_decode_ref_mut();
+                        let api_that = api_that.rust_auto_opaque_decode_ref();
                         crate::api::shared_resources::collection::Collection::download_game(
-                            &mut api_that,
+                            &api_that,
                         )
                         .await
                     })()
@@ -720,6 +716,32 @@ impl SseDecode for i64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_i64::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for crate::api::backend_exclusive::vanilla::launcher::LaunchArgs {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_jvmArgs = <Vec<String>>::sse_decode(deserializer);
+        let mut var_mainClass = <String>::sse_decode(deserializer);
+        let mut var_gameArgs = <Vec<String>>::sse_decode(deserializer);
+        return crate::api::backend_exclusive::vanilla::launcher::LaunchArgs {
+            jvm_args: var_jvmArgs,
+            main_class: var_mainClass,
+            game_args: var_gameArgs,
+        };
+    }
+}
+
+impl SseDecode for Vec<String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<String>::sse_decode(deserializer));
+        }
+        return ans_;
     }
 }
 
@@ -1358,6 +1380,30 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::shared_resources::collection:
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart
+    for crate::api::backend_exclusive::vanilla::launcher::LaunchArgs
+{
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.jvm_args.into_into_dart().into_dart(),
+            self.main_class.into_into_dart().into_dart(),
+            self.game_args.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::backend_exclusive::vanilla::launcher::LaunchArgs
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::backend_exclusive::vanilla::launcher::LaunchArgs>
+    for crate::api::backend_exclusive::vanilla::launcher::LaunchArgs
+{
+    fn into_into_dart(self) -> crate::api::backend_exclusive::vanilla::launcher::LaunchArgs {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart
     for crate::api::shared_resources::authentication::msa_flow::LoginFlowDeviceCode
 {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
@@ -1916,6 +1962,25 @@ impl SseEncode for i64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_i64::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for crate::api::backend_exclusive::vanilla::launcher::LaunchArgs {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<String>>::sse_encode(self.jvm_args, serializer);
+        <String>::sse_encode(self.main_class, serializer);
+        <Vec<String>>::sse_encode(self.game_args, serializer);
+    }
+}
+
+impl SseEncode for Vec<String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <String>::sse_encode(item, serializer);
+        }
     }
 }
 

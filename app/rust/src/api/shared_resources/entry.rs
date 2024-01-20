@@ -36,9 +36,8 @@ pub static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
         .expect("Can't find data_dir")
         .join("era-connect")
 });
-pub static DOWNLOAD_PROGRESS: Lazy<DashMap<CollectionId, Progress>> =
-    Lazy::new(|| DashMap::default());
-pub static STORAGE: Lazy<StorageState> = Lazy::new(|| StorageState::new());
+pub static DOWNLOAD_PROGRESS: Lazy<DashMap<CollectionId, Progress>> = Lazy::new(DashMap::default);
+pub static STORAGE: Lazy<StorageState> = Lazy::new(StorageState::new);
 
 #[frb(init)]
 pub fn init_app() -> anyhow::Result<()> {
@@ -152,7 +151,7 @@ pub async fn create_collection(
     advanced_options: Option<AdvancedOptions>,
 ) -> anyhow::Result<()> {
     let mut collection =
-        Collection::create(display_name, version_metadata, mod_loader, advanced_options).await?;
+        Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
     let loader = collection.get_loader()?;
 
     loader.save(&collection)?;

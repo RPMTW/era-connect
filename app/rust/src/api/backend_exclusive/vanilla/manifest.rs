@@ -29,13 +29,13 @@ pub struct GameManifest {
     pub version_type: VersionType,
 }
 
-#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
 pub struct Arguments {
     pub game: Vec<Argument>,
     pub jvm: Vec<Argument>,
 }
 
-#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum Argument {
     General(String),
@@ -45,7 +45,7 @@ pub enum Argument {
     },
 }
 
-#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum ArgumentRuledValue {
     Single(String),

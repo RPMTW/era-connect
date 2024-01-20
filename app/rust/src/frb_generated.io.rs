@@ -202,6 +202,28 @@ impl CstDecode<crate::api::shared_resources::collection::CollectionId> for wire_
         crate::api::shared_resources::collection::CollectionId(self.field0.cst_decode())
     }
 }
+impl CstDecode<crate::api::backend_exclusive::vanilla::launcher::LaunchArgs>
+    for wire_cst_launch_args
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::api::backend_exclusive::vanilla::launcher::LaunchArgs {
+        crate::api::backend_exclusive::vanilla::launcher::LaunchArgs {
+            jvm_args: self.jvm_args.cst_decode(),
+            main_class: self.main_class.cst_decode(),
+            game_args: self.game_args.cst_decode(),
+        }
+    }
+}
+impl CstDecode<Vec<String>> for *mut wire_cst_list_String {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> Vec<String> {
+        let vec = unsafe {
+            let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+            flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        };
+        vec.into_iter().map(CstDecode::cst_decode).collect()
+    }
+}
 impl CstDecode<Vec<crate::api::shared_resources::authentication::account::MinecraftAccount>>
     for *mut wire_cst_list_minecraft_account
 {
@@ -484,6 +506,20 @@ impl NewWithNullPtr for wire_cst_collection_id {
     }
 }
 impl Default for wire_cst_collection_id {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_launch_args {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            jvm_args: core::ptr::null_mut(),
+            main_class: core::ptr::null_mut(),
+            game_args: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_launch_args {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -864,6 +900,18 @@ pub extern "C" fn frbgen_era_connect_cst_new_box_autoadd_version_metadata(
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_era_connect_cst_new_list_String(len: i32) -> *mut wire_cst_list_String {
+    let wrap = wire_cst_list_String {
+        ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+            <*mut wire_cst_list_prim_u_8_strict>::new_with_null_ptr(),
+            len,
+        ),
+        len,
+    };
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_era_connect_cst_new_list_minecraft_account(
     len: i32,
 ) -> *mut wire_cst_list_minecraft_account {
@@ -982,6 +1030,19 @@ pub struct wire_cst_advanced_options {
 #[derive(Clone, Copy)]
 pub struct wire_cst_collection_id {
     field0: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_launch_args {
+    jvm_args: *mut wire_cst_list_String,
+    main_class: *mut wire_cst_list_prim_u_8_strict,
+    game_args: *mut wire_cst_list_String,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_list_String {
+    ptr: *mut *mut wire_cst_list_prim_u_8_strict,
+    len: i32,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

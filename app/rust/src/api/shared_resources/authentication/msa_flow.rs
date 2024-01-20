@@ -16,7 +16,6 @@ use serde_json::json;
 use tokio::time::sleep;
 use uuid::Uuid;
 
-use crate::frb_generated::RustOpaque;
 use crate::frb_generated::StreamSink;
 
 use super::account::{AccountToken, MinecraftAccount, MinecraftCape, MinecraftSkin};

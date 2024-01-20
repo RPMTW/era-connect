@@ -6,6 +6,7 @@
 import 'api/backend_exclusive/storage/account_storage.dart';
 import 'api/backend_exclusive/storage/storage_loader.dart';
 import 'api/backend_exclusive/storage/ui_layout.dart';
+import 'api/backend_exclusive/vanilla/launcher.dart';
 import 'api/backend_exclusive/vanilla/version.dart';
 import 'api/shared_resources/authentication/account.dart';
 import 'api/shared_resources/authentication/msa_flow.dart';
@@ -82,7 +83,8 @@ abstract class RustLibApi extends BaseApi {
       AdvancedOptions? advancedOptions,
       dynamic hint});
 
-  Future<void> collectionDownloadGame({required Collection that, dynamic hint});
+  Future<LaunchArgs> collectionDownloadGame(
+      {required Collection that, dynamic hint});
 
   Future<PathBuf> collectionGameDirectory(
       {required Collection that, dynamic hint});
@@ -210,17 +212,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> collectionDownloadGame(
+  Future<LaunchArgs> collectionDownloadGame(
       {required Collection that, dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         var arg0 =
-            cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockCollection(
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockCollection(
                 that);
         return wire.wire_Collection_download_game(port_, arg0);
       },
       codec: DcoCodec(
-        decodeSuccessData: dco_decode_unit,
+        decodeSuccessData: dco_decode_launch_args,
         decodeErrorData: dco_decode_AnyhowException,
       ),
       constMeta: kCollectionDownloadGameConstMeta,
@@ -822,6 +824,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LaunchArgs dco_decode_launch_args(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return LaunchArgs(
+      jvmArgs: dco_decode_list_String(arr[0]),
+      mainClass: dco_decode_String(arr[1]),
+      gameArgs: dco_decode_list_String(arr[2]),
+    );
+  }
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
   List<MinecraftAccount> dco_decode_list_minecraft_account(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_minecraft_account).toList();
@@ -1304,6 +1325,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int sse_decode_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getInt64();
+  }
+
+  @protected
+  LaunchArgs sse_decode_launch_args(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_jvmArgs = sse_decode_list_String(deserializer);
+    var var_mainClass = sse_decode_String(deserializer);
+    var var_gameArgs = sse_decode_list_String(deserializer);
+    return LaunchArgs(
+        jvmArgs: var_jvmArgs, mainClass: var_mainClass, gameArgs: var_gameArgs);
+  }
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <String>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -1957,6 +2000,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_i_64(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt64(self);
+  }
+
+  @protected
+  void sse_encode_launch_args(LaunchArgs self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_String(self.jvmArgs, serializer);
+    sse_encode_String(self.mainClass, serializer);
+    sse_encode_list_String(self.gameArgs, serializer);
+  }
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_String(item, serializer);
+    }
   }
 
   @protected

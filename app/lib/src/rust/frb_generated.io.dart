@@ -6,6 +6,7 @@
 import 'api/backend_exclusive/storage/account_storage.dart';
 import 'api/backend_exclusive/storage/storage_loader.dart';
 import 'api/backend_exclusive/storage/ui_layout.dart';
+import 'api/backend_exclusive/vanilla/launcher.dart';
 import 'api/backend_exclusive/vanilla/version.dart';
 import 'api/shared_resources/authentication/account.dart';
 import 'api/shared_resources/authentication/msa_flow.dart';
@@ -125,6 +126,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int dco_decode_i_64(dynamic raw);
+
+  @protected
+  LaunchArgs dco_decode_launch_args(dynamic raw);
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
 
   @protected
   List<MinecraftAccount> dco_decode_list_minecraft_account(dynamic raw);
@@ -317,6 +324,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
+  LaunchArgs sse_decode_launch_args(SseDeserializer deserializer);
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
   List<MinecraftAccount> sse_decode_list_minecraft_account(
@@ -528,6 +541,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_list_String> cst_encode_list_String(List<String> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_String(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      ans.ref.ptr[i] = cst_encode_String(raw[i]);
+    }
+    return ans;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_list_minecraft_account>
       cst_encode_list_minecraft_account(List<MinecraftAccount> raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -705,6 +728,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_collection_id(
       CollectionId apiObj, wire_cst_collection_id wireObj) {
     wireObj.field0 = cst_encode_String(apiObj.field0);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_launch_args(
+      LaunchArgs apiObj, wire_cst_launch_args wireObj) {
+    wireObj.jvm_args = cst_encode_list_String(apiObj.jvmArgs);
+    wireObj.main_class = cst_encode_String(apiObj.mainClass);
+    wireObj.game_args = cst_encode_list_String(apiObj.gameArgs);
   }
 
   @protected
@@ -1002,6 +1033,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_i_64(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_launch_args(LaunchArgs self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_minecraft_account(
@@ -1630,6 +1667,21 @@ class RustLibWire implements BaseWire {
       _cst_new_box_autoadd_version_metadataPtr
           .asFunction<ffi.Pointer<wire_cst_version_metadata> Function()>();
 
+  ffi.Pointer<wire_cst_list_String> cst_new_list_String(
+    int len,
+  ) {
+    return _cst_new_list_String(
+      len,
+    );
+  }
+
+  late final _cst_new_list_StringPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_String> Function(
+              ffi.Int32)>>('frbgen_era_connect_cst_new_list_String');
+  late final _cst_new_list_String = _cst_new_list_StringPtr
+      .asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
+
   ffi.Pointer<wire_cst_list_minecraft_account> cst_new_list_minecraft_account(
     int len,
   ) {
@@ -1870,6 +1922,13 @@ final class wire_cst_minecraft_account extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_minecraft_cape> capes;
 }
 
+final class wire_cst_list_String extends ffi.Struct {
+  external ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
 final class wire_cst_list_minecraft_account extends ffi.Struct {
   external ffi.Pointer<wire_cst_minecraft_account> ptr;
 
@@ -1921,6 +1980,14 @@ final class wire_cst_account_storage_value extends ffi.Struct {
 
 final class wire_cst_collection_id extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> field0;
+}
+
+final class wire_cst_launch_args extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_String> jvm_args;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> main_class;
+
+  external ffi.Pointer<wire_cst_list_String> game_args;
 }
 
 final class wire_cst_LoginFlowEvent_Stage extends ffi.Struct {
