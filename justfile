@@ -4,6 +4,11 @@ gen:
     cd app && flutter pub get
     cd app && flutter_rust_bridge_codegen generate
 
+update:
+    cargo install 'flutter_rust_bridge_codegen@^2.0.0-dev.8'
+    cd app && flutter pub upgrade
+    cd app/rust && cargo update
+
 lint:
     cd app/native && cargo fmt
     cd app && dart format .

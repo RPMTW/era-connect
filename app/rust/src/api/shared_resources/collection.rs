@@ -22,7 +22,8 @@ use crate::api::{
 };
 
 #[serde_with::serde_as]
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[frb(opaque)]
 pub struct Collection {
     pub display_name: String,
     pub minecraft_version: VersionMetadata,
@@ -183,10 +184,12 @@ impl Collection {
                 if file_name == COLLECTION_FILE_NAME {
                     let path = collection_base_dir.join(&base_entry_path);
                     let loader = StorageLoader::new(file_name.clone(), Cow::Borrowed(&path));
-                    let mut a = loader.load::<Collection>()?;
-                    dbg!(&a);
-                    a.entry_path = path;
-                    loader.save(&a)?;
+                    let mut collection = loader.load::<Collection>()?;
+
+                    // block_on(collection.mod_manager.scan())?;
+                    info!("Succesfully scanned the mods");
+                    collection.entry_path = path;
+                    loader.save(&collection)?;
                     loaders.push(loader);
                 }
             }
@@ -195,14 +198,14 @@ impl Collection {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct ModLoader {
     #[serde(rename = "type")]
     pub mod_loader_type: ModLoaderType,
     pub version: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub enum ModLoaderType {
     Forge,
     NeoForge,
@@ -210,7 +213,7 @@ pub enum ModLoaderType {
     Quilt,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct AdvancedOptions {
     pub jvm_max_memory: Option<usize>,
 }

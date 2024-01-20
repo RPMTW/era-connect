@@ -20,7 +20,7 @@ pub struct LatestVersion {
     pub snapshot: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 #[frb[dart_metadata = ("freezed")]]
 pub struct VersionMetadata {
@@ -37,7 +37,7 @@ pub struct VersionMetadata {
     pub compliance_level: u32,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum VersionType {
     Release,

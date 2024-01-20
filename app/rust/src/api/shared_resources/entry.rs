@@ -1,10 +1,11 @@
+use anyhow::anyhow;
 use anyhow::Context;
 use dashmap::DashMap;
 use flutter_rust_bridge::frb;
+use flutter_rust_bridge::setup_default_user_utils;
 use log::{debug, info, warn};
 use once_cell::sync::Lazy;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::{fs::create_dir_all, time::Duration};
 
 use uuid::Uuid;
@@ -35,12 +36,18 @@ pub static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
         .expect("Can't find data_dir")
         .join("era-connect")
 });
-pub static DOWNLOAD_PROGRESS: Lazy<Arc<DashMap<CollectionId, Progress>>> =
-    Lazy::new(|| Arc::new(DashMap::default()));
+pub static DOWNLOAD_PROGRESS: Lazy<DashMap<CollectionId, Progress>> =
+    Lazy::new(|| DashMap::default());
 pub static STORAGE: Lazy<StorageState> = Lazy::new(|| StorageState::new());
 
 #[frb(init)]
-pub fn setup_logger() -> anyhow::Result<()> {
+pub fn init_app() -> anyhow::Result<()> {
+    setup_default_user_utils();
+    setup_logger()?;
+    Ok(())
+}
+
+fn setup_logger() -> anyhow::Result<()> {
     use chrono::Local;
 
     let file_name = format!("{}.log", Local::now().format("%Y-%m-%d-%H-%M-%S"));
@@ -103,8 +110,8 @@ pub fn get_skin_file_path(skin: MinecraftSkin) -> String {
     skin.get_head_file_path().to_string_lossy().to_string()
 }
 
-pub fn remove_minecraft_account(uuid: Uuid) -> anyhow::Result<()> {
-    let mut storage = STORAGE.account_storage.blocking_write();
+pub async fn remove_minecraft_account(uuid: Uuid) -> anyhow::Result<()> {
+    let mut storage = STORAGE.account_storage.write().await;
     storage.remove_account(uuid);
     storage.save()?;
     Ok(())
@@ -122,13 +129,15 @@ pub async fn minecraft_login_flow(skin: StreamSink<LoginFlowEvent>) -> anyhow::R
             storage.add_account(account.clone(), true);
             storage.save()?;
 
-            skin.add(LoginFlowEvent::Success(account))?;
+            skin.add(LoginFlowEvent::Success(account))
+                .map_err(|x| anyhow!(x))?;
             info!("Successfully login minecraft account");
         }
         Err(e) => {
             skin.add(LoginFlowEvent::Error(LoginFlowErrors::UnknownError(
                 format!("{e:#}"),
-            )))?;
+            )))
+            .map_err(|x| anyhow!(x))?;
             warn!("Failed to login minecraft account: {:#}", e);
         }
     }
@@ -154,9 +163,7 @@ pub async fn create_collection(
     let id = collection.get_collection_id();
     let download_handle = tokio::spawn(async move {
         loop {
-            let p = (DOWNLOAD_PROGRESS).clone();
-            let a = p.get(&id);
-            if let Some(x) = a {
+            if let Some(x) = DOWNLOAD_PROGRESS.get(&id) {
                 if x.percentages >= 100.0 {
                     break;
                 }
