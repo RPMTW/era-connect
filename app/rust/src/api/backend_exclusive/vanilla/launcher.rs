@@ -146,8 +146,8 @@ pub async fn prepare_vanilla_download<'a>(
         .await
         .context("fail to create native directory (vanilla)")?;
 
-    let game_flags = setup_game_flags(game_manifest.arguments.game)?;
-    let jvm_flags = setup_jvm_flags(game_manifest.arguments.jvm)?;
+    let game_flags = setup_game_flags(game_manifest.arguments.game);
+    let jvm_flags = setup_jvm_flags(game_manifest.arguments.jvm);
 
     let (game_options, game_flags) = setup_game_option(
         version_id,
@@ -218,7 +218,7 @@ pub async fn prepare_vanilla_download<'a>(
 
     if let Some(advanced_option) = &collection.advanced_options {
         if let Some(max_memory) = advanced_option.jvm_max_memory {
-            jvm_flags.arguments.push(format!("-Xmx{}M", max_memory))
+            jvm_flags.arguments.push(format!("-Xmx{max_memory}M"))
         }
     }
 
@@ -348,20 +348,18 @@ fn setup_jvm_options(
     })
 }
 
-fn setup_jvm_flags(jvm_argument: Vec<Argument>) -> Result<JvmFlagsUnprocessed, anyhow::Error> {
-    let jvm_flags = JvmFlagsUnprocessed {
+const fn setup_jvm_flags(jvm_argument: Vec<Argument>) -> JvmFlagsUnprocessed {
+    JvmFlagsUnprocessed {
         arguments: jvm_argument,
         additional_arguments: None,
-    };
-    Ok(jvm_flags)
+    }
 }
 
-fn setup_game_flags(game_arguments: Vec<Argument>) -> Result<GameFlagsUnprocessed, anyhow::Error> {
-    let game_flags = GameFlagsUnprocessed {
+const fn setup_game_flags(game_arguments: Vec<Argument>) -> GameFlagsUnprocessed {
+    GameFlagsUnprocessed {
         arguments: game_arguments,
         additional_arguments: None,
-    };
-    Ok(game_flags)
+    }
 }
 
 async fn setup_game_option(
@@ -407,7 +405,7 @@ async fn setup_game_option(
         arguments: game_flags
             .arguments
             .into_iter()
-            .map(|x| match x {
+            .flat_map(|x| match x {
                 Argument::General(x) => vec![x],
                 _ => vec![String::new()],
                 // Argument::Ruled { value, .. } => match value {
@@ -415,7 +413,6 @@ async fn setup_game_option(
                 //     manifest::ArgumentRuledValue::Multiple(x) => x,
                 // },
             })
-            .flatten()
             .collect(),
         additional_arguments: game_flags.additional_arguments,
     };
@@ -431,7 +428,7 @@ async fn setup_game_option(
 fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmOptions) -> Vec<String> {
     let mut parsed_argument = Vec::new();
 
-    for argument in jvm_flags.iter() {
+    for argument in jvm_flags {
         let mut s = argument.as_str();
         let mut buf = String::with_capacity(s.len());
 

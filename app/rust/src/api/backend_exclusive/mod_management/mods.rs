@@ -76,7 +76,7 @@ pub struct ModManager {
     target_game_version: VersionMetadata,
 }
 
-pub static FERINTH: Lazy<ferinth::Ferinth> = Lazy::new(|| ferinth::Ferinth::default());
+pub static FERINTH: Lazy<ferinth::Ferinth> = Lazy::new(ferinth::Ferinth::default);
 
 impl PartialEq for ModManager {
     fn eq(&self, other: &Self) -> bool {
@@ -100,7 +100,7 @@ impl ModManager {
             target_game_version,
         }
     }
-    pub async fn get_download(&mut self) -> anyhow::Result<DownloadArgs> {
+    pub fn get_download(&mut self) -> anyhow::Result<DownloadArgs> {
         let current_size = Arc::new(AtomicUsize::new(0));
         let total_size = Arc::new(AtomicUsize::new(0));
         let base_path = self.game_directory.join("mods");
@@ -176,14 +176,13 @@ impl ModManager {
         minecraft_mod: &MinecraftModData,
         mod_override: &Vec<ModOverride>,
     ) -> anyhow::Result<()> {
-        let modrinth = &FERINTH;
         for dept in &minecraft_mod.0.dependencies {
             if let Some(dependency) = &dept.version_id {
-                let ver = modrinth.get_version(dependency).await?;
+                let ver = FERINTH.get_version(dependency).await?;
                 self.add_mod(ver.into(), vec![Tag::Dependencies], mod_override)
                     .await?;
             } else if let Some(project) = &dept.project_id {
-                let ver = modrinth.get_project(project).await?;
+                let ver = FERINTH.get_project(project).await?;
                 self.add_project(ver, vec![Tag::Dependencies], mod_override)
                     .await?;
             }
@@ -198,8 +197,7 @@ impl ModManager {
         tag: Vec<Tag>,
         mod_override: &Vec<ModOverride>,
     ) -> anyhow::Result<()> {
-        let modrinth = &FERINTH;
-        let project = modrinth
+        let project = FERINTH
             .get_project(&minecraft_mod_data.0.project_id)
             .await?;
         let mod_metadata = ModMetadata {
@@ -227,7 +225,7 @@ impl ModManager {
             .with_context(|| "don't add mods in vanilla")?;
         let mod_loader_facet = Facet::Categories(mod_loader.to_string());
         let version_facet = Facet::Versions(self.target_game_version.id.to_string());
-        let search_hits = (&FERINTH)
+        let search_hits = FERINTH
             .search(
                 query,
                 &Sort::Relevance,

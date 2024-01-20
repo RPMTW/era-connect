@@ -57,7 +57,7 @@ pub async fn extract_assets(asset_index: &AssetIndex, folder: PathBuf) -> Result
     let mut asset_download_hash = Vec::new();
     let mut asset_download_path = Vec::new();
     let mut asset_download_size = Vec::new();
-    for (_, val) in asset_objects.iter() {
+    for (_, val) in asset_objects {
         let size = val
             .get("size")
             .context("size doesn't exist!")?

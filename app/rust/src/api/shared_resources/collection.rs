@@ -53,7 +53,7 @@ const COLLECTION_BASE: &str = "collections";
 
 impl Collection {
     /// Creates a collection and return a collection with its loader attached
-    pub async fn create(
+    pub fn create(
         display_name: String,
         version_metadata: VersionMetadata,
         mod_loader: Option<ModLoader>,
@@ -105,34 +105,32 @@ impl Collection {
     #[frb(ignore)]
     pub async fn download_mods(&mut self) -> anyhow::Result<()> {
         let id = self.get_collection_id();
-        let download_args = self.mod_manager.get_download().await?;
+        let download_args = self.mod_manager.get_download()?;
         execute_and_progress(id, download_args, DownloadBias::default()).await?;
         Ok(())
     }
 
+    /// SIDE-EFFECT: put `launch_args` into Struct
     pub async fn launch_game(&mut self) -> anyhow::Result<()> {
         if self.launch_args.is_none() {
-            self.download_game().await?;
+            self.launch_args = Some(self.download_game().await?);
         }
         vanilla::launcher::launch_game(&self.launch_args.as_ref().unwrap()).await
     }
 
-    /// SIDE-EFFECT: put launch_args into Struct; download game, but also verifies
-    pub async fn download_game(&mut self) -> anyhow::Result<()> {
+    /// Downloads game(alos verifies)
+    pub async fn download_game(&self) -> anyhow::Result<LaunchArgs> {
         let mod_loader_clone = self.mod_loader.clone();
         let p = if let Some(mod_loader) = mod_loader_clone {
             match mod_loader.mod_loader_type {
-                ModLoaderType::Forge | ModLoaderType::NeoForge => {
-                    full_forge_download(&self).await?
-                }
-                ModLoaderType::Quilt => full_quilt_download(&self).await?,
-                _ => bail!("you useless!"),
+                ModLoaderType::Forge | ModLoaderType::NeoForge => full_forge_download(self).await?,
+                ModLoaderType::Quilt => full_quilt_download(self).await?,
+                _ => bail!("Modloader not yet implemented"),
             }
         } else {
-            full_vanilla_download(&self).await?
+            full_vanilla_download(self).await?
         };
-        self.launch_args = Some(p);
-        Ok(())
+        Ok(p)
     }
 
     pub fn game_directory(&self) -> PathBuf {

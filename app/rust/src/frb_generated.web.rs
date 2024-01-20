@@ -108,6 +108,37 @@ impl CstDecode<crate::api::shared_resources::collection::CollectionId>
         crate::api::shared_resources::collection::CollectionId(self_.get(0).cst_decode())
     }
 }
+impl CstDecode<crate::api::backend_exclusive::vanilla::launcher::LaunchArgs>
+    for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::api::backend_exclusive::vanilla::launcher::LaunchArgs {
+        let self_ = self
+            .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
+            .unwrap();
+        assert_eq!(
+            self_.length(),
+            3,
+            "Expected 3 elements, got {}",
+            self_.length()
+        );
+        crate::api::backend_exclusive::vanilla::launcher::LaunchArgs {
+            jvm_args: self_.get(0).cst_decode(),
+            main_class: self_.get(1).cst_decode(),
+            game_args: self_.get(2).cst_decode(),
+        }
+    }
+}
+impl CstDecode<Vec<String>> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> Vec<String> {
+        self.dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
+            .unwrap()
+            .iter()
+            .map(CstDecode::cst_decode)
+            .collect()
+    }
+}
 impl CstDecode<Vec<crate::api::shared_resources::authentication::account::MinecraftAccount>>
     for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
 {

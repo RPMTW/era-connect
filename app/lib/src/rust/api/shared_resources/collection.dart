@@ -5,6 +5,7 @@
 
 import '../../frb_generated.dart';
 import '../backend_exclusive/storage/storage_loader.dart';
+import '../backend_exclusive/vanilla/launcher.dart';
 import '../backend_exclusive/vanilla/version.dart';
 import 'authentication/account.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
@@ -41,8 +42,8 @@ class Collection extends RustOpaque {
           advancedOptions: advancedOptions,
           hint: hint);
 
-  /// SIDE-EFFECT: put launch_args into Struct; download game, but also verifies
-  Future<void> downloadGame({dynamic hint}) =>
+  /// Downloads game(alos verifies)
+  Future<LaunchArgs> downloadGame({dynamic hint}) =>
       RustLib.instance.api.collectionDownloadGame(
         that: this,
       );
@@ -65,6 +66,7 @@ class Collection extends RustOpaque {
         that: this,
       );
 
+  /// SIDE-EFFECT: put `launch_args` into Struct
   Future<void> launchGame({dynamic hint}) =>
       RustLib.instance.api.collectionLaunchGame(
         that: this,

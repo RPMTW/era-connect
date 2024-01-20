@@ -6,6 +6,7 @@
 import 'api/backend_exclusive/storage/account_storage.dart';
 import 'api/backend_exclusive/storage/storage_loader.dart';
 import 'api/backend_exclusive/storage/ui_layout.dart';
+import 'api/backend_exclusive/vanilla/launcher.dart';
 import 'api/backend_exclusive/vanilla/version.dart';
 import 'api/shared_resources/authentication/account.dart';
 import 'api/shared_resources/authentication/msa_flow.dart';
@@ -124,6 +125,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int dco_decode_i_64(dynamic raw);
+
+  @protected
+  LaunchArgs dco_decode_launch_args(dynamic raw);
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
 
   @protected
   List<MinecraftAccount> dco_decode_list_minecraft_account(dynamic raw);
@@ -319,6 +326,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
+  LaunchArgs sse_decode_launch_args(SseDeserializer deserializer);
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
   List<MinecraftAccount> sse_decode_list_minecraft_account(
@@ -537,6 +550,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Object cst_encode_i_64(int raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return castNativeBigInt(raw);
+  }
+
+  @protected
+  List<dynamic> cst_encode_launch_args(LaunchArgs raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return [
+      cst_encode_list_String(raw.jvmArgs),
+      cst_encode_String(raw.mainClass),
+      cst_encode_list_String(raw.gameArgs)
+    ];
+  }
+
+  @protected
+  List<dynamic> cst_encode_list_String(List<String> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.map(cst_encode_String).toList();
   }
 
   @protected
@@ -895,6 +924,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_i_64(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_launch_args(LaunchArgs self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_minecraft_account(
