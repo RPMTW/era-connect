@@ -4,7 +4,6 @@ use std::{borrow::Cow, fs::create_dir_all};
 use anyhow::bail;
 use chrono::{DateTime, Duration, Utc};
 use flutter_rust_bridge::frb;
-use futures::executor::block_on;
 use log::info;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -28,6 +27,7 @@ use crate::api::{
 
 #[serde_with::serde_as]
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[frb(opaque)]
 pub struct Collection {
     pub display_name: String,
     pub minecraft_version: VersionMetadata,
@@ -221,7 +221,7 @@ impl Collection {
                     let loader = StorageLoader::new(file_name.clone(), Cow::Borrowed(&path));
                     let mut collection = loader.load::<Collection>()?;
 
-                    block_on(collection.mod_manager.scan())?;
+                    // block_on(collection.mod_manager.scan())?;
                     info!("Succesfully scanned the mods");
                     collection.entry_path = path;
                     loader.save(&collection)?;
