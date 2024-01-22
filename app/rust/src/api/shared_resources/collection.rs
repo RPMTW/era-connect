@@ -14,7 +14,7 @@ pub use crate::api::backend_exclusive::storage::storage_loader::StorageLoader;
 use crate::api::{
     backend_exclusive::{
         download::{execute_and_progress, DownloadBias},
-        mod_management::mods::{ModManager, ModOverride, Tag, FERINTH},
+        mod_management::mods::{ModManager, ModOverride, Tag, FERINTH, FURSE},
         modding::{forge::full_forge_download, quilt::full_quilt_download},
         vanilla::{
             self,
@@ -88,7 +88,7 @@ impl Collection {
 
     /// use project id(slug also works) to add mod, will deal with dependencies insertion
     #[frb(ignore)]
-    pub async fn add_mod(
+    pub async fn add_modrinth_mod(
         &mut self,
         project_id: impl AsRef<str> + Send + Sync,
         tag: Vec<Tag>,
@@ -97,7 +97,20 @@ impl Collection {
         let project_id = project_id.as_ref();
         let project = (&FERINTH).get_project(project_id).await?;
         self.mod_manager
-            .add_project(project, tag, mod_override.unwrap_or(&Vec::new()))
+            .add_project(project.into(), tag, mod_override.unwrap_or(&Vec::new()))
+            .await?;
+        Ok(())
+    }
+    #[frb(ignore)]
+    pub async fn add_curseforge_mod(
+        &mut self,
+        project_id: i32,
+        tag: Vec<Tag>,
+        mod_override: Option<&Vec<ModOverride>>,
+    ) -> anyhow::Result<()> {
+        let project = (&FURSE).get_mod(project_id).await?;
+        self.mod_manager
+            .add_project(project.into(), tag, mod_override.unwrap_or(&Vec::new()))
             .await?;
         Ok(())
     }

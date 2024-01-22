@@ -10,11 +10,13 @@ use std::{fs::create_dir_all, time::Duration};
 
 use uuid::Uuid;
 
+use crate::api::backend_exclusive::mod_management::mods::ModOverride;
 pub use crate::api::backend_exclusive::storage::{
     account_storage::{AccountStorage, AccountStorageKey, AccountStorageValue},
     ui_layout::{UILayout, UILayoutKey, UILayoutValue},
 };
 
+use crate::api::backend_exclusive::vanilla::version::get_versions;
 use crate::api::backend_exclusive::{
     download::Progress,
     storage::{storage_loader::StorageInstance, storage_state::StorageState},
@@ -150,13 +152,34 @@ pub async fn create_collection(
     mod_loader: Option<ModLoader>,
     advanced_options: Option<AdvancedOptions>,
 ) -> anyhow::Result<()> {
+    let p = STORAGE.collections.read().await;
+    dbg!(p.last().as_ref().map(|x| &x.mod_manager.mods));
+
     // NOTE: testing purposes
     let mod_loader = Some(ModLoader {
-        mod_loader_type: ModLoaderType::Forge,
+        mod_loader_type: ModLoaderType::NeoForge,
         version: None,
     });
+    let version_metadata = get_versions()
+        .await?
+        .into_iter()
+        .find(|x| x.id == "1.20.4")
+        .unwrap();
     let mut collection =
         Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
+
+    collection
+        .add_curseforge_mod(
+            448233,
+            vec![],
+            Some(&vec![
+                ModOverride::QuiltFabricCompatibility,
+                ModOverride::IgnoreMinorGameVersion,
+            ]),
+        )
+        .await?;
+    collection.download_mods().await?;
+    dbg!(&collection.mod_manager.mods);
     let loader = collection.get_loader()?;
 
     loader.save(&collection)?;

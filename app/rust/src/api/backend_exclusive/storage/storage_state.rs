@@ -20,7 +20,7 @@ impl StorageState {
     pub fn new() -> Self {
         let account_storage = AccountStorage::load().unwrap_or_default();
         let ui_layout = UILayout::load().unwrap_or_default();
-        let collection_loaders = Collection::scan().unwrap_or_default();
+        let collection_loaders = Collection::scan().unwrap();
 
         Self {
             account_storage: Arc::new(RwLock::new(account_storage)),
