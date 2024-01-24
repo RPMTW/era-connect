@@ -38,7 +38,7 @@ pub struct ModloaderLibraryDownloadMetadata {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct ModloaderLibraryArtifact {
+pub struct ModloaderLibraryArtifact {
     path: String,
     sha1: String,
     size: usize,

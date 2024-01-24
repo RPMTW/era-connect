@@ -1056,11 +1056,11 @@ class RustLibWire implements BaseWire {
   void wire_Collection_get_collection_id(NativePortType port_, Object that) =>
       wasmModule.wire_Collection_get_collection_id(port_, that);
 
-  void wire_Collection_get_loader(NativePortType port_, Object that) =>
-      wasmModule.wire_Collection_get_loader(port_, that);
-
   void wire_Collection_launch_game(NativePortType port_, Object that) =>
       wasmModule.wire_Collection_launch_game(port_, that);
+
+  void wire_Collection_save(NativePortType port_, Object that) =>
+      wasmModule.wire_Collection_save(port_, that);
 
   void wire_Collection_scan(NativePortType port_) =>
       wasmModule.wire_Collection_scan(port_);
@@ -1158,9 +1158,9 @@ class RustLibWasmModule implements WasmModule {
   external void wire_Collection_get_collection_id(
       NativePortType port_, Object that);
 
-  external void wire_Collection_get_loader(NativePortType port_, Object that);
-
   external void wire_Collection_launch_game(NativePortType port_, Object that);
+
+  external void wire_Collection_save(NativePortType port_, Object that);
 
   external void wire_Collection_scan(NativePortType port_);
 

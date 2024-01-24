@@ -714,13 +714,13 @@ pub extern "C" fn frbgen_era_connect_wire_Collection_get_collection_id(port_: i6
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_era_connect_wire_Collection_get_loader(port_: i64, that: usize) {
-    wire_Collection_get_loader_impl(port_, that)
+pub extern "C" fn frbgen_era_connect_wire_Collection_launch_game(port_: i64, that: usize) {
+    wire_Collection_launch_game_impl(port_, that)
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_era_connect_wire_Collection_launch_game(port_: i64, that: usize) {
-    wire_Collection_launch_game_impl(port_, that)
+pub extern "C" fn frbgen_era_connect_wire_Collection_save(port_: i64, that: usize) {
+    wire_Collection_save_impl(port_, that)
 }
 
 #[no_mangle]

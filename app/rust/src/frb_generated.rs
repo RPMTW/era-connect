@@ -182,29 +182,6 @@ fn wire_Collection_get_collection_id_impl(
         },
     )
 }
-fn wire_Collection_get_loader_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::rust_async::RwLock<Collection>>,
-    >,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Collection_get_loader",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            move |context| {
-                transform_result_dco((move || {
-                    let api_that = api_that.rust_auto_opaque_decode_ref();
-                    crate::api::shared_resources::collection::Collection::get_loader(&api_that)
-                })())
-            }
-        },
-    )
-}
 fn wire_Collection_launch_game_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -230,6 +207,29 @@ fn wire_Collection_launch_game_impl(
                     })()
                     .await,
                 )
+            }
+        },
+    )
+}
+fn wire_Collection_save_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::rust_async::RwLock<Collection>>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Collection_save",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| {
+                transform_result_dco((move || {
+                    let api_that = api_that.rust_auto_opaque_decode_ref();
+                    crate::api::shared_resources::collection::Collection::save(&api_that)
+                })())
             }
         },
     )

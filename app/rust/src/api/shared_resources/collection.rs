@@ -47,11 +47,12 @@ impl Collection {
     pub async fn launch_game(&mut self) -> anyhow::Result<()> {
         if self.launch_args.is_none() {
             self.launch_args = Some(self.download_game().await?);
+            self.save()?;
         }
         vanilla::launcher::launch_game(&self.launch_args.as_ref().unwrap()).await
     }
 
-    /// Downloads game(alos verifies)
+    /// Downloads game(also verifies)
     pub async fn download_game(&self) -> anyhow::Result<LaunchArgs> {
         let mod_loader_clone = self.mod_loader.clone();
         let p = if let Some(mod_loader) = mod_loader_clone {
@@ -95,7 +96,7 @@ impl Collection {
             launch_args: None,
         };
 
-        loader.save(&collection)?;
+        collection.save()?;
 
         Ok(collection)
     }
@@ -114,9 +115,10 @@ impl Collection {
         )
     }
 
-    pub fn get_loader(&self) -> anyhow::Result<StorageLoader> {
+    pub fn save(&self) -> anyhow::Result<()> {
         let p = Self::create_loader(&self.display_name)?;
-        Ok(p)
+        p.save(self)?;
+        Ok(())
     }
 
     fn create_loader(display_name: &str) -> std::io::Result<StorageLoader> {

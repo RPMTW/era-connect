@@ -42,7 +42,7 @@ class Collection extends RustOpaque {
           advancedOptions: advancedOptions,
           hint: hint);
 
-  /// Downloads game(alos verifies)
+  /// Downloads game(also verifies)
   Future<LaunchArgs> downloadGame({dynamic hint}) =>
       RustLib.instance.api.collectionDownloadGame(
         that: this,
@@ -61,13 +61,12 @@ class Collection extends RustOpaque {
         that: this,
       );
 
-  Future<StorageLoader> getLoader({dynamic hint}) =>
-      RustLib.instance.api.collectionGetLoader(
+  Future<void> launchGame({dynamic hint}) =>
+      RustLib.instance.api.collectionLaunchGame(
         that: this,
       );
 
-  Future<void> launchGame({dynamic hint}) =>
-      RustLib.instance.api.collectionLaunchGame(
+  Future<void> save({dynamic hint}) => RustLib.instance.api.collectionSave(
         that: this,
       );
 

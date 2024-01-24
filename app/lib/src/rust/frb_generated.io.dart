@@ -1289,22 +1289,6 @@ class RustLibWire implements BaseWire {
       _wire_Collection_get_collection_idPtr
           .asFunction<void Function(int, int)>();
 
-  void wire_Collection_get_loader(
-    int port_,
-    int that,
-  ) {
-    return _wire_Collection_get_loader(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_Collection_get_loaderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_era_connect_wire_Collection_get_loader');
-  late final _wire_Collection_get_loader =
-      _wire_Collection_get_loaderPtr.asFunction<void Function(int, int)>();
-
   void wire_Collection_launch_game(
     int port_,
     int that,
@@ -1320,6 +1304,22 @@ class RustLibWire implements BaseWire {
           'frbgen_era_connect_wire_Collection_launch_game');
   late final _wire_Collection_launch_game =
       _wire_Collection_launch_gamePtr.asFunction<void Function(int, int)>();
+
+  void wire_Collection_save(
+    int port_,
+    int that,
+  ) {
+    return _wire_Collection_save(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_Collection_savePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_era_connect_wire_Collection_save');
+  late final _wire_Collection_save =
+      _wire_Collection_savePtr.asFunction<void Function(int, int)>();
 
   void wire_Collection_scan(
     int port_,

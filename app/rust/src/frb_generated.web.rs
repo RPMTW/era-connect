@@ -664,19 +664,19 @@ pub fn wire_Collection_get_collection_id(
 }
 
 #[wasm_bindgen]
-pub fn wire_Collection_get_loader(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-) {
-    wire_Collection_get_loader_impl(port_, that)
-}
-
-#[wasm_bindgen]
 pub fn wire_Collection_launch_game(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
 ) {
     wire_Collection_launch_game_impl(port_, that)
+}
+
+#[wasm_bindgen]
+pub fn wire_Collection_save(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+) {
+    wire_Collection_save_impl(port_, that)
 }
 
 #[wasm_bindgen]

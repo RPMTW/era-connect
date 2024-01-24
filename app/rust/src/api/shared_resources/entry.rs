@@ -157,9 +157,7 @@ pub async fn create_collection(
     });
     let mut collection =
         Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
-    let loader = collection.get_loader()?;
 
-    loader.save(&collection)?;
     info!(
         "Successfully created collection basic file at {}",
         collection.entry_path.display()

@@ -94,10 +94,9 @@ abstract class RustLibApi extends BaseApi {
   Future<CollectionId> collectionGetCollectionId(
       {required Collection that, dynamic hint});
 
-  Future<StorageLoader> collectionGetLoader(
-      {required Collection that, dynamic hint});
-
   Future<void> collectionLaunchGame({required Collection that, dynamic hint});
+
+  Future<void> collectionSave({required Collection that, dynamic hint});
 
   Future<List<StorageLoader>> collectionScan({dynamic hint});
 
@@ -314,32 +313,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<StorageLoader> collectionGetLoader(
-      {required Collection that, dynamic hint}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        var arg0 =
-            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockCollection(
-                that);
-        return wire.wire_Collection_get_loader(port_, arg0);
-      },
-      codec: DcoCodec(
-        decodeSuccessData: dco_decode_storage_loader,
-        decodeErrorData: dco_decode_AnyhowException,
-      ),
-      constMeta: kCollectionGetLoaderConstMeta,
-      argValues: [that],
-      apiImpl: this,
-      hint: hint,
-    ));
-  }
-
-  TaskConstMeta get kCollectionGetLoaderConstMeta => const TaskConstMeta(
-        debugName: "Collection_get_loader",
-        argNames: ["that"],
-      );
-
-  @override
   Future<void> collectionLaunchGame({required Collection that, dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
@@ -361,6 +334,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCollectionLaunchGameConstMeta => const TaskConstMeta(
         debugName: "Collection_launch_game",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<void> collectionSave({required Collection that, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockCollection(
+                that);
+        return wire.wire_Collection_save(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_AnyhowException,
+      ),
+      constMeta: kCollectionSaveConstMeta,
+      argValues: [that],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCollectionSaveConstMeta => const TaskConstMeta(
+        debugName: "Collection_save",
         argNames: ["that"],
       );
 
