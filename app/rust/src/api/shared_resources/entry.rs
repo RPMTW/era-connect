@@ -152,48 +152,28 @@ pub async fn create_collection(
     mod_loader: Option<ModLoader>,
     advanced_options: Option<AdvancedOptions>,
 ) -> anyhow::Result<()> {
-    let p = STORAGE.collections.read().await;
-    dbg!(p.last().as_ref().map(|x| &x.mod_manager.mods));
-
+    // let mut p = STORAGE.collections.write().await;
+    // let collection = p.last_mut().unwrap();
+    // dbg!(&collection);
     // NOTE: testing purposes
     let mod_loader = Some(ModLoader {
-        mod_loader_type: ModLoaderType::NeoForge,
+        mod_loader_type: ModLoaderType::Quilt,
         version: None,
     });
     let version_metadata = get_versions()
         .await?
         .into_iter()
-        .find(|x| x.id == "1.20.4")
+        .find(|x| x.id == "1.20.2")
         .unwrap();
     let mut collection =
         Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
 
-    collection
-        .add_curseforge_mod(
-            448233,
-            vec![],
-            Some(&vec![
-                ModOverride::QuiltFabricCompatibility,
-                ModOverride::IgnoreMinorGameVersion,
-            ]),
-        )
-        .await?;
-    collection.download_mods().await?;
-    dbg!(&collection.mod_manager.mods);
-    let loader = collection.get_loader()?;
-
-    loader.save(&collection)?;
-
-    info!(
-        "Successfully created collection basic file at {}",
-        collection.entry_path.display()
-    );
     let id = collection.get_collection_id();
     let download_handle = tokio::spawn(async move {
         loop {
             if let Some(x) = DOWNLOAD_PROGRESS.get(&id) {
                 if x.percentages >= 100.0 {
-                    break;
+                    // break;
                 }
                 debug!("{:#?}", &*x);
             }
@@ -201,13 +181,19 @@ pub async fn create_collection(
         }
     });
 
-    collection.download_game().await?;
+    info!(
+        "Successfully created collection basic file at {}",
+        collection.entry_path.display()
+    );
 
-    download_handle.await?;
+    collection.download_mods().await?;
+    dbg!(&collection.mod_manager.mods);
+
+    collection.launch_game().await?;
 
     info!("Successfully finished downloading game");
 
-    collection.launch_game().await?;
+    download_handle.await?;
 
     Ok(())
 }

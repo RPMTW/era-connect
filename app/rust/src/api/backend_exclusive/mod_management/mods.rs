@@ -148,7 +148,7 @@ pub struct ModManager {
     pub mods: Vec<ModMetadata>,
     #[serde(skip)]
     cache: Option<Vec<VersionMetadata>>,
-    #[serde(skip)]
+
     game_directory: PathBuf,
     mod_loader: Option<ModLoader>,
     target_game_version: VersionMetadata,
@@ -180,7 +180,7 @@ impl ModManager {
             target_game_version,
         }
     }
-    pub fn get_download(&mut self) -> anyhow::Result<DownloadArgs> {
+    pub fn get_download(&self) -> anyhow::Result<DownloadArgs> {
         let current_size = Arc::new(AtomicUsize::new(0));
         let total_size = Arc::new(AtomicUsize::new(0));
         let base_path = self.game_directory.join("mods");
@@ -331,8 +331,12 @@ impl ModManager {
         tag: Vec<Tag>,
         mod_override: &Vec<ModOverride>,
     ) -> anyhow::Result<()> {
+        let mut is_fabric_api = false;
         let mod_metadata = match &minecraft_mod_data {
             MinecraftModData::Modrinth(minecraft_mod) => {
+                if minecraft_mod.project_id == "P7dR8mSH" {
+                    is_fabric_api = true;
+                }
                 let project = FERINTH.get_project(&minecraft_mod.project_id).await?;
                 ModMetadata {
                     name: project.title,
@@ -365,7 +369,9 @@ impl ModManager {
         if !self.mods.contains(&mod_metadata) {
             self.mod_dependencies_resolve(&mod_metadata.mod_data, mod_override)
                 .await?;
-            self.mods.push(mod_metadata);
+            if !is_fabric_api {
+                self.mods.push(mod_metadata);
+            }
         }
         Ok(())
     }
@@ -430,6 +436,15 @@ impl ModManager {
 
         let mut mod_loader_filter = versions
             .into_iter()
+            .map(|x| {
+                match x {
+                    MinecraftModData::Modrinth(mut ver) => {
+                        ver.files = ver.files.into_iter().filter(|x| x.primary).collect::<Vec<_>>();
+                        ver.into()
+                    },
+                    MinecraftModData::Curseforge {..} => x,
+               }
+            })
             .filter(|x| {
                 if mod_override.contains(&ModOverride::IgnoreModLoader) {
                     true
@@ -490,13 +505,12 @@ impl ModManager {
                 collection_mod_loader
             );
         }
-        let version = mod_loader_filter
+        let collection_game_version = all_game_version
+            .iter()
+            .find(|x| x.id == self.target_game_version.id)
+            .expect("somehow can't find game versions");
+        let mut possible_versions = mod_loader_filter
             .filter(|x| {
-                let collection_game_version = all_game_version
-                    .iter()
-                    .find(|x| x.id == self.target_game_version.id)
-                    .expect("somehow can't find game versions");
-
                 let supported_game_versions = match x {
                     MinecraftModData::Modrinth(x) => x
                         .game_versions
@@ -515,29 +529,48 @@ impl ModManager {
                     x if x.contains(&ModOverride::IgnoreMinorGameVersion)
                         && collection_game_version.version_type == VersionType::Release =>
                     {
-                        let target_semver =
-                            semver::Version::parse(&collection_game_version.id).map(|x| x.minor);
-                        supported_game_versions.iter().any(|x| {
-                            if let (Ok(supported_version), Ok(target)) = (
-                                semver::Version::parse(&x.id).map(|x| x.minor),
-                                target_semver.as_ref(),
-                            ) {
-                                &supported_version == target
-                            } else {
-                                x.id == collection_game_version.id
-                            }
-                        })
+                        supported_game_versions
+                            .iter()
+                            .any(|x| minor_game_check(x, &collection_game_version.id))
                     }
                     _ => supported_game_versions
                         .iter()
                         .any(|x| x.id == collection_game_version.id),
                 }
             })
-            .max_by_key(|x| match x {
-                MinecraftModData::Modrinth(x) => x.date_published,
-                MinecraftModData::Curseforge { data, .. } => data.file_date,
-            });
-
+            .collect::<Vec<_>>();
+        possible_versions.sort_by_key(|x| match x {
+            MinecraftModData::Modrinth(x) => x.date_published,
+            MinecraftModData::Curseforge { data, .. } => data.file_date,
+        });
+        let version = if mod_override.contains(&ModOverride::IgnoreMinorGameVersion) {
+            // strict game check
+            if let Some(x) = possible_versions.iter().find(|x| {
+                let supported_game_versions = match x {
+                    MinecraftModData::Modrinth(x) => x
+                        .game_versions
+                        .iter()
+                        .filter_map(|x| all_game_version.iter().find(|y| &y.id == x))
+                        .collect::<Vec<_>>(),
+                    MinecraftModData::Curseforge { data, .. } => data
+                        .game_versions
+                        .iter()
+                        .filter_map(|x| all_game_version.iter().find(|y| &y.id == x))
+                        .collect::<Vec<_>>(),
+                };
+                supported_game_versions
+                    .iter()
+                    .any(|x| x.id == collection_game_version.id)
+            }) {
+                Some(x.clone())
+            }
+            // loosen it a bit
+            else {
+                possible_versions.into_iter().next()
+            }
+        } else {
+            possible_versions.into_iter().next()
+        };
         self.add_mod(
             version
                 .context("Can't find suitible mod with mod loader and version constraints")?
@@ -551,6 +584,17 @@ impl ModManager {
     }
 }
 
+fn minor_game_check(version: &&VersionMetadata, game_id: &str) -> bool {
+    let target_semver = semver::Version::parse(game_id).map(|x| x.minor);
+    if let (Ok(supported_version), Ok(target)) = (
+        semver::Version::parse(&version.id).map(|x| x.minor),
+        target_semver.as_ref(),
+    ) {
+        &supported_version == target
+    } else {
+        version.id == game_id
+    }
+}
 async fn hashes_validate(path: impl AsRef<Path>, vec: &[&str]) -> bool {
     for p in vec {
         let is_ok = validate_sha1(path.as_ref(), p).await.is_ok();
@@ -564,6 +608,7 @@ async fn hashes_validate(path: impl AsRef<Path>, vec: &[&str]) -> bool {
 /// `IgnoreMinorGameVersion` will behave like `IgnoreAllGameVersion` if operated on snapshots.
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ModOverride {
+    // ignore minor game version, using a latest-fully-compatiable mod available
     IgnoreMinorGameVersion,
     IgnoreAllGameVersion,
     QuiltFabricCompatibility,

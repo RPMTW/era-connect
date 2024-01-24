@@ -1059,9 +1059,6 @@ class RustLibWire implements BaseWire {
       wasmModule.wire_Collection_create(
           port_, display_name, version_metadata, mod_loader, advanced_options);
 
-  void wire_Collection_download_game(NativePortType port_, Object that) =>
-      wasmModule.wire_Collection_download_game(port_, that);
-
   void wire_Collection_game_directory(NativePortType port_, Object that) =>
       wasmModule.wire_Collection_game_directory(port_, that);
 
@@ -1071,14 +1068,18 @@ class RustLibWire implements BaseWire {
   void wire_Collection_get_collection_id(NativePortType port_, Object that) =>
       wasmModule.wire_Collection_get_collection_id(port_, that);
 
-  void wire_Collection_get_loader(NativePortType port_, Object that) =>
-      wasmModule.wire_Collection_get_loader(port_, that);
-
   void wire_Collection_launch_game(NativePortType port_, Object that) =>
       wasmModule.wire_Collection_launch_game(port_, that);
 
+  void wire_Collection_save(NativePortType port_, Object that) =>
+      wasmModule.wire_Collection_save(port_, that);
+
   void wire_Collection_scan(NativePortType port_) =>
       wasmModule.wire_Collection_scan(port_);
+
+  void wire_Collection_verify_and_download_game(
+          NativePortType port_, Object that) =>
+      wasmModule.wire_Collection_verify_and_download_game(port_, that);
 
   void wire_create_collection(
           NativePortType port_,
@@ -1162,9 +1163,6 @@ class RustLibWasmModule implements WasmModule {
       List<dynamic>? mod_loader,
       List<dynamic>? advanced_options);
 
-  external void wire_Collection_download_game(
-      NativePortType port_, Object that);
-
   external void wire_Collection_game_directory(
       NativePortType port_, Object that);
 
@@ -1173,11 +1171,14 @@ class RustLibWasmModule implements WasmModule {
   external void wire_Collection_get_collection_id(
       NativePortType port_, Object that);
 
-  external void wire_Collection_get_loader(NativePortType port_, Object that);
-
   external void wire_Collection_launch_game(NativePortType port_, Object that);
 
+  external void wire_Collection_save(NativePortType port_, Object that);
+
   external void wire_Collection_scan(NativePortType port_);
+
+  external void wire_Collection_verify_and_download_game(
+      NativePortType port_, Object that);
 
   external void wire_create_collection(
       NativePortType port_,

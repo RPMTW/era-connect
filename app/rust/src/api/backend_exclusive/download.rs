@@ -12,7 +12,7 @@ use std::{
 use anyhow::{bail, Context};
 use bytes::{BufMut, Bytes, BytesMut};
 use futures::{future::BoxFuture, StreamExt};
-use log::error;
+use log::{debug, error};
 use reqwest::Url;
 use tokio::{
     fs::File,
@@ -171,7 +171,7 @@ pub async fn execute_and_progress(
     download_args: DownloadArgs<'_>,
     bias: DownloadBias,
 ) -> anyhow::Result<()> {
-    println!("run_download");
+    debug!("receiving download request");
     let handles = download_args.handles;
     let calculate_speed = download_args.is_size;
     let download_complete = Arc::new(AtomicBool::new(false));
@@ -196,6 +196,8 @@ pub async fn execute_and_progress(
     join_futures(handles, 128).await?;
     download_complete.store(true, Ordering::Release);
     output.await?;
+
+    debug!("finish download request");
 
     // DOWNLOAD_PROGRESS.remove(&id);
 

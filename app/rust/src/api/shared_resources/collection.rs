@@ -38,10 +38,8 @@ pub struct Collection {
     pub played_time: Duration,
     pub advanced_options: Option<AdvancedOptions>,
 
-    #[serde(skip)]
     pub entry_path: PathBuf,
     pub mod_manager: ModManager,
-    #[serde(skip)]
     launch_args: Option<LaunchArgs>,
 }
 
@@ -51,6 +49,7 @@ pub struct CollectionId(pub String);
 const COLLECTION_FILE_NAME: &str = "collection.json";
 const COLLECTION_BASE: &str = "collections";
 
+/// if a method has `&mut self`, remember to call `self.save()` to actually save it!
 impl Collection {
     /// Creates a collection and return a collection with its loader attached
     pub fn create(
@@ -81,7 +80,7 @@ impl Collection {
             launch_args: None,
         };
 
-        loader.save(&collection)?;
+        collection.save()?;
 
         Ok(collection)
     }
@@ -99,6 +98,7 @@ impl Collection {
         self.mod_manager
             .add_project(project.into(), tag, mod_override.unwrap_or(&Vec::new()))
             .await?;
+        self.save()?;
         Ok(())
     }
     #[frb(ignore)]
@@ -112,11 +112,12 @@ impl Collection {
         self.mod_manager
             .add_project(project.into(), tag, mod_override.unwrap_or(&Vec::new()))
             .await?;
+        self.save()?;
         Ok(())
     }
 
     #[frb(ignore)]
-    pub async fn download_mods(&mut self) -> anyhow::Result<()> {
+    pub async fn download_mods(&self) -> anyhow::Result<()> {
         let id = self.get_collection_id();
         let download_args = self.mod_manager.get_download()?;
         execute_and_progress(id, download_args, DownloadBias::default()).await?;
@@ -126,13 +127,19 @@ impl Collection {
     /// SIDE-EFFECT: put `launch_args` into Struct
     pub async fn launch_game(&mut self) -> anyhow::Result<()> {
         if self.launch_args.is_none() {
-            self.launch_args = Some(self.download_game().await?);
+            self.launch_args = Some(self.verify_and_download_game().await?);
+            self.save()?;
         }
         vanilla::launcher::launch_game(&self.launch_args.as_ref().unwrap()).await
     }
 
-    /// Downloads game(alos verifies)
-    pub async fn download_game(&self) -> anyhow::Result<LaunchArgs> {
+    #[frb(ignore)]
+    pub async unsafe fn launch_game_unchecked(&self) -> anyhow::Result<()> {
+        vanilla::launcher::launch_game(&self.launch_args.as_ref().unwrap()).await
+    }
+
+    /// Downloads game(also verifies)
+    pub async fn verify_and_download_game(&self) -> anyhow::Result<LaunchArgs> {
         let mod_loader_clone = self.mod_loader.clone();
         let p = if let Some(mod_loader) = mod_loader_clone {
             match mod_loader.mod_loader_type {
@@ -155,6 +162,7 @@ impl Collection {
     }
 
     pub fn get_collection_id(&self) -> CollectionId {
+        dbg!(&self.entry_path);
         CollectionId(
             self.entry_path
                 .file_name()
@@ -164,9 +172,10 @@ impl Collection {
         )
     }
 
-    pub fn get_loader(&self) -> anyhow::Result<StorageLoader> {
+    pub fn save(&self) -> anyhow::Result<()> {
         let p = Self::create_loader(&self.display_name)?;
-        Ok(p)
+        p.save(&self)?;
+        Ok(())
     }
 
     fn create_loader(display_name: &str) -> std::io::Result<StorageLoader> {
@@ -236,6 +245,7 @@ impl Collection {
                     info!("Succesfully scanned the mods");
                     collection.entry_path = path;
                     loader.save(&collection)?;
+                    dbg!(&loader.load::<Collection>().unwrap());
                     loaders.push(loader);
                 }
             }
