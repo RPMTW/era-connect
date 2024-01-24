@@ -68,7 +68,7 @@ class Collection extends RustOpaque {
   static Future<List<StorageLoader>> scan({dynamic hint}) =>
       RustLib.instance.api.collectionScan(hint: hint);
 
-  /// Downloads game(alos verifies)
+  /// Downloads game(also verifies)
   Future<LaunchArgs> verifyAndDownloadGame({dynamic hint}) =>
       RustLib.instance.api.collectionVerifyAndDownloadGame(
         that: this,

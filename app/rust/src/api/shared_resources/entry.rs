@@ -10,7 +10,6 @@ use std::{fs::create_dir_all, time::Duration};
 
 use uuid::Uuid;
 
-use crate::api::backend_exclusive::mod_management::mods::ModOverride;
 pub use crate::api::backend_exclusive::storage::{
     account_storage::{AccountStorage, AccountStorageKey, AccountStorageValue},
     ui_layout::{UILayout, UILayoutKey, UILayoutValue},
@@ -28,10 +27,13 @@ use crate::api::backend_exclusive::vanilla;
 use crate::api::backend_exclusive::vanilla::version::VersionMetadata;
 
 use crate::api::shared_resources::authentication::msa_flow::LoginFlowErrors;
-use crate::api::shared_resources::collection::{
-    AdvancedOptions, Collection, CollectionId, ModLoader, ModLoaderType,
-};
+use crate::api::shared_resources::collection::Collection;
+use crate::api::shared_resources::collection::ModLoaderType;
 use crate::frb_generated::StreamSink;
+
+use super::collection::AdvancedOptions;
+use super::collection::CollectionId;
+use super::collection::ModLoader;
 
 pub static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
     dirs::data_dir()
@@ -157,13 +159,13 @@ pub async fn create_collection(
     // dbg!(&collection);
     // NOTE: testing purposes
     let mod_loader = Some(ModLoader {
-        mod_loader_type: ModLoaderType::Quilt,
+        mod_loader_type: ModLoaderType::Fabric,
         version: None,
     });
     let version_metadata = get_versions()
         .await?
         .into_iter()
-        .find(|x| x.id == "1.20.2")
+        .find(|x| x.id == "1.20.4")
         .unwrap();
     let mut collection =
         Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
