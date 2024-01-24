@@ -1,6 +1,5 @@
 pub use std::{borrow::Cow, fs::create_dir_all, path::PathBuf};
 
-use anyhow::bail;
 use chrono::{DateTime, Duration, Utc};
 use flutter_rust_bridge::frb;
 use log::info;
@@ -10,7 +9,7 @@ use serde_with::serde_as;
 
 use crate::api::{
     backend_exclusive::{
-        modding::{forge::full_forge_download, quilt::full_quilt_download},
+        modding::forge::mod_loader_download,
         storage::storage_loader::StorageLoader,
         vanilla::{
             self,
@@ -34,9 +33,7 @@ pub struct Collection {
     pub played_time: Duration,
     pub advanced_options: Option<AdvancedOptions>,
 
-    #[serde(skip)]
     pub entry_path: PathBuf,
-    #[serde(skip)]
     launch_args: Option<LaunchArgs>,
 }
 
@@ -59,9 +56,11 @@ impl Collection {
         let mod_loader_clone = self.mod_loader.clone();
         let p = if let Some(mod_loader) = mod_loader_clone {
             match mod_loader.mod_loader_type {
-                ModLoaderType::Forge | ModLoaderType::NeoForge => full_forge_download(self).await?,
-                ModLoaderType::Quilt => full_quilt_download(self).await?,
-                _ => bail!("Modloader not yet implemented"),
+                ModLoaderType::Forge
+                | ModLoaderType::NeoForge
+                | ModLoaderType::Quilt
+                | ModLoaderType::Fabric => mod_loader_download(self).await?,
+                // _ => bail!("Modloader not yet implemented"),
             }
         } else {
             full_vanilla_download(self).await?

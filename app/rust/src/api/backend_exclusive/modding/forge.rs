@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     io::{BufRead, BufReader},
     path::PathBuf,
     process::Stdio,
@@ -9,28 +9,23 @@ use std::{
     },
 };
 
-use anyhow::{anyhow, Context, Result};
-use bytes::Bytes;
-use log::{debug, error, info, warn};
+use anyhow::{Context, Result};
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tokio::{fs, io::AsyncBufReadExt};
+use tokio::io::AsyncBufReadExt;
 
-use crate::api::{
-    backend_exclusive::{
-        download::{
-            download_file, execute_and_progress, validate_sha1, DownloadArgs, DownloadBias,
-            HandlesType,
-        },
-        vanilla::{
-            launcher::{
-                prepare_vanilla_download, GameOptions, JvmOptions, LaunchArgs, ProcessedArguments,
-            },
-            manifest::{fetch_game_manifest, GameManifest},
-        },
+use crate::api::backend_exclusive::{
+    download::{execute_and_progress, DownloadArgs, DownloadBias, HandlesType},
+    modding::library::prepare_modloader_download,
+    vanilla::{
+        launcher::{prepare_vanilla_download, GameOptions, JvmOptions, LaunchArgs},
+        manifest::{fetch_game_manifest, GameManifest},
     },
-    shared_resources::collection::Collection,
 };
+use crate::api::shared_resources::collection::Collection;
+
+use super::library::ModloaderLibrary;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Processors {
@@ -80,293 +75,152 @@ impl ProcessorsDataType {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct ForgeLibrary {
-    downloads: Option<ForgeLibraryDownloadMetadata>,
-    name: String,
-    url: Option<String>,
-    include_in_classpath: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct ForgeLibraryDownloadMetadata {
-    artifact: ForgeLibraryArtifact,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct ForgeLibraryArtifact {
-    path: String,
-    sha1: String,
-    size: usize,
-    url: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct ForgeVersionsManifest {
-    game_versions: Vec<ForgeVersion>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-struct ForgeVersion {
-    id: String,
-    stable: bool,
-    loaders: Vec<ForgeLoaders>,
-}
-#[derive(Debug, Serialize, Deserialize, Clone)]
-struct ForgeLoaders {
-    id: String,
-    url: String,
-    stable: bool,
-}
-
-async fn fetch_forge_manifest(game_version: &str, forge_version: Option<&str>) -> Result<Bytes> {
-    let bytes = download_file("https://meta.modrinth.com/neo/v0/manifest.json", None).await?;
-    let forge_manifest: ForgeVersionsManifest = serde_json::from_slice(&bytes)?;
-    let loaders = &forge_manifest
-        .game_versions
-        .iter()
-        .find(|x| x.id == game_version)
-        .context("Can't find the desired game version")?
-        .loaders;
-    let loader_url = &match forge_version {
-        Some(x) => loaders.iter().find(|y| y.id == x),
-        None => loaders.first(),
-    }
-    .context("Can't find the forge manifest")?
-    .url;
-    download_file(&loader_url, None).await
-}
-
-pub async fn prepare_forge_download<'a>(
-    mut launch_args: LaunchArgs,
-    jvm_options: JvmOptions,
-    game_options: GameOptions,
-) -> Result<(DownloadArgs<'a>, ProcessedArguments, Value)> {
-    let bytes = fetch_forge_manifest(&game_options.game_version_name, None).await?;
-
-    let current_size = Arc::new(AtomicUsize::new(0));
-    let total_size = Arc::new(AtomicUsize::new(0));
-
-    let forge_manifest: Value = serde_json::from_slice(&bytes)?;
-    let libraries: Vec<ForgeLibrary> = Vec::<ForgeLibrary>::deserialize(
-        forge_manifest
-            .get("libraries")
-            .context("forge library key doesn't exist")?,
-    )?;
-
-    let mut handles: HandlesType = Vec::new();
-    let mut classpath = HashSet::new();
-    let library_directory = &jvm_options.library_directory;
-
-    for library in libraries {
-        if let Some(download) = library.downloads {
-            let current_size_clone = Arc::clone(&current_size);
-            let total_size_clone = Arc::clone(&total_size);
-            let artifact = download.artifact;
-            let path = library_directory.join(artifact.path.clone());
-            let url = artifact.url.clone();
-            let sha1 = artifact.sha1.clone();
-
-            if library.include_in_classpath {
-                classpath.insert(path.to_string_lossy().to_string());
-            }
-
-            handles.push(Box::pin(async move {
-                if !path.exists() {
-                    fs::create_dir_all(path.parent().context("forge library path doesn't exist")?)
-                        .await?;
-                    total_size_clone.fetch_add(artifact.size, Ordering::Relaxed);
-                    let bytes = download_file(&url, Some(current_size_clone)).await?;
-                    fs::write(path, bytes).await.map_err(|err| anyhow!(err))
-                } else if let Err(err) = validate_sha1(&path, &sha1).await {
-                    total_size_clone.fetch_add(artifact.size, Ordering::Relaxed);
-                    error!("{err}\n redownloading");
-                    let bytes = download_file(&url, Some(current_size_clone)).await?;
-                    fs::write(path, bytes).await.map_err(|err| anyhow!(err))
-                } else {
-                    debug!("hash verified");
-                    Ok(())
-                }
-            }));
-        } else {
-            let name = convert_maven_to_path(&library.name, None)?;
-            let url = library.url.context("url doesn't exist")? + &name;
-            let path = library_directory.join(name);
-
-            if library.include_in_classpath {
-                classpath.insert(path.to_string_lossy().to_string());
-            }
-
-            if !path.exists() {
-                handles.push(Box::pin(async move {
-                    fs::create_dir_all(path.parent().context("library parent dir doesn't exist")?)
-                        .await?;
-                    let bytes = download_file(&url, None).await?;
-                    fs::write(path, bytes).await.map_err(|err| anyhow!(err))
-                }));
-            }
-        }
-    }
-
-    let pos = launch_args.jvm_args.iter().position(|x| x == "-cp");
-    if let Some(pos) = pos {
-        let classpaths = launch_args
-            .jvm_args
-            .get_mut(pos + 1)
-            .context("the next argument of -cp doesn't exist")?;
-        let mut a = classpaths
-            .split(':')
-            .map(ToString::to_string)
-            .collect::<HashSet<_>>();
-        a.extend(classpath);
-        *classpaths = a.into_iter().collect::<Vec<_>>().join(":");
-    }
-
-    Ok((
-        DownloadArgs {
-            current: Arc::clone(&current_size),
-            total: Arc::clone(&total_size),
-            handles,
-            is_size: true,
-        },
-        ProcessedArguments {
-            launch_args,
-            jvm_args: jvm_options,
-            game_args: game_options,
-        },
-        forge_manifest,
-    ))
-}
-
-pub fn process_forge<'a>(
+pub fn processers_process<'a>(
     mut launch_args: LaunchArgs,
     jvm_options: JvmOptions,
     game_options: GameOptions,
     game_manifest: GameManifest,
     manifest: Value,
 ) -> Result<(LaunchArgs, DownloadArgs<'a>)> {
-    let mut data = ProcessorData::deserialize(
-        manifest
-            .get("data")
-            .context("forge manifest data doesn't exist")?,
-    )?;
-    let processors = Vec::<Processors>::deserialize(
-        manifest
-            .get("processors")
-            .context("forge manifest processors doensn't exist")?,
-    )?;
     let libraries_folder = jvm_options.library_directory.to_string_lossy().to_string();
-    let library_manifest = Vec::<ForgeLibrary>::deserialize(
+    let library_manifest = Vec::<ModloaderLibrary>::deserialize(
         manifest
             .get("libraries")
-            .context("forge manifest library doesn't exist")?,
+            .context("mod loader manifest library doesn't exist")?,
     )?;
+    let processor_data = manifest
+        .get("data")
+        .map(|x| ProcessorData::deserialize(x))
+        .map_or(Ok(None), |v| v.map(Some))?;
+    let processors = manifest
+        .get("processors")
+        .map(|x| Vec::<Processors>::deserialize(x))
+        .map_or(Ok(None), |v| v.map(Some))?;
+
     let forge_installer = library_manifest
         .iter()
         .filter(|x| x.downloads.is_none())
-        .find(|x| x.name.contains("client"))
-        .context("client installer doesn't exist")?
-        .name
-        .clone();
-    let minecraft_jar = jvm_options.primary_jar.clone();
-    let game_directory = jvm_options.game_directory.to_string_lossy().to_string();
-    data.merged_mappings
-        .convert_maven_to_path(&libraries_folder)?;
-    data.mappings.convert_maven_to_path(&libraries_folder)?;
-    data.mc_extra
-        .as_mut()
-        .map(|x| x.convert_maven_to_path(&libraries_folder));
-    data.mc_slim
-        .as_mut()
-        .map(|x| x.convert_maven_to_path(&libraries_folder));
-    data.mc_srg.convert_maven_to_path(&libraries_folder)?;
-    data.mc_unpacked.convert_maven_to_path(&libraries_folder)?;
-    data.mojmaps.convert_maven_to_path(&libraries_folder)?;
-    data.patched.convert_maven_to_path(&libraries_folder)?;
-    data.binpatch.convert_maven_to_path(&libraries_folder)?;
+        .find(|x| x.name.contains("client") && x.name.contains("minecraftforge"))
+        .map(|x| x.name.clone());
+
     let index = Arc::new(AtomicUsize::new(0));
     let index_cloned = Arc::clone(&index);
-    let max = Arc::new(AtomicUsize::new(processors.len() - 1));
     let mut handles: HandlesType = Vec::new();
+    let max = Arc::new(AtomicUsize::new(
+        processors.as_ref().map_or(1, |x| x.len()) - 1,
+    ));
 
-    handles.push(Box::pin(async move {
-        for (i, processor) in processors.into_iter().enumerate() {
-            index_cloned.store(i, Ordering::Relaxed);
-            let processor_jar = convert_maven_to_path(&processor.jar, Some(&libraries_folder))?;
-            let processor_main_class = get_processor_main_class(processor_jar.clone())
-                .await?
-                .context("Processor main class doesn't exist")?;
-            let mut processor_classpath = processor
-                .classpath
-                .iter()
+    if let (Some(mut processor_data), Some(processors), Some(forge_installer)) =
+        (processor_data, processors, forge_installer)
+    {
+        let minecraft_jar = jvm_options.primary_jar.clone();
+        let game_directory = jvm_options.game_directory.to_string_lossy().to_string();
+        processor_data
+            .merged_mappings
+            .convert_maven_to_path(&libraries_folder)?;
+        processor_data
+            .mappings
+            .convert_maven_to_path(&libraries_folder)?;
+        processor_data
+            .mc_extra
+            .as_mut()
+            .map(|x| x.convert_maven_to_path(&libraries_folder));
+        processor_data
+            .mc_slim
+            .as_mut()
+            .map(|x| x.convert_maven_to_path(&libraries_folder));
+        processor_data
+            .mc_srg
+            .convert_maven_to_path(&libraries_folder)?;
+        processor_data
+            .mc_unpacked
+            .convert_maven_to_path(&libraries_folder)?;
+        processor_data
+            .mojmaps
+            .convert_maven_to_path(&libraries_folder)?;
+        processor_data
+            .patched
+            .convert_maven_to_path(&libraries_folder)?;
+        processor_data
+            .binpatch
+            .convert_maven_to_path(&libraries_folder)?;
+
+        handles.push(Box::pin(async move {
+            for (i, processor) in processors.into_iter().enumerate() {
+                index_cloned.store(i, Ordering::Relaxed);
+                let processor_jar = convert_maven_to_path(&processor.jar, Some(&libraries_folder))?;
+                let processor_main_class = get_processor_main_class(processor_jar.clone())
+                    .await?
+                    .context("Processor main class doesn't exist")?;
+                let mut processor_classpath = processor
+                    .classpath
+                    .iter()
+                    .map(|x| {
+                        convert_maven_to_path(x, Some(&libraries_folder))
+                            .context("failed to convert processor classpath maven to path")
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+
+                processor_classpath.push(processor_jar);
+
+                if let Some(sides) = processor.sides {
+                    if sides.contains(&String::from("server")) {
+                        continue;
+                    }
+                }
+
+                let args = process_client(
+                    &processor.args,
+                    &processor_data,
+                    &minecraft_jar,
+                    &game_directory,
+                    &convert_maven_to_path(&forge_installer, Some(&libraries_folder))?,
+                )
+                .into_iter()
                 .map(|x| {
-                    convert_maven_to_path(x, Some(&libraries_folder))
-                        .context("failed to convert processor classpath maven to path")
+                    if x.starts_with('[') {
+                        convert_maven_to_path(&x, Some(&libraries_folder))
+                            .context("failed to convert [] types maven into path")
+                    } else {
+                        Ok(x)
+                    }
                 })
                 .collect::<Result<Vec<_>>>()?;
 
-            processor_classpath.push(processor_jar);
+                let mut all = Vec::new();
+                all.push(String::from("-cp"));
+                all.push(processor_classpath.join(":"));
+                all.push(processor_main_class);
+                all.extend(args);
 
-            if let Some(sides) = processor.sides {
-                if sides.contains(&String::from("server")) {
-                    continue;
+                let process = tokio::process::Command::new("java")
+                    .args(all)
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn()?
+                    .stdout
+                    .context("stdout doesn't exist")?;
+                let read = tokio::io::BufReader::new(process);
+                let mut a = read.lines();
+                while let Some(x) = a.next_line().await? {
+                    debug!("{x}");
                 }
             }
-
-            let args = process_client(
-                &processor.args,
-                &data,
-                &minecraft_jar,
-                &game_directory,
-                &convert_maven_to_path(&forge_installer, Some(&libraries_folder))?,
-            )
-            .into_iter()
-            .map(|x| {
-                if x.starts_with('[') {
-                    convert_maven_to_path(&x, Some(&libraries_folder))
-                        .context("failed to convert [] types maven into path")
-                } else {
-                    Ok(x)
-                }
-            })
-            .collect::<Result<Vec<_>>>()?;
-
-            let mut all = Vec::new();
-            all.push(String::from("-cp"));
-            all.push(processor_classpath.join(":"));
-            all.push(processor_main_class);
-            all.extend(args);
-
-            let process = tokio::process::Command::new("java")
-                .args(all)
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()?
-                .stdout
-                .context("stdout doesn't exist")?;
-            let read = tokio::io::BufReader::new(process);
-            let mut a = read.lines();
-            while let Some(x) = a.next_line().await? {
-                debug!("{x}");
-            }
-        }
-        Ok(())
-    }));
+            Ok(())
+        }));
+    }
 
     let arguments = manifest
         .get("arguments")
-        .context("forge arguments doesn't exist")?;
-    let jvm = Vec::<String>::deserialize(
-        arguments
-            .get("jvm")
-            .context("jvm game flags doesn't exist")?,
-    )?;
-    let game = Vec::<String>::deserialize(
-        arguments
-            .get("game")
-            .context("forge game flags doesn't exist")?,
-    )?;
+        .context("modloader arguments doesn't exist")?;
+    let jvm = arguments
+        .get("jvm")
+        .map(|x| Vec::<String>::deserialize(x))
+        .unwrap_or(Ok(vec![]))?;
+    let game = arguments
+        .get("game")
+        .map(|x| Vec::<String>::deserialize(x))
+        .unwrap_or(Ok(vec![]))?;
     let jvm = jvm_args_parse(&jvm, &jvm_options);
     launch_args.main_class = manifest
         .get("mainClass")
@@ -427,7 +281,6 @@ fn jvm_args_parse(jvm_flags: &[String], jvm_options: &JvmOptions) -> Vec<String>
     }
     parsed_argument
 }
-
 fn process_client(
     jvm_flags: &[String],
     processors_data: &ProcessorData,
@@ -558,7 +411,7 @@ pub async fn get_processor_main_class(path: String) -> Result<Option<String>> {
     }
     Ok(None)
 }
-pub async fn full_forge_download(collection: &Collection) -> anyhow::Result<LaunchArgs> {
+pub async fn mod_loader_download(collection: &Collection) -> anyhow::Result<LaunchArgs> {
     let collection_id = collection.get_collection_id();
     info!("Starts Vanilla Downloading");
     let vanilla_bias = DownloadBias {
@@ -570,12 +423,13 @@ pub async fn full_forge_download(collection: &Collection) -> anyhow::Result<Laun
         prepare_vanilla_download(collection, game_manifest.clone()).await?;
     execute_and_progress(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
 
-    info!("Starts Forge Downloading");
-    let forge_download_bias = DownloadBias {
+    info!("Starts Modloader Downloading");
+    let modloader_download_bias = DownloadBias {
         start: 80.0,
         end: 90.0,
     };
-    let (forge_download_args, forge_arguments, manifest) = prepare_forge_download(
+    let (modloader_download_args, modloader_arguments, manifest) = prepare_modloader_download(
+        &collection.mod_loader.as_ref().unwrap().mod_loader_type,
         vanilla_arguments.launch_args,
         vanilla_arguments.jvm_args,
         vanilla_arguments.game_args,
@@ -583,21 +437,21 @@ pub async fn full_forge_download(collection: &Collection) -> anyhow::Result<Laun
     .await?;
     execute_and_progress(
         collection_id.clone(),
-        forge_download_args,
-        forge_download_bias,
+        modloader_download_args,
+        modloader_download_bias,
     )
     .await?;
 
-    info!("Starts Forge Processing");
+    info!("Starts Modloader Processing");
     let forge_processor_bias = DownloadBias {
         start: 90.0,
         end: 100.0,
     };
 
-    let (processed_arguments, forge_processor_progress) = process_forge(
-        forge_arguments.launch_args,
-        forge_arguments.jvm_args,
-        forge_arguments.game_args,
+    let (processed_arguments, forge_processor_progress) = processers_process(
+        modloader_arguments.launch_args,
+        modloader_arguments.jvm_args,
+        modloader_arguments.game_args,
         game_manifest,
         manifest,
     )?;

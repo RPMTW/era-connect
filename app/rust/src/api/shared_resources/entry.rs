@@ -26,6 +26,7 @@ use crate::api::backend_exclusive::vanilla;
 pub use crate::api::backend_exclusive::vanilla::version::VersionMetadata;
 
 use crate::api::shared_resources::authentication::msa_flow::LoginFlowErrors;
+use crate::api::shared_resources::collection::ModLoaderType;
 use crate::api::shared_resources::collection::{
     AdvancedOptions, Collection, CollectionId, ModLoader,
 };
@@ -150,6 +151,10 @@ pub async fn create_collection(
     mod_loader: Option<ModLoader>,
     advanced_options: Option<AdvancedOptions>,
 ) -> anyhow::Result<()> {
+    let mod_loader = Some(ModLoader {
+        mod_loader_type: ModLoaderType::Fabric,
+        version: String::new(),
+    });
     let mut collection =
         Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
     let loader = collection.get_loader()?;
@@ -172,13 +177,11 @@ pub async fn create_collection(
         }
     });
 
-    collection.download_game().await?;
+    collection.launch_game().await?;
 
     download_handle.await?;
 
     info!("Successfully finished downloading game");
-
-    collection.launch_game().await?;
 
     Ok(())
 }
