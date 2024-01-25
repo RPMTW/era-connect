@@ -203,21 +203,20 @@ pub async fn create_collection(
         collection.entry_path.display()
     );
     let id = Arc::new(collection.get_collection_id());
-    let download_handle: flutter_rust_bridge::JoinHandle<anyhow::Result<()>> =
-        tokio::spawn(async move {
-            loop {
-                let (tx, mut rx) = unbounded_channel();
-                DOWNLOAD_PROGRESS.send(HashMapMessage::Get(Arc::clone(&id), tx))?;
-                if let Some(Some(x)) = rx.recv().await {
-                    if x.percentages >= 100.0 {
-                        break;
-                    }
-                    debug!("{:#?}", x);
+    let download_handle = tokio::spawn(async move {
+        loop {
+            let (tx, mut rx) = unbounded_channel();
+            DOWNLOAD_PROGRESS.send(HashMapMessage::Get(Arc::clone(&id), tx))?;
+            if let Some(Some(x)) = rx.recv().await {
+                if x.percentages >= 100.0 {
+                    break;
                 }
-                tokio::time::sleep(Duration::from_millis(500)).await;
+                debug!("{:#?}", x);
             }
-            Ok(())
-        });
+            tokio::time::sleep(Duration::from_millis(500)).await;
+        }
+        Ok::<(), anyhow::Error>(())
+    });
 
     collection.launch_game().await?;
 
