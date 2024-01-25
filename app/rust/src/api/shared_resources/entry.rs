@@ -1,12 +1,16 @@
 use anyhow::anyhow;
 use anyhow::Context;
-use dashmap::DashMap;
 use flutter_rust_bridge::frb;
 use flutter_rust_bridge::setup_default_user_utils;
 use log::{debug, info, warn};
 use once_cell::sync::Lazy;
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::{fs::create_dir_all, time::Duration};
+use tokio::sync::mpsc::unbounded_channel;
+use tokio::sync::mpsc::UnboundedReceiver;
+use tokio::sync::mpsc::UnboundedSender;
 
 use uuid::Uuid;
 
@@ -37,7 +41,43 @@ pub static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
         .expect("Can't find data_dir")
         .join("era-connect")
 });
-pub static DOWNLOAD_PROGRESS: Lazy<DashMap<CollectionId, Progress>> = Lazy::new(DashMap::default);
+
+pub static DOWNLOAD_PROGRESS: Lazy<UnboundedSender<HashMapMessage>> = Lazy::new(|| {
+    let (sender, receiver) = unbounded_channel();
+    spawn_hashmap_manager_thread(receiver);
+    sender
+});
+
+pub enum HashMapMessage {
+    Insert(Arc<CollectionId>, Progress),
+    Remove(Arc<CollectionId>),
+    Get(Arc<CollectionId>, UnboundedSender<Option<Arc<Progress>>>),
+}
+
+fn spawn_hashmap_manager_thread(mut receiver: UnboundedReceiver<HashMapMessage>) {
+    flutter_rust_bridge::spawn(async move {
+        let mut hashmap: HashMap<Arc<CollectionId>, Arc<Progress>> = HashMap::new();
+
+        loop {
+            if let Some(message) = receiver.recv().await {
+                match message {
+                    HashMapMessage::Insert(key, value) => {
+                        hashmap.insert(key, Arc::new(value));
+                    }
+                    HashMapMessage::Remove(key) => {
+                        hashmap.remove(&key);
+                    }
+                    HashMapMessage::Get(key, response_sender) => {
+                        let response = hashmap.get(&key).map(Arc::clone);
+                        let _ = response_sender.send(response);
+                    }
+                }
+            }
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+    });
+}
+
 pub static STORAGE: Lazy<StorageState> = Lazy::new(StorageState::new);
 
 #[frb(init)]
@@ -152,7 +192,7 @@ pub async fn create_collection(
     advanced_options: Option<AdvancedOptions>,
 ) -> anyhow::Result<()> {
     let mod_loader = Some(ModLoader {
-        mod_loader_type: ModLoaderType::Fabric,
+        mod_loader_type: ModLoaderType::Quilt,
         version: String::new(),
     });
     let mut collection =
@@ -162,22 +202,26 @@ pub async fn create_collection(
         "Successfully created collection basic file at {}",
         collection.entry_path.display()
     );
-    let id = collection.get_collection_id();
-    let download_handle = tokio::spawn(async move {
-        loop {
-            if let Some(x) = DOWNLOAD_PROGRESS.get(&id) {
-                if x.percentages >= 100.0 {
-                    break;
+    let id = Arc::new(collection.get_collection_id());
+    let download_handle: flutter_rust_bridge::JoinHandle<anyhow::Result<()>> =
+        tokio::spawn(async move {
+            loop {
+                let (tx, mut rx) = unbounded_channel();
+                DOWNLOAD_PROGRESS.send(HashMapMessage::Get(Arc::clone(&id), tx))?;
+                if let Some(Some(x)) = rx.recv().await {
+                    if x.percentages >= 100.0 {
+                        break;
+                    }
+                    debug!("{:#?}", x);
                 }
-                debug!("{:#?}", &*x);
+                tokio::time::sleep(Duration::from_millis(500)).await;
             }
-            tokio::time::sleep(Duration::from_millis(500)).await;
-        }
-    });
+            Ok(())
+        });
 
     collection.launch_game().await?;
 
-    download_handle.await?;
+    download_handle.await??;
 
     info!("Successfully finished downloading game");
 
