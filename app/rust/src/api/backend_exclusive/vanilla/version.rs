@@ -5,8 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::api::backend_exclusive::download::download_file;
 
-const VERSION_MANIFEST_URL: &str =
-    "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
+const VERSION_MANIFEST_URL: &str = "https://meta.modrinth.com/minecraft/v0/manifest.json";
 
 #[derive(Debug, Deserialize)]
 pub struct VersionsManifest {

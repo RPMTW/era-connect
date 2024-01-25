@@ -15,12 +15,10 @@ pub struct GameManifest {
     pub arguments: Arguments,
     pub asset_index: AssetIndex,
     pub assets: String,
-    pub compliance_level: u32,
     pub downloads: Downloads,
     pub id: String,
     pub java_version: JavaVersion,
     pub libraries: Vec<Library>,
-    pub logging: LoggingConfig,
     pub main_class: String,
     pub minimum_launcher_version: u32,
     pub release_time: DateTime<Utc>,
@@ -72,27 +70,6 @@ pub struct DownloadMetadata {
 pub struct JavaVersion {
     pub component: String,
     pub major_version: u32,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct LoggingConfig {
-    pub client: LoggingClientConfig,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct LoggingClientConfig {
-    pub argument: String,
-    pub file: LoggingFile,
-    #[serde(rename = "type")]
-    pub logging_type: String,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct LoggingFile {
-    pub id: String,
-    pub sha1: String,
-    pub size: u64,
-    pub url: String,
 }
 
 pub async fn fetch_game_manifest(url: &str) -> anyhow::Result<GameManifest> {

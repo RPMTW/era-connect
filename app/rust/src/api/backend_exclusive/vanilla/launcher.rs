@@ -147,7 +147,6 @@ pub async fn prepare_vanilla_download<'a>(
         .await
         .context("fail to create native directory (vanilla)")?;
 
-    let logging_arguments = setup_logging(&game_manifest, &game_directory).await?;
     let game_flags = setup_game_flags(game_manifest.arguments.game);
     let jvm_flags = setup_jvm_flags(game_manifest.arguments.jvm);
 
@@ -180,7 +179,6 @@ pub async fn prepare_vanilla_download<'a>(
         jvm_flags,
     )?;
 
-    jvm_flags.arguments.push(dbg!(logging_arguments));
     jvm_flags.arguments = jvm_args_parse(&jvm_flags.arguments, &jvm_options);
 
     let mut handles = Vec::new();
@@ -246,28 +244,6 @@ pub async fn prepare_vanilla_download<'a>(
     ))
 }
 
-async fn setup_logging(game_manifest: &GameManifest, game_directory: &PathBuf) -> Result<String> {
-    let logging_url = &game_manifest.logging.client.file.url;
-    let logging_path =
-        game_directory.join(&game_manifest.logging.client.logging_type.replace("-", "."));
-    if !logging_path.exists() {
-        let p = download_file(logging_url, None).await?;
-        fs::write(&logging_path, p).await?;
-    } else if validate_sha1(&logging_path, &game_manifest.logging.client.file.sha1)
-        .await
-        .is_err()
-    {
-        let p = download_file(logging_url, None).await?;
-        fs::write(&logging_path, p).await?;
-    }
-    let logging_argument = game_manifest
-        .logging
-        .client
-        .argument
-        .replace("${path}", &logging_path.to_string_lossy().to_string());
-    Ok(logging_argument)
-}
-
 fn add_jvm_rules(
     library_list: Arc<[Library]>,
     library_path: impl AsRef<Path>,
@@ -294,11 +270,13 @@ fn add_jvm_rules(
     let mut classpath_list = parsed_library_list
         .iter()
         .map(|x| {
-            library_path
-                .as_ref()
-                .join(&x.downloads.artifact.path)
-                .to_string_lossy()
-                .to_string()
+            if let Some(ref path) = x.downloads.artifact.path {
+                library_path.as_ref().join(path)
+            } else {
+                library_path.as_ref().to_path_buf()
+            }
+            .to_string_lossy()
+            .to_string()
         })
         .collect::<Vec<String>>();
 
