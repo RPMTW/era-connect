@@ -14,6 +14,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use uuid::Uuid;
 
+use crate::api::backend_exclusive::mod_management::mods::ModOverride;
 pub use crate::api::backend_exclusive::storage::{
     account_storage::{AccountStorage, AccountStorageKey, AccountStorageValue},
     ui_layout::{UILayout, UILayoutKey, UILayoutValue},
@@ -78,7 +79,6 @@ fn spawn_hashmap_manager_thread(mut receiver: UnboundedReceiver<HashMapMessage>)
                     }
                 }
             }
-            tokio::time::sleep(Duration::from_millis(100)).await;
         }
     });
 }
@@ -194,9 +194,9 @@ pub async fn create_collection(
     mod_loader: Option<ModLoader>,
     advanced_options: Option<AdvancedOptions>,
 ) -> anyhow::Result<()> {
-    // let mut p = STORAGE.collections.write().await;
-    // let collection = p.last_mut().unwrap();
-    // dbg!(&collection);
+    //     let mut p = STORAGE.collections.write().await;
+    //     let collection = p.last_mut().unwrap();
+    //     dbg!(&collection);
     // NOTE: testing purposes
     let mod_loader = Some(ModLoader {
         mod_loader_type: ModLoaderType::Fabric,
@@ -205,10 +205,34 @@ pub async fn create_collection(
     let version_metadata = get_versions()
         .await?
         .into_iter()
-        .find(|x| x.id == "1.20.4")
+        .find(|x| x.id == "1.20.2")
         .unwrap();
     let mut collection =
         Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
+
+    collection
+        .add_modrinth_mod("fabric-api", vec![], None)
+        .await?;
+    collection
+        .add_modrinth_mod("c2me-fabric", vec![], None)
+        .await?;
+    collection
+        .add_modrinth_mod("distanthorizons", vec![], None)
+        .await?;
+    collection.add_modrinth_mod("sodium", vec![], None).await?;
+    collection.add_modrinth_mod("modmenu", vec![], None).await?;
+    collection
+        .add_modrinth_mod("ferrite-core", vec![], None)
+        .await?;
+    collection.add_modrinth_mod("lazydfu", vec![], None).await?;
+    collection.add_modrinth_mod("iris", vec![], None).await?;
+    collection
+        .add_modrinth_mod("continuity", vec![], None)
+        .await?;
+    collection.add_modrinth_mod("indium", vec![], None).await?;
+    // collection
+    //     .add_modrinth_mod("entityculling", vec![], None)
+    //     .await?;
 
     info!(
         "Successfully created collection basic file at {}",
@@ -236,7 +260,7 @@ pub async fn create_collection(
     );
 
     collection.download_mods().await?;
-    dbg!(&collection.mod_manager.mods);
+    // dbg!(&collection.mod_manager.mods);
 
     collection.launch_game().await?;
 
