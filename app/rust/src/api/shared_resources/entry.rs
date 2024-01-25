@@ -48,6 +48,8 @@ pub static DOWNLOAD_PROGRESS: Lazy<UnboundedSender<HashMapMessage>> = Lazy::new(
     sender
 });
 
+pub static STORAGE: Lazy<StorageState> = Lazy::new(StorageState::new);
+
 pub enum HashMapMessage {
     Insert(Arc<CollectionId>, Progress),
     Remove(Arc<CollectionId>),
@@ -77,8 +79,6 @@ fn spawn_hashmap_manager_thread(mut receiver: UnboundedReceiver<HashMapMessage>)
         }
     });
 }
-
-pub static STORAGE: Lazy<StorageState> = Lazy::new(StorageState::new);
 
 #[frb(init)]
 pub fn init_app() -> anyhow::Result<()> {

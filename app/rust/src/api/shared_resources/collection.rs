@@ -168,8 +168,8 @@ impl Collection {
             .collect()
     }
 
-    pub fn scan() -> anyhow::Result<Vec<StorageLoader>> {
-        let mut loaders = Vec::new();
+    pub fn scan() -> anyhow::Result<Vec<Collection>> {
+        let mut collections = Vec::new();
         let collection_base_dir = Self::get_base_path();
         create_dir_all(&collection_base_dir)?;
         let dirs = collection_base_dir.read_dir()?;
@@ -186,13 +186,15 @@ impl Collection {
 
                     // block_on(collection.mod_manager.scan())?;
                     info!("Succesfully scanned the mods");
-                    collection.entry_path = path;
-                    loader.save(&collection)?;
-                    loaders.push(loader);
+                    if collection.entry_path != path {
+                        collection.entry_path = path;
+                        loader.save(&collection)?;
+                    }
+                    collections.push(collection);
                 }
             }
         }
-        Ok(loaders)
+        Ok(collections)
     }
 }
 
