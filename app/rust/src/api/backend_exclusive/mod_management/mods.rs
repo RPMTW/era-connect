@@ -3,6 +3,7 @@ use ferinth::structures::search::Facet;
 use ferinth::structures::search::Sort;
 use flutter_rust_bridge::frb;
 use furse::structures::file_structs::HashAlgo;
+use log::debug;
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde::Serialize;
@@ -404,7 +405,14 @@ impl ModManager {
         tag: Vec<Tag>,
         mod_override: &Vec<ModOverride>,
     ) -> anyhow::Result<()> {
-        let all_game_version = get_versions().await?;
+        let all_game_version = if let Some(x) = self.cache.as_deref() {
+            debug!("using cached game version");
+            x
+        } else {
+            self.cache = Some(get_versions().await?);
+            self.cache.as_deref().unwrap()
+        };
+
         let modrinth = &FERINTH;
 
         let versions: Vec<MinecraftModData> = match project {
@@ -497,8 +505,7 @@ impl ModManager {
                         },
                     }
                 }
-            })
-            .peekable();
+            }).peekable();
         if mod_loader_filter.peek().is_none() {
             bail!(
                 "Can't find suitable Mod Loader, mod loader is {:?}",
