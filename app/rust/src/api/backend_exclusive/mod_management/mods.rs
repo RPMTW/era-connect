@@ -1,7 +1,9 @@
 use anyhow::bail;
 use ferinth::structures::search::Facet;
 use ferinth::structures::search::Sort;
+use ferinth::structures::version::DependencyType;
 use flutter_rust_bridge::frb;
+use furse::structures::file_structs::FileRelationType;
 use furse::structures::file_structs::HashAlgo;
 use log::debug;
 use once_cell::sync::Lazy;
@@ -31,9 +33,10 @@ use crate::api::{
 
 pub type ModrinthSearchResponse = ferinth::structures::search::Response;
 
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, Deserialize, Serialize)]
 pub struct ModMetadata {
     pub name: String,
+    pub project_id: ProjectId,
     pub long_description: String,
     pub short_description: String,
     pub mod_version: Option<String>,
@@ -41,6 +44,18 @@ pub struct ModMetadata {
     pub overrides: Vec<ModOverride>,
     pub incompatiable_mods: Option<Vec<ModMetadata>>,
     pub mod_data: MinecraftModData,
+}
+
+impl PartialEq for ModMetadata {
+    fn eq(&self, other: &Self) -> bool {
+        self.project_id == other.project_id
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+pub enum ProjectId {
+    Modrinth(String),
+    Curseforge(i32),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -300,14 +315,16 @@ impl ModManager {
         match minecraft_mod {
             MinecraftModData::Modrinth(minecraft_mod) => {
                 for dept in &minecraft_mod.dependencies {
-                    if let Some(dependency) = &dept.version_id {
-                        let ver = FERINTH.get_version(dependency).await?;
-                        self.add_mod(ver.into(), vec![Tag::Dependencies], mod_override)
-                            .await?;
-                    } else if let Some(project) = &dept.project_id {
-                        let ver = FERINTH.get_project(project).await?;
-                        self.add_project(ver.into(), vec![Tag::Dependencies], mod_override)
-                            .await?;
+                    if dept.dependency_type == DependencyType::Required {
+                        if let Some(dependency) = &dept.version_id {
+                            let ver = FERINTH.get_version(dependency).await?;
+                            self.add_mod(ver.into(), vec![Tag::Dependencies], mod_override)
+                                .await?;
+                        } else if let Some(project) = &dept.project_id {
+                            let ver = FERINTH.get_project(project).await?;
+                            self.add_project(ver.into(), vec![Tag::Dependencies], mod_override)
+                                .await?;
+                        }
                     }
                 }
             }
@@ -316,9 +333,11 @@ impl ModManager {
                 ..
             } => {
                 for dept in &minecraft_mod.dependencies {
-                    let project = FURSE.get_mod(dept.mod_id).await?;
-                    self.add_project(project.into(), vec![Tag::Dependencies], mod_override)
-                        .await?;
+                    if dept.relation_type == FileRelationType::RequiredDependency {
+                        let project = FURSE.get_mod(dept.mod_id).await?;
+                        self.add_project(project.into(), vec![Tag::Dependencies], mod_override)
+                            .await?;
+                    }
                 }
             }
         }
@@ -341,6 +360,7 @@ impl ModManager {
                 let project = FERINTH.get_project(&minecraft_mod.project_id).await?;
                 ModMetadata {
                     name: project.title,
+                    project_id: ProjectId::Modrinth(minecraft_mod.project_id.clone()),
                     long_description: project.body,
                     short_description: project.description,
                     mod_version: Some(minecraft_mod.version_number.clone()),
@@ -357,6 +377,7 @@ impl ModManager {
                 let project = FURSE.get_mod(minecraft_mod.mod_id).await?;
                 ModMetadata {
                     name: project.name,
+                    project_id: ProjectId::Curseforge(minecraft_mod.mod_id),
                     long_description: FURSE.get_mod_description(project.id).await?,
                     short_description: project.summary,
                     mod_version: None,
@@ -370,7 +391,13 @@ impl ModManager {
         if !self.mods.contains(&mod_metadata) {
             self.mod_dependencies_resolve(&mod_metadata.mod_data, mod_override)
                 .await?;
-            if !is_fabric_api {
+            if self.mod_loader.as_ref().map(|x| x.mod_loader_type) == Some(ModLoaderType::Quilt)
+                && is_fabric_api
+            {
+                let project = (&FERINTH).get_project("qsl").await?;
+                self.add_project(project.into(), vec![Tag::Dependencies], &vec![])
+                    .await?;
+            } else {
                 self.mods.push(mod_metadata);
             }
         }
@@ -414,6 +441,10 @@ impl ModManager {
         };
 
         let modrinth = &FERINTH;
+        let name = match &project {
+            Project::Modrinth(x) => x.title.clone(),
+            Project::Curseforge(x) => x.name.clone(),
+        };
 
         let versions: Vec<MinecraftModData> = match project {
             Project::Modrinth(project) => modrinth
@@ -508,8 +539,9 @@ impl ModManager {
             }).peekable();
         if mod_loader_filter.peek().is_none() {
             bail!(
-                "Can't find suitable Mod Loader, mod loader is {:?}",
-                collection_mod_loader
+                "Can't find suitable Mod Loader, mod loader is {:?}, project is {}",
+                collection_mod_loader,
+                name,
             );
         }
         let collection_game_version = all_game_version
@@ -550,6 +582,7 @@ impl ModManager {
             MinecraftModData::Modrinth(x) => x.date_published,
             MinecraftModData::Curseforge { data, .. } => data.file_date,
         });
+        let possible_versions = possible_versions.into_iter().rev().collect::<Vec<_>>();
         let version = if mod_override.contains(&ModOverride::IgnoreMinorGameVersion) {
             // strict game check
             if let Some(x) = possible_versions.iter().find(|x| {
@@ -580,7 +613,7 @@ impl ModManager {
         };
         self.add_mod(
             version
-                .context("Can't find suitible mod with mod loader and version constraints")?
+                .context(format!("Can't find suitible mod with mod loader and version constraints, project is {name}"))?
                 .into(),
             tag,
             mod_override,
