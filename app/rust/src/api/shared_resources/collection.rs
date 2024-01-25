@@ -134,7 +134,7 @@ impl Collection {
 
     #[frb(ignore)]
     pub async unsafe fn launch_game_unchecked(&self) -> anyhow::Result<()> {
-        vanilla::launcher::launch_game(&self.launch_args.as_ref().unwrap()).await
+        vanilla::launcher::launch_game(&self.launch_args.as_ref().unwrap_unchecked()).await
     }
 
     /// Downloads game(also verifies)

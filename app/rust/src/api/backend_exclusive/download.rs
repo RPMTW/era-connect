@@ -20,7 +20,10 @@ use tokio::{
     time::{self, Instant},
 };
 
-use crate::api::shared_resources::{collection::CollectionId, entry::DOWNLOAD_PROGRESS};
+use crate::api::shared_resources::{
+    collection::CollectionId,
+    entry::{HashMapMessage, DOWNLOAD_PROGRESS},
+};
 
 pub type HandlesType<'a> = Vec<BoxFuture<'a, anyhow::Result<()>>>;
 
@@ -175,19 +178,20 @@ pub async fn execute_and_progress(
     let handles = download_args.handles;
     let calculate_speed = download_args.is_size;
     let download_complete = Arc::new(AtomicBool::new(false));
+    let arc_id = Arc::new(id);
 
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&download_args.current);
     let total_size_clone = Arc::clone(&download_args.total);
-    let id_clone = id.clone();
+    let id_clone = Arc::clone(&arc_id);
 
     let output = tokio::spawn(async move {
         rolling_average(
             download_complete_clone,
             current_size_clone,
             total_size_clone,
-            bias,
             id_clone,
+            bias,
             calculate_speed,
         )
         .await;
@@ -197,9 +201,9 @@ pub async fn execute_and_progress(
     download_complete.store(true, Ordering::Release);
     output.await?;
 
-    debug!("finish download request");
+    DOWNLOAD_PROGRESS.send(HashMapMessage::Remove(arc_id))?;
 
-    // DOWNLOAD_PROGRESS.remove(&id);
+    debug!("finish download request");
 
     Ok(())
 }
@@ -208,8 +212,8 @@ pub async fn rolling_average(
     download_complete: Arc<AtomicBool>,
     current: Arc<AtomicUsize>,
     total: Arc<AtomicUsize>,
+    id: Arc<CollectionId>,
     bias: DownloadBias,
-    id: CollectionId,
     calculate_speed: bool,
 ) {
     let mut instant = Instant::now();
@@ -258,7 +262,9 @@ pub async fn rolling_average(
 
         prev_bytes = current;
         instant = Instant::now();
-        DOWNLOAD_PROGRESS.insert(id.clone(), progress);
+        DOWNLOAD_PROGRESS
+            .send(HashMapMessage::Insert(Arc::clone(&id), progress))
+            .unwrap();
     }
 }
 
