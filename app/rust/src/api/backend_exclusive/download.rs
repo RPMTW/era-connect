@@ -150,6 +150,21 @@ pub struct Progress {
     pub bias: DownloadBias,
 }
 
+impl Default for Progress {
+    fn default() -> Self {
+        Self {
+            percentages: 100.0,
+            speed: None,
+            current_size: None,
+            total_size: None,
+            bias: DownloadBias {
+                start: 0.0,
+                end: 100.0,
+            },
+        }
+    }
+}
+
 /// set percentages bias
 /// example:
 /// start: 30.0
@@ -194,13 +209,14 @@ pub async fn execute_and_progress(
             bias,
             calculate_speed,
         )
-        .await;
+        .await
     });
     // Create a semaphore with a limit on the number of concurrent downloads
     join_futures(handles, 128).await?;
     download_complete.store(true, Ordering::Release);
-    output.await?;
+    let progress = output.await?;
 
+    DOWNLOAD_PROGRESS.send(HashMapMessage::Insert(Arc::clone(&arc_id), progress))?;
     DOWNLOAD_PROGRESS.send(HashMapMessage::Remove(arc_id))?;
 
     debug!("finish download request");
@@ -215,10 +231,12 @@ pub async fn rolling_average(
     id: Arc<CollectionId>,
     bias: DownloadBias,
     calculate_speed: bool,
-) {
+) -> Progress {
     let mut instant = Instant::now();
     let mut prev_bytes = 0.0;
-    while !download_complete.load(Ordering::Acquire) {
+    let mut completed = false;
+    let m_progress;
+    loop {
         let multiplier = bias.end - bias.start;
 
         let sleep_time = 250;
@@ -260,12 +278,22 @@ pub async fn rolling_average(
             }
         };
 
-        prev_bytes = current;
-        instant = Instant::now();
-        DOWNLOAD_PROGRESS
-            .send(HashMapMessage::Insert(Arc::clone(&id), progress))
-            .unwrap();
+        if download_complete.load(Ordering::Acquire) {
+            if !completed {
+                completed = true;
+            } else {
+                m_progress = progress;
+                break;
+            }
+        } else {
+            prev_bytes = current;
+            instant = Instant::now();
+            DOWNLOAD_PROGRESS
+                .send(HashMapMessage::Insert(Arc::clone(&id), progress))
+                .unwrap();
+        }
     }
+    m_progress
 }
 
 pub async fn join_futures(
