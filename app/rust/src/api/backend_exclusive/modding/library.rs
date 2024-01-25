@@ -64,8 +64,26 @@ struct ForgeLoaders {
     stable: bool,
 }
 
-async fn fetch_forge_manifest(game_version: &str, forge_version: Option<&str>) -> Result<Bytes> {
+async fn fetch_neoforge_manifest(game_version: &str, forge_version: Option<&str>) -> Result<Bytes> {
     let bytes = download_file("https://meta.modrinth.com/neo/v0/manifest.json", None).await?;
+    let forge_manifest: ModloaderVersionsManifest = serde_json::from_slice(&bytes)?;
+    let loaders = &forge_manifest
+        .game_versions
+        .iter()
+        .find(|x| x.id == game_version)
+        .context("Can't find the desired game version")?
+        .loaders;
+    let loader_url = &match forge_version {
+        Some(x) => loaders.iter().find(|y| y.id == x),
+        None => loaders.first(),
+    }
+    .context("Can't find the forge manifest")?
+    .url;
+    download_file(&loader_url, None).await
+}
+
+async fn fetch_forge_manifest(game_version: &str, forge_version: Option<&str>) -> Result<Bytes> {
+    let bytes = download_file("https://meta.modrinth.com/forge/v0/manifest.json", None).await?;
     let forge_manifest: ModloaderVersionsManifest = serde_json::from_slice(&bytes)?;
     let loaders = &forge_manifest
         .game_versions
@@ -125,9 +143,10 @@ pub async fn prepare_modloader_download<'a>(
     game_options: GameOptions,
 ) -> Result<(DownloadArgs<'a>, ProcessedArguments, Value)> {
     let bytes = match mod_loader {
-        ModLoaderType::Forge | ModLoaderType::NeoForge => {
-            fetch_forge_manifest(&game_options.game_version_name, None).await?
+        ModLoaderType::NeoForge => {
+            fetch_neoforge_manifest(&game_options.game_version_name, None).await?
         }
+        ModLoaderType::Forge => fetch_forge_manifest(&game_options.game_version_name, None).await?,
         ModLoaderType::Quilt => fetch_quilt_manifest(None).await?,
         ModLoaderType::Fabric => fetch_fabric_manifest(None).await?,
     };
