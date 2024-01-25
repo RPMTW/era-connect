@@ -174,9 +174,11 @@ impl Collection {
     }
 
     pub fn save(&self) -> anyhow::Result<()> {
-        let p = Self::create_loader(&self.display_name)?;
-        p.save(&self)?;
-        Ok(())
+        StorageLoader::new(
+            COLLECTION_FILE_NAME.to_string(),
+            Cow::Borrowed(&self.entry_path),
+        )
+        .save(&self)
     }
 
     fn create_loader(display_name: &str) -> std::io::Result<StorageLoader> {

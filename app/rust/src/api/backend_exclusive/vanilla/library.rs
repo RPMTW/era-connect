@@ -26,7 +26,7 @@ pub struct Library {
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct Metadata {
-    pub path: String,
+    pub path: Option<String>,
     pub sha1: String,
     pub size: usize,
     pub url: String,
@@ -50,8 +50,8 @@ pub fn os_match<'a>(library: &Library, current_os_type: &'a OsName) -> (bool, bo
                     }
                     is_native_library = true;
                     library_extension_type = match current_os_type {
-                        OsName::Osx => ".dylib",
-                        OsName::Linux => ".so",
+                        OsName::Osx | OsName::OsxArm64 => ".dylib",
+                        OsName::Linux | OsName::LinuxArm64 | OsName::LinuxArm32 => ".so",
                         OsName::Windows => ".dll",
                     }
                 }
@@ -96,22 +96,43 @@ pub async fn parallel_library(
                 let path = library.downloads.artifact.path.clone();
                 let (process_native, is_native_library, library_extension) =
                     os_match(library, &current_os_type);
-                let non_native_download_path = folder_clone.join(&path);
-                let non_native_redownload = if non_native_download_path.exists() {
-                    if let Err(x) = if !process_native && !is_native_library {
-                        validate_sha1(&non_native_download_path, &library.downloads.artifact.sha1)
+                if let Some(ref path) = path {
+                    let non_native_download_path = folder_clone.join(&path);
+                    let non_native_redownload = if non_native_download_path.exists() {
+                        if let Err(x) = if !process_native && !is_native_library {
+                            validate_sha1(
+                                &non_native_download_path,
+                                &library.downloads.artifact.sha1,
+                            )
                             .await
+                        } else {
+                            Ok(())
+                        } {
+                            error!("{x}, \nredownloading.");
+                            true
+                        } else {
+                            false
+                        }
                     } else {
-                        Ok(())
-                    } {
-                        error!("{x}, \nredownloading.");
                         true
-                    } else {
-                        false
+                    };
+                    if !process_native && non_native_redownload {
+                        total_size_clone
+                            .fetch_add(library.downloads.artifact.size, Ordering::Relaxed);
+                        let parent_dir = non_native_download_path
+                            .parent()
+                            .context("Can't find parent of non_native_download_path")?;
+                        fs::create_dir_all(parent_dir)
+                            .await
+                            .context("Fail to create parent dir(library)")?;
+                        let url = &library.downloads.artifact.url;
+                        let bytes =
+                            download_file(url, Some(Arc::clone(&current_size_clone))).await?;
+                        fs::write(&non_native_download_path, bytes)
+                            .await
+                            .map_err(|err| anyhow!(err))?;
                     }
-                } else {
-                    true
-                };
+                }
 
                 // always download(kinda required for now.)
                 if process_native {
@@ -124,23 +145,8 @@ pub async fn parallel_library(
                         library_extension,
                     )
                     .await?;
-                    Ok(())
-                } else if !non_native_redownload {
-                    Ok(())
-                } else {
-                    total_size_clone.fetch_add(library.downloads.artifact.size, Ordering::Relaxed);
-                    let parent_dir = non_native_download_path
-                        .parent()
-                        .context("Can't find parent of non_native_download_path")?;
-                    fs::create_dir_all(parent_dir)
-                        .await
-                        .context("Fail to create parent dir(library)")?;
-                    let url = &library.downloads.artifact.url;
-                    let bytes = download_file(url, Some(current_size_clone)).await?;
-                    fs::write(&non_native_download_path, bytes)
-                        .await
-                        .map_err(|err| anyhow!(err))
                 }
+                Ok(())
             } else {
                 Ok(())
             }

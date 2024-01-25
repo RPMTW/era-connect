@@ -21,6 +21,12 @@ pub enum OsName {
     Windows,
     #[serde(rename = "linux")]
     Linux,
+    #[serde(rename = "osx-arm64")]
+    OsxArm64,
+    #[serde(rename = "linux-arm64")]
+    LinuxArm64,
+    #[serde(rename = "linux-arm32")]
+    LinuxArm32,
 }
 
 impl fmt::Display for OsName {
@@ -29,6 +35,9 @@ impl fmt::Display for OsName {
             Self::Osx => write!(f, "Osx"),
             Self::Windows => write!(f, "Windows"),
             Self::Linux => write!(f, "Linux"),
+            Self::OsxArm64 => write!(f, "Arm64 Osx"),
+            Self::LinuxArm64 => write!(f, "Arm64 Linux"),
+            Self::LinuxArm32 => write!(f, "Arm32 Linux"),
         }
     }
 }
@@ -43,7 +52,7 @@ pub struct Os {
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct Rule {
     pub action: ActionType,
-    pub features: Option<HashMap<String, bool>>,
+    pub features: Option<HashMap<String, Option<bool>>>,
     pub os: Option<Os>,
 }
 
