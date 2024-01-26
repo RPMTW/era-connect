@@ -10,6 +10,7 @@ use log::debug;
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde::Serialize;
+use std::cmp::Reverse;
 use std::fs::create_dir_all;
 use std::path::Path;
 use std::path::PathBuf;
@@ -729,13 +730,12 @@ fn fetch_version_modloader_constraints(
         })
         .collect::<Vec<_>>();
     possible_versions.sort_by_key(|x| match x {
-        RawModData::Modrinth(x) => x.date_published,
-        RawModData::Curseforge { data, .. } => data.file_date,
+        RawModData::Modrinth(x) => Reverse(x.date_published),
+        RawModData::Curseforge { data, .. } => Reverse(data.file_date),
     });
-    let possible_versions = possible_versions.into_iter().rev().collect::<Vec<_>>();
     let version = if mod_override.contains(&ModOverride::IgnoreMinorGameVersion) {
         // strict game check
-        if let Some(x) = possible_versions.iter().find(|x| {
+        let strict_check_version = possible_versions.iter().find(|x| {
             let supported_game_versions = match x {
                 RawModData::Modrinth(x) => x
                     .game_versions
@@ -751,11 +751,10 @@ fn fetch_version_modloader_constraints(
             supported_game_versions
                 .iter()
                 .any(|x| x.id == collection_game_version.id)
-        }) {
+        });
+        if let Some(x) = strict_check_version {
             Some(x.clone())
-        }
-        // loosen it a bit
-        else {
+        } else {
             possible_versions.into_iter().next()
         }
     } else {
