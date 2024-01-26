@@ -494,6 +494,7 @@ impl ModManager {
             Project::Modrinth(x) => x.title.clone(),
             Project::Curseforge(x) => x.name.clone(),
         };
+        let target_game_version = self.target_game_version.id.as_str();
 
         let versions = get_mod_version(project).await?;
 
@@ -519,7 +520,7 @@ impl ModManager {
 
         self.add_mod(
             version
-                .context(format!("Can't find suitible mod with mod loader and version constraints, project is {name}"))?
+                .context(format!("Can't find suitible mod with mod loader and version constraints, project is {name}, version is {target_game_version}, mod loader is {collection_mod_loader:?}"))?
                 .into(),
             tag,
             mod_override,
@@ -551,46 +552,37 @@ impl ModManager {
             })
         }))
         .buffered(10)
+        .map(|x| {
+            let (name, versions) = x??;
+            let collection_mod_loader = self
+                .mod_loader
+                .clone()
+                .with_context(|| "don't add mod in vanilla")?
+                .mod_loader_type;
+
+            let collection_game_version = all_game_version
+                .iter()
+                .find(|x| x.id == self.target_game_version.id)
+                .context("somehow can't find game versions")?;
+
+            let version = fetch_version_modloader_constraints(
+                &name,
+                all_game_version.as_slice(),
+                collection_game_version,
+                collection_mod_loader,
+                versions,
+                &mod_override,
+            )?.with_context(|| format!("Can't find suitible mod with mod loader and version constraints, project is {name}"))?;
+            Ok(version)
+        })
         .collect::<Vec<_>>();
 
-        let multiple_projects = buffered_iterator
+        let multiple_mods = buffered_iterator
             .await
             .into_iter()
-            .flatten()
             .collect::<anyhow::Result<Vec<_>>>()?;
 
-        let multiple_mods = multiple_projects
-            .into_iter()
-            .map(|(name, versions)| {
-                let collection_mod_loader = self
-                    .mod_loader
-                    .clone()
-                    .with_context(|| "don't add mod in vanilla")?
-                    .mod_loader_type;
-
-                let collection_game_version = all_game_version
-                    .iter()
-                    .find(|x| x.id == self.target_game_version.id)
-                    .context("somehow can't find game versions")?;
-
-                let version = fetch_version_modloader_constraints(
-                    &name,
-                    all_game_version.as_slice(),
-                    collection_game_version,
-                    collection_mod_loader,
-                    versions,
-                    &mod_override,
-                )?;
-                Ok::<_, anyhow::Error>((name, version))
-            })
-            .collect::<anyhow::Result<Vec<_>>>()?;
-
-        let mulitlple_mods = multiple_mods.into_iter().map(|(name, x)| {
-            x
-                .context(format!("Can't find suitible mod with mod loader and version constraints, project is {name}"))
-        }).collect::<anyhow::Result<Vec<_>>>()?;
-
-        self.add_multiple_mods(mulitlple_mods, tag, mod_override)
+        self.add_multiple_mods(multiple_mods, tag, mod_override)
             .await?;
 
         Ok(())
