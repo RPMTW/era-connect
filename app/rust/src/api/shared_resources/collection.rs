@@ -4,6 +4,7 @@ use std::{borrow::Cow, fs::create_dir_all};
 use chrono::{DateTime, Duration, Utc};
 use flutter_rust_bridge::frb;
 use log::info;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -90,12 +91,31 @@ impl Collection {
         &mut self,
         project_id: impl AsRef<str> + Send + Sync,
         tag: Vec<Tag>,
-        mod_override: Option<&Vec<ModOverride>>,
+        mod_override: Option<Vec<ModOverride>>,
     ) -> anyhow::Result<()> {
         let project_id = project_id.as_ref();
         let project = (&FERINTH).get_project(project_id).await?;
         self.mod_manager
-            .add_project(project.into(), tag, mod_override.unwrap_or(&Vec::new()))
+            .add_project(project.into(), tag, mod_override.unwrap_or(Vec::new()))
+            .await?;
+        self.save()?;
+        Ok(())
+    }
+
+    // #[frb(ignore)]
+    pub async fn add_multiple_modrinth_mod(
+        &mut self,
+        project_ids: Vec<&str>,
+        tag: Vec<Tag>,
+        mod_override: Option<Vec<ModOverride>>,
+    ) -> anyhow::Result<()> {
+        let project = (&FERINTH).get_multiple_projects(&project_ids).await?;
+        self.mod_manager
+            .add_multiple_project(
+                project.into_iter().map(|x| x.into()).collect::<Vec<_>>(),
+                tag.clone(),
+                mod_override.unwrap_or(Vec::new()),
+            )
             .await?;
         self.save()?;
         Ok(())
@@ -105,11 +125,11 @@ impl Collection {
         &mut self,
         project_id: i32,
         tag: Vec<Tag>,
-        mod_override: Option<&Vec<ModOverride>>,
+        mod_override: Option<Vec<ModOverride>>,
     ) -> anyhow::Result<()> {
         let project = (&FURSE).get_mod(project_id).await?;
         self.mod_manager
-            .add_project(project.into(), tag, mod_override.unwrap_or(&Vec::new()))
+            .add_project(project.into(), tag, mod_override.unwrap_or(Vec::new()))
             .await?;
         self.save()?;
         Ok(())

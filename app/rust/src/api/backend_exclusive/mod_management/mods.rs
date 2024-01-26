@@ -5,6 +5,7 @@ use ferinth::structures::version::DependencyType;
 use flutter_rust_bridge::frb;
 use furse::structures::file_structs::FileRelationType;
 use furse::structures::file_structs::HashAlgo;
+use futures::StreamExt;
 use log::debug;
 use once_cell::sync::Lazy;
 use serde::Deserialize;
@@ -43,7 +44,7 @@ pub struct ModMetadata {
     pub tag: Vec<Tag>,
     pub overrides: Vec<ModOverride>,
     pub incompatiable_mods: Option<Vec<ModMetadata>>,
-    pub mod_data: MinecraftModData,
+    pub mod_data: RawModData,
 }
 
 impl PartialEq for ModMetadata {
@@ -59,7 +60,7 @@ pub enum ProjectId {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub enum MinecraftModData {
+pub enum RawModData {
     Modrinth(ferinth::structures::version::Version),
     Curseforge {
         data: furse::structures::file_structs::File,
@@ -84,10 +85,10 @@ impl From<furse::structures::mod_structs::Mod> for Project {
     }
 }
 
-impl PartialEq for MinecraftModData {
+impl PartialEq for RawModData {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (MinecraftModData::Modrinth(my), MinecraftModData::Modrinth(other)) => {
+            (RawModData::Modrinth(my), RawModData::Modrinth(other)) => {
                 my.files
                     .iter()
                     .zip(other.files.iter())
@@ -95,11 +96,11 @@ impl PartialEq for MinecraftModData {
                     && my.version_number == other.version_number
             }
             (
-                MinecraftModData::Curseforge {
+                RawModData::Curseforge {
                     data: my_data,
                     metadata: my_metadata,
                 },
-                MinecraftModData::Curseforge {
+                RawModData::Curseforge {
                     data: other_data,
                     metadata: other_metadata,
                 },
@@ -111,18 +112,12 @@ impl PartialEq for MinecraftModData {
                     .all(|(x, y)| x.value == y.value)
                     && my_metadata.file_id == other_metadata.file_id
             }
-            (
-                MinecraftModData::Curseforge { data: my_data, .. },
-                MinecraftModData::Modrinth(val),
-            ) => my_data
+            (RawModData::Curseforge { data: my_data, .. }, RawModData::Modrinth(val)) => my_data
                 .hashes
                 .iter()
                 .zip(val.files.iter())
                 .all(|(x, y)| x.value == y.hashes.sha1),
-            (
-                MinecraftModData::Modrinth(val),
-                MinecraftModData::Curseforge { data: my_data, .. },
-            ) => my_data
+            (RawModData::Modrinth(val), RawModData::Curseforge { data: my_data, .. }) => my_data
                 .hashes
                 .iter()
                 .zip(val.files.iter())
@@ -131,7 +126,7 @@ impl PartialEq for MinecraftModData {
     }
 }
 
-impl From<ferinth::structures::version::Version> for MinecraftModData {
+impl From<ferinth::structures::version::Version> for RawModData {
     fn from(value: ferinth::structures::version::Version) -> Self {
         Self::Modrinth(value)
     }
@@ -141,7 +136,7 @@ impl
     From<(
         furse::structures::file_structs::File,
         furse::structures::file_structs::FileIndex,
-    )> for MinecraftModData
+    )> for RawModData
 {
     fn from(
         value: (
@@ -156,7 +151,7 @@ impl
     }
 }
 
-impl Eq for MinecraftModData {}
+impl Eq for RawModData {}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[frb(opaque)]
@@ -206,7 +201,7 @@ impl ModManager {
         let mut handles = HandlesType::new();
         for minecraft_mod in &self.mods {
             match &minecraft_mod.mod_data {
-                MinecraftModData::Modrinth(minecraft_mod) => {
+                RawModData::Modrinth(minecraft_mod) => {
                     for file in &minecraft_mod.files {
                         let hash = &file.hashes.sha1;
                         let url = &file.url;
@@ -230,7 +225,7 @@ impl ModManager {
                         }));
                     }
                 }
-                MinecraftModData::Curseforge { data: file, .. } => {
+                RawModData::Curseforge { data: file, .. } => {
                     let hashes = file
                         .hashes
                         .iter()
@@ -286,8 +281,8 @@ impl ModManager {
             let raw_hash = get_hash(&path).await?;
             let hash = hex::encode(raw_hash);
             let already_contained_in_collection = self.mods.iter().any(|x| match &x.mod_data {
-                MinecraftModData::Modrinth(x) => x.files.iter().any(|x| x.hashes.sha1 == hash),
-                MinecraftModData::Curseforge { data, .. } => data
+                RawModData::Modrinth(x) => x.files.iter().any(|x| x.hashes.sha1 == hash),
+                RawModData::Curseforge { data, .. } => data
                     .hashes
                     .iter()
                     .filter(|x| x.algo == HashAlgo::Sha1)
@@ -298,7 +293,7 @@ impl ModManager {
                     .get_version_from_hash(&hash)
                     .await
                     .context("Can't find jar")?;
-                self.add_mod(version.into(), vec![Tag::Explicit], &Vec::new())
+                self.add_mod(version.into(), vec![Tag::Explicit], Vec::new())
                     .await?;
             }
         }
@@ -309,12 +304,13 @@ impl ModManager {
     #[async_recursion]
     async fn mod_dependencies_resolve(
         &mut self,
-        minecraft_mod: &MinecraftModData,
-        mod_override: &Vec<ModOverride>,
+        minecraft_mod: &RawModData,
+        mod_override: Vec<ModOverride>,
     ) -> anyhow::Result<()> {
         match minecraft_mod {
-            MinecraftModData::Modrinth(minecraft_mod) => {
+            RawModData::Modrinth(minecraft_mod) => {
                 for dept in &minecraft_mod.dependencies {
+                    let mod_override = mod_override.clone();
                     if dept.dependency_type == DependencyType::Required {
                         if let Some(dependency) = &dept.version_id {
                             let ver = FERINTH.get_version(dependency).await?;
@@ -328,11 +324,12 @@ impl ModManager {
                     }
                 }
             }
-            MinecraftModData::Curseforge {
+            RawModData::Curseforge {
                 data: minecraft_mod,
                 ..
             } => {
                 for dept in &minecraft_mod.dependencies {
+                    let mod_override = mod_override.clone();
                     if dept.relation_type == FileRelationType::RequiredDependency {
                         let project = FURSE.get_mod(dept.mod_id).await?;
                         self.add_project(project.into(), vec![Tag::Dependencies], mod_override)
@@ -347,13 +344,78 @@ impl ModManager {
     #[async_recursion]
     async fn add_mod(
         &mut self,
-        minecraft_mod_data: MinecraftModData,
+        minecraft_mod_data: RawModData,
         tag: Vec<Tag>,
-        mod_override: &Vec<ModOverride>,
+        mod_override: Vec<ModOverride>,
     ) -> anyhow::Result<()> {
+        let (mod_metadata, is_fabric_api) =
+            Self::raw_mod_transformation(minecraft_mod_data, mod_override.clone(), tag).await?;
+        if !self.mods.contains(&mod_metadata) {
+            self.mod_dependencies_resolve(&mod_metadata.mod_data, mod_override)
+                .await?;
+            if self.mod_loader.as_ref().map(|x| x.mod_loader_type) == Some(ModLoaderType::Quilt)
+                && is_fabric_api
+            {
+                let project = (&FERINTH).get_project("qsl").await?;
+                self.add_project(project.into(), vec![Tag::Dependencies], vec![])
+                    .await?;
+            } else {
+                self.mods.push(mod_metadata);
+            }
+        }
+        Ok(())
+    }
+
+    async fn add_multiple_mods(
+        &mut self,
+        minecraft_mod_data: Vec<RawModData>,
+        tag: Vec<Tag>,
+        mod_override: Vec<ModOverride>,
+    ) -> anyhow::Result<()> {
+        let buffered = tokio_stream::iter(minecraft_mod_data.into_iter())
+            .map(|mod_metadata| {
+                let mod_override_cloned = mod_override.clone();
+                let tag_cloned = tag.clone();
+                tokio::spawn(async move {
+                    let (mod_metadata, is_fabric_api) =
+                        Self::raw_mod_transformation(mod_metadata, mod_override_cloned, tag_cloned)
+                            .await?;
+                    Ok((mod_metadata, is_fabric_api))
+                })
+            })
+            .buffered(10)
+            .collect::<Vec<_>>();
+        let minecraft_mod_data = buffered
+            .await
+            .into_iter()
+            .flatten()
+            .collect::<anyhow::Result<Vec<_>>>()?;
+        for (mod_metadata, is_fabric_api) in minecraft_mod_data {
+            if !self.mods.contains(&mod_metadata) {
+                self.mod_dependencies_resolve(&mod_metadata.mod_data, mod_override.clone())
+                    .await?;
+                if self.mod_loader.as_ref().map(|x| x.mod_loader_type) == Some(ModLoaderType::Quilt)
+                    && is_fabric_api
+                {
+                    let project = (&FERINTH).get_project("qsl").await?;
+                    self.add_project(project.into(), vec![Tag::Dependencies], vec![])
+                        .await?;
+                } else {
+                    self.mods.push(mod_metadata);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    async fn raw_mod_transformation(
+        minecraft_mod_data: RawModData,
+        mod_override: Vec<ModOverride>,
+        tag: Vec<Tag>,
+    ) -> anyhow::Result<(ModMetadata, bool)> {
         let mut is_fabric_api = false;
         let mod_metadata = match &minecraft_mod_data {
-            MinecraftModData::Modrinth(minecraft_mod) => {
+            RawModData::Modrinth(minecraft_mod) => {
                 if minecraft_mod.project_id == "P7dR8mSH" {
                     is_fabric_api = true;
                 }
@@ -366,11 +428,11 @@ impl ModManager {
                     mod_version: Some(minecraft_mod.version_number.clone()),
                     tag,
                     incompatiable_mods: None,
-                    overrides: mod_override.clone(),
+                    overrides: mod_override,
                     mod_data: minecraft_mod_data,
                 }
             }
-            MinecraftModData::Curseforge {
+            RawModData::Curseforge {
                 data: minecraft_mod,
                 ..
             } => {
@@ -383,25 +445,12 @@ impl ModManager {
                     mod_version: None,
                     tag,
                     incompatiable_mods: None,
-                    overrides: mod_override.clone(),
+                    overrides: mod_override,
                     mod_data: minecraft_mod_data,
                 }
             }
         };
-        if !self.mods.contains(&mod_metadata) {
-            self.mod_dependencies_resolve(&mod_metadata.mod_data, mod_override)
-                .await?;
-            if self.mod_loader.as_ref().map(|x| x.mod_loader_type) == Some(ModLoaderType::Quilt)
-                && is_fabric_api
-            {
-                let project = (&FERINTH).get_project("qsl").await?;
-                self.add_project(project.into(), vec![Tag::Dependencies], &vec![])
-                    .await?;
-            } else {
-                self.mods.push(mod_metadata);
-            }
-        }
-        Ok(())
+        Ok((mod_metadata, is_fabric_api))
     }
 
     pub async fn search_modrinth_project(
@@ -430,7 +479,7 @@ impl ModManager {
         &mut self,
         project: Project,
         tag: Vec<Tag>,
-        mod_override: &Vec<ModOverride>,
+        mod_override: Vec<ModOverride>,
     ) -> anyhow::Result<()> {
         let all_game_version = if let Some(x) = self.cache.as_deref() {
             debug!("using cached game version");
@@ -440,177 +489,33 @@ impl ModManager {
             self.cache.as_deref().unwrap()
         };
 
-        let modrinth = &FERINTH;
         let name = match &project {
             Project::Modrinth(x) => x.title.clone(),
             Project::Curseforge(x) => x.name.clone(),
         };
 
-        let versions: Vec<MinecraftModData> = match project {
-            Project::Modrinth(project) => modrinth
-                .get_multiple_versions(
-                    project
-                        .versions
-                        .iter()
-                        .map(String::as_str)
-                        .collect::<Vec<_>>()
-                        .as_slice(),
-                )
-                .await?
-                .into_iter()
-                .map(|x| x.into())
-                .collect::<Vec<_>>(),
-            Project::Curseforge(x) => x
-                .latest_files
-                .into_iter()
-                .zip(x.latest_files_indexes.into_iter())
-                .map(|x| x.into())
-                .collect::<Vec<_>>(),
-        };
+        let versions = get_mod_version(project).await?;
 
         let collection_mod_loader = self
             .mod_loader
-            .clone()
-            .with_context(|| "don't add mod in vanilla")?;
+            .as_ref()
+            .with_context(|| "don't add mod in vanilla")?
+            .mod_loader_type;
 
-        let mut mod_loader_filter = versions
-            .into_iter()
-            .map(|x| {
-                match x {
-                    MinecraftModData::Modrinth(mut ver) => {
-                        ver.files = ver.files.into_iter().filter(|x| x.primary).collect::<Vec<_>>();
-                        ver.into()
-                    },
-                    MinecraftModData::Curseforge {..} => x,
-               }
-            })
-            .filter(|x| {
-                if mod_override.contains(&ModOverride::IgnoreModLoader) {
-                    true
-                } else {
-                    match &x {
-                        MinecraftModData::Modrinth(x) => x.loaders.iter().any(|loader| {
-                            let loader = match loader.as_str() {
-                                "forge" => Some(ModLoaderType::Forge),
-                                "quilt" => Some(ModLoaderType::Quilt),
-                                "fabric" => Some(ModLoaderType::Fabric),
-                                "neoforge" => Some(ModLoaderType::NeoForge),
-                                _ => None,
-                            };
-
-                            let target_quilt_compatibility = mod_override.contains(&ModOverride::QuiltFabricCompatibility);
-
-                            let neo_forge_compatibility = collection_mod_loader.mod_loader_type == ModLoaderType::NeoForge && loader == Some(ModLoaderType::Forge);
-
-                            let quilt_compatible = target_quilt_compatibility
-                                && collection_mod_loader.mod_loader_type == ModLoaderType::Quilt
-                                && loader == Some(ModLoaderType::Fabric);
-                            loader.is_some_and(|x| x == collection_mod_loader.mod_loader_type)
-                                || quilt_compatible || neo_forge_compatibility
-                        }),
-                        MinecraftModData::Curseforge{metadata, ..} => {
-                            if let Some(loader) = &metadata.mod_loader {
-                                let mut any = false;
-                                let loader = match loader {
-                                    furse::structures::common_structs::ModLoaderType::Any => { any = true; None },
-                                    furse::structures::common_structs::ModLoaderType::Forge => Some(ModLoaderType::Forge),
-                                    furse::structures::common_structs::ModLoaderType::Cauldron => None,
-                                    furse::structures::common_structs::ModLoaderType::LiteLoader => None,
-                                    furse::structures::common_structs::ModLoaderType::Fabric => Some(ModLoaderType::Fabric),
-                                    furse::structures::common_structs::ModLoaderType::Quilt => Some(ModLoaderType::Quilt),
-                                    furse::structures::common_structs::ModLoaderType::NeoForge => Some(ModLoaderType::NeoForge)
-                                 };
-
-                            let neo_forge_compatibility = collection_mod_loader.mod_loader_type == ModLoaderType::NeoForge && loader == Some(ModLoaderType::Forge);
-
-                            let quilt_compatible = mod_override
-                                .contains(&ModOverride::QuiltFabricCompatibility)
-                                && collection_mod_loader.mod_loader_type == ModLoaderType::Quilt
-                                && loader == Some(ModLoaderType::Fabric);
-                            loader.is_some_and(|x| x == collection_mod_loader.mod_loader_type)
-                                || quilt_compatible || any || neo_forge_compatibility
-
-                            } else {
-                                false
-                            }
-                        },
-                    }
-                }
-            }).peekable();
-        if mod_loader_filter.peek().is_none() {
-            bail!(
-                "Can't find suitable Mod Loader, mod loader is {:?}, project is {}",
-                collection_mod_loader,
-                name,
-            );
-        }
         let collection_game_version = all_game_version
             .iter()
             .find(|x| x.id == self.target_game_version.id)
-            .expect("somehow can't find game versions");
-        let mut possible_versions = mod_loader_filter
-            .filter(|x| {
-                let supported_game_versions = match x {
-                    MinecraftModData::Modrinth(x) => x
-                        .game_versions
-                        .iter()
-                        .filter_map(|x| all_game_version.iter().find(|y| &y.id == x))
-                        .collect::<Vec<_>>(),
-                    MinecraftModData::Curseforge { data, .. } => data
-                        .game_versions
-                        .iter()
-                        .filter_map(|x| all_game_version.iter().find(|y| &y.id == x))
-                        .collect::<Vec<_>>(),
-                };
+            .context("somehow can't find game versions")?;
 
-                match &**mod_override {
-                    x if x.contains(&ModOverride::IgnoreAllGameVersion) => true,
-                    x if x.contains(&ModOverride::IgnoreMinorGameVersion)
-                        && collection_game_version.version_type == VersionType::Release =>
-                    {
-                        supported_game_versions
-                            .iter()
-                            .any(|x| minor_game_check(x, &collection_game_version.id))
-                    }
-                    _ => supported_game_versions
-                        .iter()
-                        .any(|x| x.id == collection_game_version.id),
-                }
-            })
-            .collect::<Vec<_>>();
-        possible_versions.sort_by_key(|x| match x {
-            MinecraftModData::Modrinth(x) => x.date_published,
-            MinecraftModData::Curseforge { data, .. } => data.file_date,
-        });
-        let possible_versions = possible_versions.into_iter().rev().collect::<Vec<_>>();
-        let version = if mod_override.contains(&ModOverride::IgnoreMinorGameVersion) {
-            // strict game check
-            if let Some(x) = possible_versions.iter().find(|x| {
-                let supported_game_versions = match x {
-                    MinecraftModData::Modrinth(x) => x
-                        .game_versions
-                        .iter()
-                        .filter_map(|x| all_game_version.iter().find(|y| &y.id == x))
-                        .collect::<Vec<_>>(),
-                    MinecraftModData::Curseforge { data, .. } => data
-                        .game_versions
-                        .iter()
-                        .filter_map(|x| all_game_version.iter().find(|y| &y.id == x))
-                        .collect::<Vec<_>>(),
-                };
-                supported_game_versions
-                    .iter()
-                    .any(|x| x.id == collection_game_version.id)
-            }) {
-                Some(x.clone())
-            }
-            // loosen it a bit
-            else {
-                possible_versions.into_iter().next()
-            }
-        } else {
-            possible_versions.into_iter().next()
-        };
+        let version = fetch_version_modloader_constraints(
+            &name,
+            all_game_version,
+            collection_game_version,
+            collection_mod_loader,
+            versions,
+            &mod_override,
+        )?;
+
         self.add_mod(
             version
                 .context(format!("Can't find suitible mod with mod loader and version constraints, project is {name}"))?
@@ -622,6 +527,266 @@ impl ModManager {
 
         Ok(())
     }
+
+    pub async fn add_multiple_project(
+        &mut self,
+        projects: Vec<Project>,
+        tag: Vec<Tag>,
+        mod_override: Vec<ModOverride>,
+    ) -> anyhow::Result<()> {
+        let all_game_version = get_versions().await?;
+
+        let buffered_iterator = tokio_stream::iter(projects.into_iter().map(|project| {
+            tokio::spawn(async {
+                let name = match &project {
+                    Project::Modrinth(x) => x.title.clone(),
+                    Project::Curseforge(x) => x.name.clone(),
+                };
+                let version = get_mod_version(project).await;
+                match version {
+                    Ok(v) => Ok((name, v)),
+                    Err(err) => Err(err),
+                }
+            })
+        }))
+        .buffered(10)
+        .collect::<Vec<_>>();
+
+        let multiple_projects = buffered_iterator
+            .await
+            .into_iter()
+            .flatten()
+            .collect::<anyhow::Result<Vec<_>>>()?;
+
+        let multiple_mods = multiple_projects
+            .into_iter()
+            .map(|(name, versions)| {
+                let collection_mod_loader = self
+                    .mod_loader
+                    .clone()
+                    .with_context(|| "don't add mod in vanilla")?
+                    .mod_loader_type;
+
+                let collection_game_version = all_game_version
+                    .iter()
+                    .find(|x| x.id == self.target_game_version.id)
+                    .context("somehow can't find game versions")?;
+
+                let version = fetch_version_modloader_constraints(
+                    &name,
+                    all_game_version.as_slice(),
+                    collection_game_version,
+                    collection_mod_loader,
+                    versions,
+                    &mod_override,
+                )?;
+                Ok::<_, anyhow::Error>((name, version))
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?;
+
+        let mulitlple_mods = multiple_mods.into_iter().map(|(name, x)| {
+            x
+                .context(format!("Can't find suitible mod with mod loader and version constraints, project is {name}"))
+        }).collect::<anyhow::Result<Vec<_>>>()?;
+
+        self.add_multiple_mods(mulitlple_mods, tag, mod_override)
+            .await?;
+
+        Ok(())
+    }
+}
+
+fn fetch_version_modloader_constraints(
+    name: &str,
+    all_game_versions: &[VersionMetadata],
+    collection_game_version: &VersionMetadata,
+    collection_mod_loader: ModLoaderType,
+    versions: Vec<RawModData>,
+    mod_override: &Vec<ModOverride>,
+) -> anyhow::Result<Option<RawModData>> {
+    let mut mod_loader_filter = versions
+        .into_iter()
+        .map(|x| match x {
+            RawModData::Modrinth(mut ver) => {
+                ver.files = ver
+                    .files
+                    .into_iter()
+                    .filter(|x| x.primary)
+                    .collect::<Vec<_>>();
+                ver.into()
+            }
+            RawModData::Curseforge { .. } => x,
+        })
+        .filter(|x| {
+            if mod_override.contains(&ModOverride::IgnoreModLoader) {
+                true
+            } else {
+                match &x {
+                    RawModData::Modrinth(x) => x.loaders.iter().any(|loader| {
+                        let loader = match loader.as_str() {
+                            "forge" => Some(ModLoaderType::Forge),
+                            "quilt" => Some(ModLoaderType::Quilt),
+                            "fabric" => Some(ModLoaderType::Fabric),
+                            "neoforge" => Some(ModLoaderType::NeoForge),
+                            _ => None,
+                        };
+
+                        let target_quilt_compatibility =
+                            mod_override.contains(&ModOverride::QuiltFabricCompatibility);
+
+                        let neo_forge_compatibility = collection_mod_loader
+                            == ModLoaderType::NeoForge
+                            && loader == Some(ModLoaderType::Forge);
+
+                        let quilt_compatible = target_quilt_compatibility
+                            && collection_mod_loader == ModLoaderType::Quilt
+                            && loader == Some(ModLoaderType::Fabric);
+                        loader.is_some_and(|x| x == collection_mod_loader)
+                            || quilt_compatible
+                            || neo_forge_compatibility
+                    }),
+                    RawModData::Curseforge { metadata, .. } => {
+                        if let Some(loader) = &metadata.mod_loader {
+                            let mut any = false;
+                            let loader = match loader {
+                                furse::structures::common_structs::ModLoaderType::Any => {
+                                    any = true;
+                                    None
+                                }
+                                furse::structures::common_structs::ModLoaderType::Forge => {
+                                    Some(ModLoaderType::Forge)
+                                }
+                                furse::structures::common_structs::ModLoaderType::Cauldron => None,
+                                furse::structures::common_structs::ModLoaderType::LiteLoader => {
+                                    None
+                                }
+                                furse::structures::common_structs::ModLoaderType::Fabric => {
+                                    Some(ModLoaderType::Fabric)
+                                }
+                                furse::structures::common_structs::ModLoaderType::Quilt => {
+                                    Some(ModLoaderType::Quilt)
+                                }
+                                furse::structures::common_structs::ModLoaderType::NeoForge => {
+                                    Some(ModLoaderType::NeoForge)
+                                }
+                            };
+
+                            let neo_forge_compatibility = collection_mod_loader
+                                == ModLoaderType::NeoForge
+                                && loader == Some(ModLoaderType::Forge);
+
+                            let quilt_compatible = mod_override
+                                .contains(&ModOverride::QuiltFabricCompatibility)
+                                && collection_mod_loader == ModLoaderType::Quilt
+                                && loader == Some(ModLoaderType::Fabric);
+                            loader.is_some_and(|x| x == collection_mod_loader)
+                                || quilt_compatible
+                                || any
+                                || neo_forge_compatibility
+                        } else {
+                            false
+                        }
+                    }
+                }
+            }
+        })
+        .peekable();
+    if mod_loader_filter.peek().is_none() {
+        bail!(
+            "Can't find suitable Mod Loader, mod loader is {:?}, project is {}",
+            collection_mod_loader,
+            name,
+        );
+    }
+    let mut possible_versions = mod_loader_filter
+        .filter(|x| {
+            let supported_game_versions = match x {
+                RawModData::Modrinth(x) => x
+                    .game_versions
+                    .iter()
+                    .filter_map(|x| all_game_versions.iter().find(|y| &y.id == x))
+                    .collect::<Vec<_>>(),
+                RawModData::Curseforge { data, .. } => data
+                    .game_versions
+                    .iter()
+                    .filter_map(|x| all_game_versions.iter().find(|y| &y.id == x))
+                    .collect::<Vec<_>>(),
+            };
+
+            match &**mod_override {
+                x if x.contains(&ModOverride::IgnoreAllGameVersion) => true,
+                x if x.contains(&ModOverride::IgnoreMinorGameVersion)
+                    && collection_game_version.version_type == VersionType::Release =>
+                {
+                    supported_game_versions
+                        .iter()
+                        .any(|x| minor_game_check(x, &collection_game_version.id))
+                }
+                _ => supported_game_versions
+                    .iter()
+                    .any(|x| x.id == collection_game_version.id),
+            }
+        })
+        .collect::<Vec<_>>();
+    possible_versions.sort_by_key(|x| match x {
+        RawModData::Modrinth(x) => x.date_published,
+        RawModData::Curseforge { data, .. } => data.file_date,
+    });
+    let possible_versions = possible_versions.into_iter().rev().collect::<Vec<_>>();
+    let version = if mod_override.contains(&ModOverride::IgnoreMinorGameVersion) {
+        // strict game check
+        if let Some(x) = possible_versions.iter().find(|x| {
+            let supported_game_versions = match x {
+                RawModData::Modrinth(x) => x
+                    .game_versions
+                    .iter()
+                    .filter_map(|x| all_game_versions.iter().find(|y| &y.id == x))
+                    .collect::<Vec<_>>(),
+                RawModData::Curseforge { data, .. } => data
+                    .game_versions
+                    .iter()
+                    .filter_map(|x| all_game_versions.iter().find(|y| &y.id == x))
+                    .collect::<Vec<_>>(),
+            };
+            supported_game_versions
+                .iter()
+                .any(|x| x.id == collection_game_version.id)
+        }) {
+            Some(x.clone())
+        }
+        // loosen it a bit
+        else {
+            possible_versions.into_iter().next()
+        }
+    } else {
+        possible_versions.into_iter().next()
+    };
+    Ok(version)
+}
+
+async fn get_mod_version(project: Project) -> anyhow::Result<Vec<RawModData>> {
+    let projects = match project {
+        Project::Modrinth(project) => FERINTH
+            .get_multiple_versions(
+                project
+                    .versions
+                    .iter()
+                    .map(String::as_str)
+                    .collect::<Vec<_>>()
+                    .as_slice(),
+            )
+            .await?
+            .into_iter()
+            .map(|x| x.into())
+            .collect::<Vec<_>>(),
+        Project::Curseforge(x) => x
+            .latest_files
+            .into_iter()
+            .zip(x.latest_files_indexes.into_iter())
+            .map(|x| x.into())
+            .collect::<Vec<_>>(),
+    };
+    Ok(projects)
 }
 
 fn minor_game_check(version: &&VersionMetadata, game_id: &str) -> bool {

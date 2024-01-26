@@ -211,25 +211,43 @@ pub async fn create_collection(
         Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
 
     collection
-        .add_modrinth_mod("fabric-api", vec![], None)
+        .add_multiple_modrinth_mod(
+            vec![
+                "fabric-api",
+                "distanthorizons",
+                "sodium",
+                "modmenu",
+                "ferrite-core",
+                "lazydfu",
+                "iris",
+                "continuity",
+                "indium",
+            ],
+            vec![],
+            None,
+        )
         .await?;
-    collection
-        .add_modrinth_mod("c2me-fabric", vec![], None)
-        .await?;
-    collection
-        .add_modrinth_mod("distanthorizons", vec![], None)
-        .await?;
-    collection.add_modrinth_mod("sodium", vec![], None).await?;
-    collection.add_modrinth_mod("modmenu", vec![], None).await?;
-    collection
-        .add_modrinth_mod("ferrite-core", vec![], None)
-        .await?;
-    collection.add_modrinth_mod("lazydfu", vec![], None).await?;
-    collection.add_modrinth_mod("iris", vec![], None).await?;
-    collection
-        .add_modrinth_mod("continuity", vec![], None)
-        .await?;
-    collection.add_modrinth_mod("indium", vec![], None).await?;
+
+    // collection
+    //     .add_modrinth_mod("fabric-api", vec![], None)
+    //     .await?;
+    // collection
+    //     .add_modrinth_mod("c2me-fabric", vec![], None)
+    //     .await?;
+    // collection
+    //     .add_modrinth_mod("distanthorizons", vec![], None)
+    //     .await?;
+    // collection.add_modrinth_mod("sodium", vec![], None).await?;
+    // collection.add_modrinth_mod("modmenu", vec![], None).await?;
+    // collection
+    //     .add_modrinth_mod("ferrite-core", vec![], None)
+    //     .await?;
+    // collection.add_modrinth_mod("lazydfu", vec![], None).await?;
+    // collection.add_modrinth_mod("iris", vec![], None).await?;
+    // collection
+    //     .add_modrinth_mod("continuity", vec![], None)
+    //     .await?;
+    // collection.add_modrinth_mod("indium", vec![], None).await?;
     // collection
     //     .add_modrinth_mod("entityculling", vec![], None)
     //     .await?;
