@@ -10,6 +10,7 @@ use log::debug;
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde::Serialize;
+use std::cmp;
 use std::cmp::Reverse;
 use std::fs::create_dir_all;
 use std::path::Path;
@@ -35,7 +36,7 @@ use crate::api::{
 
 pub type ModrinthSearchResponse = ferinth::structures::search::Response;
 
-#[derive(Clone, Debug, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ModMetadata {
     pub name: String,
     pub project_id: ProjectId,
@@ -45,7 +46,18 @@ pub struct ModMetadata {
     pub tag: Vec<Tag>,
     pub overrides: Vec<ModOverride>,
     pub incompatiable_mods: Option<Vec<ModMetadata>>,
-    pub mod_data: RawModData,
+    mod_data: RawModData,
+}
+
+impl PartialOrd for ModMetadata {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        if let (Some(x), Some(y)) = (&self.mod_version, &other.mod_version) {
+            if let (Ok(x), Ok(y)) = (semver::Version::parse(x), semver::Version::parse(y)) {
+                return Some(x.cmp(&y));
+            }
+        }
+        None
+    }
 }
 
 impl PartialEq for ModMetadata {
@@ -53,6 +65,7 @@ impl PartialEq for ModMetadata {
         self.project_id == other.project_id
     }
 }
+impl Eq for ModMetadata {}
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ProjectId {
@@ -86,47 +99,6 @@ impl From<furse::structures::mod_structs::Mod> for Project {
     }
 }
 
-impl PartialEq for RawModData {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (RawModData::Modrinth(my), RawModData::Modrinth(other)) => {
-                my.files
-                    .iter()
-                    .zip(other.files.iter())
-                    .all(|(x, y)| x.hashes.sha1 == y.hashes.sha1)
-                    && my.version_number == other.version_number
-            }
-            (
-                RawModData::Curseforge {
-                    data: my_data,
-                    metadata: my_metadata,
-                },
-                RawModData::Curseforge {
-                    data: other_data,
-                    metadata: other_metadata,
-                },
-            ) => {
-                my_data
-                    .hashes
-                    .iter()
-                    .zip(other_data.hashes.iter())
-                    .all(|(x, y)| x.value == y.value)
-                    && my_metadata.file_id == other_metadata.file_id
-            }
-            (RawModData::Curseforge { data: my_data, .. }, RawModData::Modrinth(val)) => my_data
-                .hashes
-                .iter()
-                .zip(val.files.iter())
-                .all(|(x, y)| x.value == y.hashes.sha1),
-            (RawModData::Modrinth(val), RawModData::Curseforge { data: my_data, .. }) => my_data
-                .hashes
-                .iter()
-                .zip(val.files.iter())
-                .all(|(x, y)| x.value == y.hashes.sha1),
-        }
-    }
-}
-
 impl From<ferinth::structures::version::Version> for RawModData {
     fn from(value: ferinth::structures::version::Version) -> Self {
         Self::Modrinth(value)
@@ -151,8 +123,6 @@ impl
         }
     }
 }
-
-impl Eq for RawModData {}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[frb(opaque)]
@@ -351,7 +321,14 @@ impl ModManager {
     ) -> anyhow::Result<()> {
         let (mod_metadata, is_fabric_api) =
             Self::raw_mod_transformation(minecraft_mod_data, mod_override.clone(), tag).await?;
-        if !self.mods.contains(&mod_metadata) {
+
+        if let Some(previous) = self.mods.iter_mut().find(|x| **x == mod_metadata) {
+            if let Some(order) = mod_metadata.partial_cmp(&previous) {
+                if order == cmp::Ordering::Greater {
+                    *previous = mod_metadata;
+                }
+            }
+        } else {
             self.mod_dependencies_resolve(&mod_metadata.mod_data, mod_override)
                 .await?;
             if self.mod_loader.as_ref().map(|x| x.mod_loader_type) == Some(ModLoaderType::Quilt)
