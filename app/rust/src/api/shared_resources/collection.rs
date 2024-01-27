@@ -4,7 +4,6 @@ use std::{borrow::Cow, fs::create_dir_all};
 use chrono::{DateTime, Duration, Utc};
 use flutter_rust_bridge::frb;
 use log::info;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;

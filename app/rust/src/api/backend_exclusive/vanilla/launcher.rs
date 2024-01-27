@@ -2,7 +2,7 @@ use anyhow::bail;
 use anyhow::{Context, Result};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::{atomic::AtomicUsize, atomic::Ordering, Arc};
 use tokio::fs::{self, create_dir_all};
 
