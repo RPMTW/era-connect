@@ -101,7 +101,7 @@ impl Collection {
         Ok(())
     }
 
-    // #[frb(ignore)]
+    #[frb(ignore)]
     pub async fn add_multiple_modrinth_mod(
         &mut self,
         project_ids: Vec<&str>,

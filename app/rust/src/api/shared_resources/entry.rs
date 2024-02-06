@@ -14,6 +14,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use uuid::Uuid;
 
+use crate::api::backend_exclusive::mod_management::mods::ModOverride;
 pub use crate::api::backend_exclusive::storage::{
     account_storage::{AccountStorage, AccountStorageKey, AccountStorageValue},
     ui_layout::{UILayout, UILayoutKey, UILayoutValue},
@@ -61,7 +62,7 @@ pub enum HashMapMessage {
 
 fn spawn_hashmap_manager_thread(mut receiver: UnboundedReceiver<HashMapMessage>) {
     flutter_rust_bridge::spawn(async move {
-        let mut hashmap: HashMap<Arc<CollectionId>, Arc<Progress>> = HashMap::new();
+        let mut hashmap = HashMap::new();
 
         loop {
             if let Some(message) = receiver.recv().await {
@@ -74,7 +75,7 @@ fn spawn_hashmap_manager_thread(mut receiver: UnboundedReceiver<HashMapMessage>)
                     }
                     HashMapMessage::Get(key, response_sender) => {
                         let response = hashmap.get(&key).map(Arc::clone);
-                        let _ = response_sender.send(response);
+                        response_sender.send(response).expect("receiver dead.");
                     }
                 }
             }
@@ -221,35 +222,12 @@ pub async fn create_collection(
                 "iris",
                 "continuity",
                 "indium",
+                "rpmtw-update-mod",
             ],
             vec![],
-            None,
+            Some(vec![ModOverride::IgnoreMinorGameVersion]),
         )
         .await?;
-
-    // collection
-    //     .add_modrinth_mod("fabric-api", vec![], None)
-    //     .await?;
-    // collection
-    //     .add_modrinth_mod("c2me-fabric", vec![], None)
-    //     .await?;
-    // collection
-    //     .add_modrinth_mod("distanthorizons", vec![], None)
-    //     .await?;
-    // collection.add_modrinth_mod("sodium", vec![], None).await?;
-    // collection.add_modrinth_mod("modmenu", vec![], None).await?;
-    // collection
-    //     .add_modrinth_mod("ferrite-core", vec![], None)
-    //     .await?;
-    // collection.add_modrinth_mod("lazydfu", vec![], None).await?;
-    // collection.add_modrinth_mod("iris", vec![], None).await?;
-    // collection
-    //     .add_modrinth_mod("continuity", vec![], None)
-    //     .await?;
-    // collection.add_modrinth_mod("indium", vec![], None).await?;
-    // collection
-    //     .add_modrinth_mod("entityculling", vec![], None)
-    //     .await?;
 
     info!(
         "Successfully created collection basic file at {}",
