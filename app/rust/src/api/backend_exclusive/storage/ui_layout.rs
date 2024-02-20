@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, path::PathBuf};
 
 pub use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
@@ -6,17 +6,18 @@ use struct_key_value_pair::VariantStruct;
 
 use super::storage_loader::{StorageInstance, StorageLoader};
 
-const UI_LAYOUT_FILE_NAME: &str = "ui_layout.json";
+const GLOBAL_SETTINGS_FILENAME: &str = "global_setings.json";
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug, VariantStruct)]
-#[serde(default)]
-pub struct UILayout {
-    pub completed_setup: bool,
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+pub struct GlobalSettings {
+    pub appearances: Appearances,
+    pub ui_layout: UILayout,
+    pub download: Download,
 }
 
-impl StorageInstance<Self> for UILayout {
+impl StorageInstance<Self> for GlobalSettings {
     fn file_name() -> &'static str {
-        UI_LAYOUT_FILE_NAME
+        GLOBAL_SETTINGS_FILENAME
     }
 
     fn save(&self) -> anyhow::Result<()> {
@@ -24,4 +25,53 @@ impl StorageInstance<Self> for UILayout {
             StorageLoader::new(Self::file_name().to_owned(), Cow::Owned(Self::base_path()));
         storage.save(self)
     }
+}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[serde(default)]
+pub struct Download {
+    max_simultatneous_download: usize,
+    download_speed_limit: Option<Speed>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum Speed {
+    MegabytePerSecond(f64),
+    MebibytePerSecond(f64),
+    KilobytePerSecond(f64),
+    KibiBytePerSecond(f64),
+}
+
+impl Default for Speed {
+    fn default() -> Self {
+        Self::MegabytePerSecond(0.0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+pub struct Appearances {
+    pub dark_lightmode: DarkLightMode,
+    pub day_light_darkmode: bool,
+    pub default_background_picture: PathBuf,
+    pub blur: bool,
+    pub adaptive_background: bool,
+    pub high_contrast: bool,
+    pub greyscale: bool,
+    pub disable_background_picture: bool,
+    pub animation: bool,
+}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+pub enum DarkLightMode {
+    #[default]
+    Dark,
+    Light,
+}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug, VariantStruct)]
+#[serde(default)]
+pub struct UILayout {
+    pub completed_setup: bool,
+    pub shows_recommendation: bool,
+    pub sidebar_preivew: bool,
 }
