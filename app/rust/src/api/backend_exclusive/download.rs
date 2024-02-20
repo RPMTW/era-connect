@@ -22,7 +22,7 @@ use tokio::{
 
 use crate::api::shared_resources::{
     collection::CollectionId,
-    entry::{HashMapMessage, DOWNLOAD_PROGRESS},
+    entry::{HashMapMessage, DOWNLOAD_PROGRESS, STORAGE},
 };
 
 pub type HandlesType<'a> = Vec<BoxFuture<'a, anyhow::Result<()>>>;
@@ -174,10 +174,16 @@ pub async fn execute_and_progress(
     let download_complete = Arc::new(AtomicBool::new(false));
     let arc_id = Arc::new(id);
 
+    let download = &STORAGE.global_settings.read().await.download;
+    let max_simultaenous_download = download.max_simultatneous_download;
+
+    let allowed_to_download = Arc::new(AtomicBool::new(true));
+
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&download_args.current);
     let total_size_clone = Arc::clone(&download_args.total);
     let id_clone = Arc::clone(&arc_id);
+    let allowed_to_download_clone = Arc::clone(&allowed_to_download);
 
     let output = tokio::spawn(async move {
         rolling_average(
@@ -187,11 +193,12 @@ pub async fn execute_and_progress(
             id_clone,
             bias,
             calculate_speed,
+            allowed_to_download_clone,
         )
         .await
     });
-    // Create a semaphore with a limit on the number of concurrent downloads
-    join_futures(handles, 128).await?;
+
+    join_futures(handles, max_simultaenous_download, allowed_to_download).await?;
     download_complete.store(true, Ordering::Release);
     let progress = output.await?;
 
@@ -208,6 +215,7 @@ pub async fn rolling_average(
     id: Arc<CollectionId>,
     bias: DownloadBias,
     calculate_speed: bool,
+    allowed_to_download: Arc<AtomicBool>,
 ) -> Progress {
     let mut instant = Instant::now();
     let mut prev_bytes = 0.0;
@@ -237,6 +245,14 @@ pub async fn rolling_average(
             }
 
             let speed = average_speed.iter().sum::<f64>() / average_speed.len() as f64;
+
+            let global_settings = STORAGE.global_settings.read().await;
+            let speed_limit = global_settings.download.download_speed_limit.as_ref();
+            if speed_limit.is_some_and(|x| speed > x.to_mebibyte()) {
+                allowed_to_download.store(false, Ordering::Relaxed);
+            } else {
+                allowed_to_download.store(true, Ordering::Relaxed);
+            }
 
             Progress {
                 percentages,
@@ -276,10 +292,16 @@ pub async fn rolling_average(
 pub async fn join_futures(
     handles: HandlesType<'_>,
     concurrency_limit: usize,
+    allowed_to_download: Arc<AtomicBool>,
 ) -> Result<(), anyhow::Error> {
     let mut download_stream = tokio_stream::iter(handles).buffer_unordered(concurrency_limit);
-    while let Some(x) = download_stream.next().await {
-        x?
+    loop {
+        if allowed_to_download.load(Ordering::Relaxed) {
+            let Some(x) = download_stream.next().await else {
+                break;
+            };
+            return x;
+        }
     }
     Ok(())
 }

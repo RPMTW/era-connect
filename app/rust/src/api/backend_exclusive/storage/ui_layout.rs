@@ -27,11 +27,20 @@ impl StorageInstance<Self> for GlobalSettings {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(default)]
 pub struct Download {
-    max_simultatneous_download: usize,
-    download_speed_limit: Option<Speed>,
+    pub max_simultatneous_download: usize,
+    pub download_speed_limit: Option<Speed>,
+}
+
+impl Default for Download {
+    fn default() -> Self {
+        Self {
+            max_simultatneous_download: 64,
+            download_speed_limit: None,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -40,6 +49,18 @@ pub enum Speed {
     MebibytePerSecond(f64),
     KilobytePerSecond(f64),
     KibiBytePerSecond(f64),
+}
+
+impl Speed {
+    // FIXME: Naive translation
+    pub fn to_mebibyte(&self) -> f64 {
+        match self {
+            Speed::MegabytePerSecond(x) => *x,
+            Speed::MebibytePerSecond(x) => *x,
+            Speed::KilobytePerSecond(x) => *x / 1024.,
+            Speed::KibiBytePerSecond(x) => *x / 1000.,
+        }
+    }
 }
 
 impl Default for Speed {
