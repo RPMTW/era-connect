@@ -137,7 +137,7 @@ pub async fn parallel_assets_download(
                     asset_download_list_clone
                         .get(index)
                         .context("Can't get asset download list")?,
-                    Some(current_size_clone),
+                    current_size_clone,
                 )
                 .await?;
                 fs::write(

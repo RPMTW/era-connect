@@ -421,7 +421,13 @@ pub async fn mod_loader_download(collection: &Collection) -> anyhow::Result<Laun
     let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
     let (vanilla_download_args, vanilla_arguments) =
         prepare_vanilla_download(collection, game_manifest.clone()).await?;
-    execute_and_progress(collection_id.clone(), vanilla_download_args, vanilla_bias).await?;
+    execute_and_progress(
+        collection_id.clone(),
+        vanilla_download_args,
+        vanilla_bias,
+        String::from("Vanilla Download"),
+    )
+    .await?;
 
     info!("Starts Modloader Downloading");
     let modloader_download_bias = DownloadBias {
@@ -439,6 +445,7 @@ pub async fn mod_loader_download(collection: &Collection) -> anyhow::Result<Laun
         collection_id.clone(),
         modloader_download_args,
         modloader_download_bias,
+        String::from("Modloader Processing"),
     )
     .await?;
 
@@ -459,6 +466,7 @@ pub async fn mod_loader_download(collection: &Collection) -> anyhow::Result<Laun
         collection_id,
         forge_processor_progress,
         forge_processor_bias,
+        String::from("Forge Processor Processing"),
     )
     .await?;
     Ok(processed_arguments)

@@ -126,8 +126,7 @@ pub async fn parallel_library(
                             .await
                             .context("Fail to create parent dir(library)")?;
                         let url = &library.downloads.artifact.url;
-                        let bytes =
-                            download_file(url, Some(Arc::clone(&current_size_clone))).await?;
+                        let bytes = download_file(url, Arc::clone(&current_size_clone)).await?;
                         fs::write(&non_native_download_path, bytes)
                             .await
                             .map_err(|err| anyhow!(err))?;
@@ -165,7 +164,7 @@ async fn native_download(
     library_extension: &str,
 ) -> Result<()> {
     let current_size_clone = Arc::clone(&current_size);
-    let bytes = download_file(url, Some(current_size_clone)).await?;
+    let bytes = download_file(url, current_size_clone).await?;
 
     let reader = std::io::Cursor::new(bytes);
     if let Ok(mut archive) = zip::ZipArchive::new(reader) {
