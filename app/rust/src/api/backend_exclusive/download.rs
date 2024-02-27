@@ -213,10 +213,11 @@ pub async fn rolling_average(
     let mut prev_bytes = 0.0;
     let mut completed = false;
     let m_progress;
+    let sleep_time = 250;
+    let rolling_average_window = 5000 / sleep_time; // 5000/250 = 20
+    let mut average_speed = VecDeque::with_capacity(rolling_average_window);
     loop {
         let multiplier = bias.end - bias.start;
-
-        let sleep_time = 250;
 
         time::sleep(Duration::from_millis(sleep_time.try_into().unwrap())).await;
         let current = current.load(Ordering::Relaxed) as f64;
@@ -224,9 +225,6 @@ pub async fn rolling_average(
         let percentages = (current / total).mul_add(multiplier, bias.start);
 
         let progress = if calculate_speed {
-            let rolling_average_window = 5000 / sleep_time; // 5000/250 = 20
-            let mut average_speed = VecDeque::with_capacity(rolling_average_window);
-
             let speed = (current - prev_bytes) / instant.elapsed().as_secs_f64() / 1_000_000.0;
 
             if average_speed.len() < rolling_average_window {
