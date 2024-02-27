@@ -5,7 +5,8 @@ use tokio::sync::RwLock;
 use crate::api::shared_resources::collection::Collection;
 
 use super::{
-    account_storage::AccountStorage, storage_loader::StorageInstance, ui_layout::GlobalSettings,
+    account_storage::AccountStorage, global_settings::GlobalSettings,
+    storage_loader::StorageInstance,
 };
 
 pub struct StorageState {

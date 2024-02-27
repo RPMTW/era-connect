@@ -300,7 +300,7 @@ pub async fn join_futures(
             let Some(x) = download_stream.next().await else {
                 break;
             };
-            return x;
+            x?;
         }
     }
     Ok(())

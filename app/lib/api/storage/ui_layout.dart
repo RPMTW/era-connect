@@ -1,4 +1,4 @@
-import 'package:era_connect/src/rust/api/backend_exclusive/storage/ui_layout.dart';
+import 'package:era_connect/src/rust/api/backend_exclusive/storage/global_settings.dart';
 import 'package:era_connect/src/rust/api/shared_resources/entry.dart';
 
 class UILayoutStorage {
@@ -9,7 +9,7 @@ class UILayoutStorage {
 }
 
 T _get<T>(UILayoutKey key) {
-  return getUiLayoutStorage(key: key).field0 as T;
+  return getUiLayoutStorage(key: key) as T;
 }
 
 Future<void> _set(UILayoutValue value) {

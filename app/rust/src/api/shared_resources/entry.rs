@@ -16,7 +16,7 @@ use uuid::Uuid;
 
 pub use crate::api::backend_exclusive::storage::{
     account_storage::{AccountStorage, AccountStorageKey, AccountStorageValue},
-    ui_layout::{UILayout, UILayoutKey, UILayoutValue},
+    global_settings::{UILayout, UILayoutKey, UILayoutValue},
 };
 
 use crate::api::backend_exclusive::{
