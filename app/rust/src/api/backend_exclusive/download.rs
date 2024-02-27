@@ -218,7 +218,6 @@ pub async fn rolling_average(
     let sleep_time = 250;
     let rolling_average_window = 5000 / sleep_time; // 5000/250 = 20
     let mut average_speed = VecDeque::with_capacity(rolling_average_window);
-
     loop {
         let multiplier = bias.end - bias.start;
 
