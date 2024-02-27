@@ -177,14 +177,10 @@ pub async fn execute_and_progress(
     let download = &STORAGE.global_settings.read().await.download;
     let max_simultaenous_download = download.max_simultatneous_download;
 
-    let allowed_to_download = Arc::new(AtomicBool::new(true));
-
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&download_args.current);
     let total_size_clone = Arc::clone(&download_args.total);
     let id_clone = Arc::clone(&arc_id);
-    let allowed_to_download_clone = Arc::clone(&allowed_to_download);
-
     let output = tokio::spawn(async move {
         rolling_average(
             download_complete_clone,
@@ -193,12 +189,11 @@ pub async fn execute_and_progress(
             id_clone,
             bias,
             calculate_speed,
-            allowed_to_download_clone,
         )
         .await
     });
 
-    join_futures(handles, max_simultaenous_download, allowed_to_download).await?;
+    join_futures(handles, max_simultaenous_download).await?;
     download_complete.store(true, Ordering::Release);
     let progress = output.await?;
 
@@ -215,16 +210,16 @@ pub async fn rolling_average(
     id: Arc<CollectionId>,
     bias: DownloadBias,
     calculate_speed: bool,
-    allowed_to_download: Arc<AtomicBool>,
 ) -> Progress {
     let mut instant = Instant::now();
     let mut prev_bytes = 0.0;
     let mut completed = false;
     let m_progress;
+    let sleep_time = 250;
+    let rolling_average_window = 5000 / sleep_time; // 5000/250 = 20
+    let mut average_speed = VecDeque::with_capacity(rolling_average_window);
     loop {
         let multiplier = bias.end - bias.start;
-
-        let sleep_time = 250;
 
         time::sleep(Duration::from_millis(sleep_time.try_into().unwrap())).await;
         let current = current.load(Ordering::Relaxed) as f64;
@@ -232,9 +227,6 @@ pub async fn rolling_average(
         let percentages = (current / total).mul_add(multiplier, bias.start);
 
         let progress = if calculate_speed {
-            let rolling_average_window = 5000 / sleep_time; // 5000/250 = 20
-            let mut average_speed = VecDeque::with_capacity(rolling_average_window);
-
             let speed = (current - prev_bytes) / instant.elapsed().as_secs_f64() / 1_000_000.0;
 
             if average_speed.len() < rolling_average_window {
@@ -244,19 +236,14 @@ pub async fn rolling_average(
                 average_speed.push_back(speed);
             }
 
-            let speed = average_speed.iter().sum::<f64>() / average_speed.len() as f64;
+            let average_speed = average_speed.iter().sum::<f64>() / average_speed.len() as f64;
 
             let global_settings = STORAGE.global_settings.read().await;
             let speed_limit = global_settings.download.download_speed_limit.as_ref();
-            if speed_limit.is_some_and(|x| speed > x.to_mebibyte()) {
-                allowed_to_download.store(false, Ordering::Relaxed);
-            } else {
-                allowed_to_download.store(true, Ordering::Relaxed);
-            }
 
             Progress {
                 percentages,
-                speed: Some(speed),
+                speed: Some(average_speed),
                 current_size: Some(current),
                 total_size: Some(total),
                 bias,
@@ -292,16 +279,10 @@ pub async fn rolling_average(
 pub async fn join_futures(
     handles: HandlesType<'_>,
     concurrency_limit: usize,
-    allowed_to_download: Arc<AtomicBool>,
 ) -> Result<(), anyhow::Error> {
     let mut download_stream = tokio_stream::iter(handles).buffer_unordered(concurrency_limit);
-    loop {
-        if allowed_to_download.load(Ordering::Relaxed) {
-            let Some(x) = download_stream.next().await else {
-                break;
-            };
-            return x;
-        }
+    while let Some(x) = download_stream.next().await {
+        x?;
     }
     Ok(())
 }

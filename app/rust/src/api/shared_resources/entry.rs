@@ -16,7 +16,7 @@ use uuid::Uuid;
 
 pub use crate::api::backend_exclusive::storage::{
     account_storage::{AccountStorage, AccountStorageKey, AccountStorageValue},
-    ui_layout::{UILayout, UILayoutKey, UILayoutValue},
+    global_settings::{UILayout, UILayoutKey, UILayoutValue},
 };
 
 use crate::api::backend_exclusive::{
@@ -123,7 +123,7 @@ fn setup_logger() -> anyhow::Result<()> {
     Ok(())
 }
 
-// #[frb(sync)]
+#[frb(sync)]
 pub fn get_ui_layout_storage(key: UILayoutKey) -> UILayoutValue {
     let value = STORAGE
         .global_settings

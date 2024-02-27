@@ -1,4 +1,4 @@
-import 'package:era_connect/src/rust/api/backend_exclusive/storage/ui_layout.dart';
+import 'package:era_connect/src/rust/api/backend_exclusive/storage/global_settings.dart';
 import 'package:era_connect/src/rust/api/shared_resources/entry.dart';
 
 class UILayoutStorage {
