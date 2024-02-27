@@ -1,14 +1,19 @@
+use std::sync::{atomic::AtomicUsize, Arc};
 pub use std::{borrow::Cow, fs::create_dir_all, path::PathBuf};
 
+use anyhow::bail;
 use chrono::{DateTime, Duration, Utc};
 use flutter_rust_bridge::frb;
 use log::info;
+use os_version::OsVersion;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
+use zip::ZipArchive;
 
 use crate::api::{
     backend_exclusive::{
+        download::{download_file, execute_and_progress, DownloadArgs, DownloadBias},
         modding::forge::mod_loader_download,
         storage::storage_loader::StorageLoader,
         vanilla::{
@@ -19,6 +24,8 @@ use crate::api::{
     },
     shared_resources::entry::DATA_DIR,
 };
+
+use super::entry::STORAGE;
 
 #[serde_with::serde_as]
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
@@ -32,6 +39,7 @@ pub struct Collection {
     #[serde_as(as = "serde_with::DurationSeconds<i64>")]
     pub played_time: Duration,
     pub advanced_options: Option<AdvancedOptions>,
+    pub java_path: PathBuf,
 
     pub entry_path: PathBuf,
     launch_args: Option<LaunchArgs>,
@@ -42,6 +50,7 @@ pub struct CollectionId(pub String);
 
 const COLLECTION_FILE_NAME: &str = "collection.json";
 const COLLECTION_BASE: &str = "collections";
+const JAVA_INSTALL_BASE: &str = "java";
 
 impl Collection {
     pub async fn launch_game(&mut self) -> anyhow::Result<()> {
@@ -74,7 +83,7 @@ impl Collection {
     }
 
     /// Creates a collection and return a collection
-    pub fn create(
+    pub async fn create(
         display_name: String,
         version_metadata: VersionMetadata,
         mod_loader: Option<ModLoader>,
@@ -83,8 +92,9 @@ impl Collection {
         let now_time = Utc::now();
         let loader = Self::create_loader(&display_name)?;
         let entry_path = loader.base_path.clone();
-
-        let collection = Collection {
+        let auto_java = STORAGE.global_settings.blocking_read().auto_java;
+        let java_path = PathBuf::new();
+        let mut collection = Collection {
             display_name,
             minecraft_version: version_metadata,
             mod_loader,
@@ -92,17 +102,111 @@ impl Collection {
             updated_at: now_time,
             played_time: Duration::seconds(0),
             advanced_options,
+            java_path,
             entry_path,
             launch_args: None,
         };
+
+        if auto_java {
+            collection.auto_java_install().await?;
+        }
 
         collection.save()?;
 
         Ok(collection)
     }
 
+    // Side-Effect: modfies entry_path
+    async fn auto_java_install(&mut self) -> anyhow::Result<()> {
+        if let Some(java_path) = self.locate_auto_java_installation()? {
+            self.java_path = java_path;
+            return Ok(());
+        }
+        let version = &self.minecraft_version;
+        let recommended_java_version = version.get_recommended_java_version().to_string();
+        let java_install_base = Self::get_java_install_base();
+        let os = os_version::detect()?;
+        let os = match os {
+            OsVersion::Linux(x) if x.distro == "Alpine" => "alpine-linux",
+            OsVersion::Linux(x) if x.distro == "solaris" => "solaris",
+            OsVersion::Linux(_) => "linux",
+            OsVersion::MacOS(_) => "mac",
+            OsVersion::Windows(_) => "windows",
+            _ => bail!("Unsupported platform"),
+        };
+        let arch = std::env::consts::ARCH.to_string();
+
+        let reqwest_string = format!("https://api.adoptium.net/v3/binary/latest/{feature_version}/{release_type}/{os}/{arch}/{image_type}/{jvm_impl}/{heap_size}/{vendor}", 
+            feature_version = recommended_java_version,
+            release_type = "ga",
+            image_type="jre",
+            jvm_impl = "hotspot",
+            heap_size = "normal", 
+            vendor = "eclipse");
+
+        let max = reqwest::get(&reqwest_string).await?.content_length();
+        let current_size = Arc::new(AtomicUsize::new(0));
+        let current_size_clone = Arc::clone(&current_size);
+
+        let handle = Box::pin(async move {
+            let bytes = download_file(reqwest_string, Some(current_size_clone)).await?;
+            let cursor = std::io::Cursor::new(bytes);
+            let mut zip = ZipArchive::new(cursor)?;
+            zip.extract(java_install_base)?;
+            Ok(())
+        });
+        let download_args = if let Some(max) = max {
+            DownloadArgs {
+                current: current_size,
+                total: Arc::new(AtomicUsize::new(max as usize)),
+                handles: vec![handle],
+                is_size: true,
+            }
+        } else {
+            DownloadArgs {
+                current: Arc::new(AtomicUsize::new(100)),
+                total: Arc::new(AtomicUsize::new(100)),
+                handles: vec![handle],
+                is_size: false,
+            }
+        };
+        let download_bias = DownloadBias {
+            start: 0.,
+            end: 100.,
+        };
+        let collection_id = self.get_collection_id();
+        execute_and_progress(collection_id, download_args, download_bias).await?;
+        info!("Java download complete!");
+        Ok(())
+    }
+
+    fn locate_auto_java_installation(&self) -> anyhow::Result<Option<PathBuf>> {
+        let auto_java_path_base = Self::get_java_install_base();
+        for path in std::fs::read_dir(auto_java_path_base)? {
+            let path = path?;
+            let path_str = path.file_name().to_string_lossy().to_string();
+            let regex = Regex::new(r"jdk-(\d+\.\d+\.\d+)\+\d+-jre")?;
+            let Some(c) = regex.captures(&*path_str).and_then(|x| x.get(0)) else {
+                continue;
+            };
+            let readed_java_version = c.as_str();
+            let current_java_version = self
+                .minecraft_version
+                .get_recommended_java_version()
+                .to_string();
+            if readed_java_version == current_java_version {
+                return Ok(Some(path.path()));
+            }
+        }
+        Ok(None)
+    }
+
     pub fn get_base_path() -> PathBuf {
         DATA_DIR.join(COLLECTION_BASE)
+    }
+
+    pub fn get_java_install_base() -> PathBuf {
+        DATA_DIR.join(JAVA_INSTALL_BASE)
     }
 
     pub fn get_collection_id(&self) -> CollectionId {

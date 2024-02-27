@@ -1,6 +1,7 @@
 use anyhow::bail;
 use anyhow::{Context, Result};
 use log::{error, info};
+use os_version::OsVersion;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 pub use std::path::PathBuf;
@@ -81,6 +82,7 @@ pub struct LaunchArgs {
     pub jvm_args: Vec<String>,
     pub main_class: String,
     pub game_args: Vec<String>,
+    pub java_executable_path: PathBuf,
 }
 
 pub async fn launch_game(launch_args: &LaunchArgs) -> Result<()> {
@@ -88,7 +90,7 @@ pub async fn launch_game(launch_args: &LaunchArgs) -> Result<()> {
     launch_vec.extend(&launch_args.jvm_args);
     launch_vec.push(&launch_args.main_class);
     launch_vec.extend(&launch_args.game_args);
-    let b = tokio::process::Command::new("java")
+    let b = tokio::process::Command::new(&launch_args.java_executable_path)
         .args(launch_vec)
         .spawn();
     b?.wait().await?;
@@ -223,10 +225,21 @@ pub async fn prepare_vanilla_download<'a>(
         }
     }
 
+    let os_version = os_version::detect()?;
+
+    let java_executable_path = collection.java_path.join({
+        match os_version {
+            OsVersion::Linux(_) | OsVersion::MacOS(_) => "java",
+            os_version::OsVersion::Windows(_) => "java.exe",
+            _ => bail!("Unsupported platform"),
+        }
+    });
+
     let launch_args = LaunchArgs {
         jvm_args: jvm_flags.arguments,
         main_class: game_manifest.main_class,
         game_args: game_flags.arguments,
+        java_executable_path,
     };
 
     Ok((

@@ -11,6 +11,7 @@ const GLOBAL_SETTINGS_FILENAME: &str = "global_setings.json";
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct GlobalSettings {
     pub appearances: Appearances,
+    pub auto_java: bool,
     pub ui_layout: UILayout,
     pub download: Download,
 }

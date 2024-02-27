@@ -201,7 +201,7 @@ pub async fn create_collection(
         version: String::new(),
     });
     let mut collection =
-        Collection::create(display_name, version_metadata, mod_loader, advanced_options)?;
+        Collection::create(display_name, version_metadata, mod_loader, advanced_options).await?;
 
     info!(
         "Successfully created collection basic file at {}",
