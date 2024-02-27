@@ -693,10 +693,9 @@ pub fn wire_get_skin_file_path(
 
 #[wasm_bindgen]
 pub fn wire_get_ui_layout_storage(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
     key: i32,
-) {
-    wire_get_ui_layout_storage_impl(port_, key)
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    wire_get_ui_layout_storage_impl(key)
 }
 
 #[wasm_bindgen]

@@ -324,24 +324,21 @@ fn wire_get_skin_file_path_impl(
     )
 }
 fn wire_get_ui_layout_storage_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
     key: impl CstDecode<crate::api::backend_exclusive::storage::global_settings::UILayoutKey>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "get_ui_layout_storage",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
             let api_key = key.cst_decode();
-            move |context| {
-                transform_result_dco((move || {
-                    Result::<_, ()>::Ok(crate::api::shared_resources::entry::get_ui_layout_storage(
-                        api_key,
-                    ))
-                })())
-            }
+            transform_result_dco((move || {
+                Result::<_, ()>::Ok(crate::api::shared_resources::entry::get_ui_layout_storage(
+                    api_key,
+                ))
+            })())
         },
     )
 }

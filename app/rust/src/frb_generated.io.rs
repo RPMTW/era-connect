@@ -735,8 +735,10 @@ pub extern "C" fn frbgen_era_connect_wire_get_skin_file_path(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_era_connect_wire_get_ui_layout_storage(port_: i64, key: i32) {
-    wire_get_ui_layout_storage_impl(port_, key)
+pub extern "C" fn frbgen_era_connect_wire_get_ui_layout_storage(
+    key: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    wire_get_ui_layout_storage_impl(key)
 }
 
 #[no_mangle]

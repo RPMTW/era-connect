@@ -1415,21 +1415,19 @@ class RustLibWire implements BaseWire {
   late final _wire_get_skin_file_path = _wire_get_skin_file_pathPtr.asFunction<
       WireSyncRust2DartDco Function(ffi.Pointer<wire_cst_minecraft_skin>)>();
 
-  void wire_get_ui_layout_storage(
-    int port_,
+  WireSyncRust2DartDco wire_get_ui_layout_storage(
     int key,
   ) {
     return _wire_get_ui_layout_storage(
-      port_,
       key,
     );
   }
 
   late final _wire_get_ui_layout_storagePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Int32)>>(
           'frbgen_era_connect_wire_get_ui_layout_storage');
-  late final _wire_get_ui_layout_storage =
-      _wire_get_ui_layout_storagePtr.asFunction<void Function(int, int)>();
+  late final _wire_get_ui_layout_storage = _wire_get_ui_layout_storagePtr
+      .asFunction<WireSyncRust2DartDco Function(int)>();
 
   void wire_get_vanilla_versions(
     int port_,

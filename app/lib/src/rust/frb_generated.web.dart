@@ -1077,8 +1077,9 @@ class RustLibWire implements BaseWire {
       wire_get_skin_file_path(List<dynamic> skin) =>
           wasmModule.wire_get_skin_file_path(skin);
 
-  void wire_get_ui_layout_storage(NativePortType port_, int key) =>
-      wasmModule.wire_get_ui_layout_storage(port_, key);
+  dynamic /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+      wire_get_ui_layout_storage(int key) =>
+          wasmModule.wire_get_ui_layout_storage(key);
 
   void wire_get_vanilla_versions(NativePortType port_) =>
       wasmModule.wire_get_vanilla_versions(port_);
@@ -1171,7 +1172,8 @@ class RustLibWasmModule implements WasmModule {
   external dynamic /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
       wire_get_skin_file_path(List<dynamic> skin);
 
-  external void wire_get_ui_layout_storage(NativePortType port_, int key);
+  external dynamic /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+      wire_get_ui_layout_storage(int key);
 
   external void wire_get_vanilla_versions(NativePortType port_);
 

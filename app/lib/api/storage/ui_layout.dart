@@ -9,7 +9,7 @@ class UILayoutStorage {
 }
 
 T _get<T>(UILayoutKey key) {
-  return getUiLayoutStorage(key: key) as T;
+  return getUiLayoutStorage(key: key).field0 as T;
 }
 
 Future<void> _set(UILayoutValue value) {

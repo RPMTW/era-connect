@@ -15,8 +15,7 @@ import 'package:uuid/uuid.dart';
 
 // The type `HashMapMessage` is not used by any `pub` functions, thus it is ignored.
 
-Future<UILayoutValue> getUiLayoutStorage(
-        {required UILayoutKey key, dynamic hint}) =>
+UILayoutValue getUiLayoutStorage({required UILayoutKey key, dynamic hint}) =>
     RustLib.instance.api.getUiLayoutStorage(key: key, hint: hint);
 
 Future<List<VersionMetadata>> getVanillaVersions({dynamic hint}) =>

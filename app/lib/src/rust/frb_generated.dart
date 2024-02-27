@@ -111,8 +111,7 @@ abstract class RustLibApi extends BaseApi {
 
   String getSkinFilePath({required MinecraftSkin skin, dynamic hint});
 
-  Future<UILayoutValue> getUiLayoutStorage(
-      {required UILayoutKey key, dynamic hint});
+  UILayoutValue getUiLayoutStorage({required UILayoutKey key, dynamic hint});
 
   Future<List<VersionMetadata>> getVanillaVersions({dynamic hint});
 
@@ -469,12 +468,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<UILayoutValue> getUiLayoutStorage(
-      {required UILayoutKey key, dynamic hint}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
+  UILayoutValue getUiLayoutStorage({required UILayoutKey key, dynamic hint}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
         var arg0 = cst_encode_ui_layout_key(key);
-        return wire.wire_get_ui_layout_storage(port_, arg0);
+        return wire.wire_get_ui_layout_storage(arg0);
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_ui_layout_value,
