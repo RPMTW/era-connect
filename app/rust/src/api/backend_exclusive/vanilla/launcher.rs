@@ -103,7 +103,13 @@ pub async fn full_vanilla_download(collection: &Collection) -> anyhow::Result<La
     let game_manifest = fetch_game_manifest(&collection.minecraft_version.url).await?;
     let (vanilla_download_args, vanilla_arguments) =
         prepare_vanilla_download(collection, game_manifest.clone()).await?;
-    execute_and_progress(collection_id, vanilla_download_args, vanilla_bias).await?;
+    execute_and_progress(
+        collection_id,
+        vanilla_download_args,
+        vanilla_bias,
+        String::from("Download Vanilla"),
+    )
+    .await?;
 
     Ok(vanilla_arguments.launch_args)
 }
@@ -202,14 +208,12 @@ pub async fn prepare_vanilla_download<'a>(
 
     if !client_jar_filename.exists() {
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
-        let bytes =
-            download_file(&downloads_list.client.url, Some(Arc::clone(&current_size))).await?;
+        let bytes = download_file(&downloads_list.client.url, Arc::clone(&current_size)).await?;
         fs::write(client_jar_filename, &bytes).await?;
     } else if let Err(x) = validate_sha1(&client_jar_filename, &downloads_list.client.sha1).await {
         total_size.fetch_add(downloads_list.client.size, Ordering::Relaxed);
         error!("{x}\n redownloading.");
-        let bytes =
-            download_file(&downloads_list.client.url, Some(Arc::clone(&current_size))).await?;
+        let bytes = download_file(&downloads_list.client.url, Arc::clone(&current_size)).await?;
         fs::write(client_jar_filename, &bytes).await?;
     }
 

@@ -17,7 +17,7 @@ use uuid::Uuid;
 use crate::api::backend_exclusive::mod_management::mods::ModOverride;
 pub use crate::api::backend_exclusive::storage::{
     account_storage::{AccountStorage, AccountStorageKey, AccountStorageValue},
-    ui_layout::{UILayout, UILayoutKey, UILayoutValue},
+    global_settings::{UILayout, UILayoutKey, UILayoutValue},
 };
 
 use crate::api::backend_exclusive::vanilla::version::get_versions;
@@ -128,7 +128,11 @@ fn setup_logger() -> anyhow::Result<()> {
 
 #[frb(sync)]
 pub fn get_ui_layout_storage(key: UILayoutKey) -> UILayoutValue {
-    let value = STORAGE.ui_layout.blocking_read().get_value(key);
+    let value = STORAGE
+        .global_settings
+        .blocking_read()
+        .ui_layout
+        .get_value(key);
     value
 }
 
@@ -137,9 +141,10 @@ pub async fn get_vanilla_versions() -> anyhow::Result<Vec<VersionMetadata>> {
 }
 
 pub fn set_ui_layout_storage(value: UILayoutValue) -> anyhow::Result<()> {
-    let mut storage = STORAGE.ui_layout.blocking_write();
-    storage.set_value(value);
-    storage.save()?;
+    let global_settings = &mut *STORAGE.global_settings.blocking_write();
+    let ui_layout = &mut global_settings.ui_layout;
+    ui_layout.set_value(value);
+    global_settings.save()?;
     Ok(())
 }
 

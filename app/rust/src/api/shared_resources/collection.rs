@@ -138,7 +138,13 @@ impl Collection {
     pub async fn download_mods(&self) -> anyhow::Result<()> {
         let id = self.get_collection_id();
         let download_args = self.mod_manager.get_download()?;
-        execute_and_progress(id, download_args, DownloadBias::default()).await?;
+        execute_and_progress(
+            id,
+            download_args,
+            DownloadBias::default(),
+            String::from("Mods downloading"),
+        )
+        .await?;
         Ok(())
     }
 

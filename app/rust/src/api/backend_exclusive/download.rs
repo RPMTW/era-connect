@@ -22,16 +22,17 @@ use tokio::{
 
 use crate::api::shared_resources::{
     collection::CollectionId,
-    entry::{HashMapMessage, DOWNLOAD_PROGRESS},
+    entry::{HashMapMessage, DOWNLOAD_PROGRESS, STORAGE},
 };
 
 pub type HandlesType<'a> = Vec<BoxFuture<'a, anyhow::Result<()>>>;
 
 pub async fn download_file(
     url: impl AsRef<str> + Send + Sync,
-    current_size_clone: Option<Arc<AtomicUsize>>,
+    current_size: impl Into<Option<Arc<AtomicUsize>>>,
 ) -> Result<Bytes, anyhow::Error> {
     let url = url.as_ref();
+    let current_size = current_size.into();
     let client = reqwest::Client::builder()
         .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
         .http2_keep_alive_timeout(std::time::Duration::from_secs(10))
@@ -60,14 +61,14 @@ pub async fn download_file(
         }
     }?;
 
-    let bytes = match chunked_download(response, current_size_clone.clone()).await {
+    let bytes = match chunked_download(response, current_size.clone()).await {
         Ok(x) => x,
         Err(err) => {
             error!("{err:?} you fucked up.");
-            if let Some(ref size) = current_size_clone {
+            if let Some(ref size) = current_size {
                 size.fetch_sub(err.1, Ordering::Relaxed);
             }
-            chunked_download(client.get(url).send().await?, current_size_clone)
+            chunked_download(client.get(url).send().await?, current_size)
                 .await
                 .map_err(|err| err.0)?
         }
@@ -143,6 +144,7 @@ pub async fn get_hash(file_path: impl AsRef<Path> + Send + Sync) -> anyhow::Resu
 
 #[derive(Clone, Debug)]
 pub struct Progress {
+    pub name: Arc<str>,
     pub percentages: f64,
     pub speed: Option<f64>,
     pub current_size: Option<f64>,
@@ -153,6 +155,7 @@ pub struct Progress {
 impl Default for Progress {
     fn default() -> Self {
         Self {
+            name: String::new().into(),
             percentages: 100.0,
             speed: None,
             current_size: None,
@@ -188,6 +191,7 @@ pub async fn execute_and_progress(
     id: CollectionId,
     download_args: DownloadArgs<'_>,
     bias: DownloadBias,
+    name: String,
 ) -> anyhow::Result<()> {
     debug!("receiving download request");
     let handles = download_args.handles;
@@ -195,13 +199,16 @@ pub async fn execute_and_progress(
     let download_complete = Arc::new(AtomicBool::new(false));
     let arc_id = Arc::new(id);
 
+    let download = &STORAGE.global_settings.read().await.download;
+    let max_simultaenous_download = download.max_simultatneous_download;
+
     let download_complete_clone = Arc::clone(&download_complete);
     let current_size_clone = Arc::clone(&download_args.current);
     let total_size_clone = Arc::clone(&download_args.total);
     let id_clone = Arc::clone(&arc_id);
-
     let output = tokio::spawn(async move {
         rolling_average(
+            name,
             download_complete_clone,
             current_size_clone,
             total_size_clone,
@@ -211,8 +218,8 @@ pub async fn execute_and_progress(
         )
         .await
     });
-    // Create a semaphore with a limit on the number of concurrent downloads
-    join_futures(handles, 128).await?;
+
+    join_futures(handles, max_simultaenous_download).await?;
     download_complete.store(true, Ordering::Release);
     let progress = output.await?;
 
@@ -225,6 +232,7 @@ pub async fn execute_and_progress(
 }
 
 pub async fn rolling_average(
+    name: impl Into<Arc<str>>,
     download_complete: Arc<AtomicBool>,
     current: Arc<AtomicUsize>,
     total: Arc<AtomicUsize>,
@@ -236,10 +244,13 @@ pub async fn rolling_average(
     let mut prev_bytes = 0.0;
     let mut completed = false;
     let m_progress;
+    let sleep_time = 250;
+    let rolling_average_window = 5000 / sleep_time; // 5000/250 = 20
+    let mut average_speed = VecDeque::with_capacity(rolling_average_window);
+    let name = name.into();
     loop {
+        let name = name.clone();
         let multiplier = bias.end - bias.start;
-
-        let sleep_time = 250;
 
         time::sleep(Duration::from_millis(sleep_time.try_into().unwrap())).await;
         let current = current.load(Ordering::Relaxed) as f64;
@@ -247,9 +258,6 @@ pub async fn rolling_average(
         let percentages = (current / total).mul_add(multiplier, bias.start);
 
         let progress = if calculate_speed {
-            let rolling_average_window = 5000 / sleep_time; // 5000/250 = 20
-            let mut average_speed = VecDeque::with_capacity(rolling_average_window);
-
             let speed = (current - prev_bytes) / instant.elapsed().as_secs_f64() / 1_000_000.0;
 
             if average_speed.len() < rolling_average_window {
@@ -259,17 +267,22 @@ pub async fn rolling_average(
                 average_speed.push_back(speed);
             }
 
-            let speed = average_speed.iter().sum::<f64>() / average_speed.len() as f64;
+            let average_speed = average_speed.iter().sum::<f64>() / average_speed.len() as f64;
+
+            let global_settings = STORAGE.global_settings.read().await;
+            let speed_limit = global_settings.download.download_speed_limit.as_ref();
 
             Progress {
+                name,
                 percentages,
-                speed: Some(speed),
+                speed: Some(average_speed),
                 current_size: Some(current),
                 total_size: Some(total),
                 bias,
             }
         } else {
             Progress {
+                name,
                 percentages,
                 speed: None,
                 current_size: None,
@@ -302,7 +315,7 @@ pub async fn join_futures(
 ) -> Result<(), anyhow::Error> {
     let mut download_stream = tokio_stream::iter(handles).buffer_unordered(concurrency_limit);
     while let Some(x) = download_stream.next().await {
-        x?
+        x?;
     }
     Ok(())
 }
