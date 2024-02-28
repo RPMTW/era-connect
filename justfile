@@ -2,11 +2,12 @@ default: _install_cargo_deps gen lint
 
 gen:
     cd app && flutter pub get
-    cd app && flutter_rust_bridge_codegen \
-        --rust-input native/src/api.rs \
-        --dart-output lib/api/gen/bridge_generated.dart \
-        --c-output macos/Runner/bridge_generated.h \
-        --dart-decl-output lib/api/gen/bridge_definitions.dart
+    cd app && flutter_rust_bridge_codegen generate
+
+update:
+    cargo install 'flutter_rust_bridge_codegen@^2.0.0-dev.8'
+    cd app && flutter pub upgrade
+    cd app/rust && cargo update
 
 lint:
     cd app/native && cargo fmt

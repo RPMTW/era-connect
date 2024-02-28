@@ -1,18 +1,17 @@
-import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
-import 'package:era_connect/api/ffi.dart';
+import 'package:era_connect/src/rust/api/backend_exclusive/storage/global_settings.dart';
+import 'package:era_connect/src/rust/api/shared_resources/entry.dart';
 
 class UILayoutStorage {
   const UILayoutStorage();
 
-  bool get completedSetup => _get<bool>(bridge.UILayoutKey.CompletedSetup);
-  set completedSetup(bool value) =>
-      _set(bridge.UILayoutValue.completedSetup(value));
+  bool get completedSetup => _get<bool>(UILayoutKey.completedSetup);
+  set completedSetup(bool value) => _set(UILayoutValue.completedSetup(value));
 }
 
-T _get<T>(bridge.UILayoutKey key) {
-  return api.getUiLayoutStorage(key: key).field0 as T;
+T _get<T>(UILayoutKey key) {
+  return getUiLayoutStorage(key: key).field0 as T;
 }
 
-Future<void> _set(bridge.UILayoutValue value) {
-  return api.setUiLayoutStorage(value: value);
+Future<void> _set(UILayoutValue value) {
+  return setUiLayoutStorage(value: value);
 }

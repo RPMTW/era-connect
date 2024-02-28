@@ -3,17 +3,24 @@ import 'package:flutter/material.dart';
 
 class TabItem {
   final String title;
-  final String icon;
+  final EraIcon icon;
   final Widget? content;
+  final VoidCallback? onTap;
 
-  const TabItem({required this.title, required this.icon, this.content});
+  const TabItem(
+      {required this.title, required this.icon, this.content, this.onTap});
 }
 
 class DialogRectangleTab extends StatefulWidget {
   final String title;
   final List<TabItem> tabs;
+  final int initialPage;
 
-  const DialogRectangleTab({super.key, required this.title, required this.tabs})
+  const DialogRectangleTab(
+      {super.key,
+      required this.title,
+      this.initialPage = 0,
+      required this.tabs})
       : assert(tabs.length > 1);
 
   @override
@@ -21,7 +28,13 @@ class DialogRectangleTab extends StatefulWidget {
 }
 
 class _DialogRectangleTabState extends State<DialogRectangleTab> {
-  int _currentPage = 0;
+  late int _currentPage;
+
+  @override
+  void initState() {
+    _currentPage = widget.initialPage;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +90,7 @@ class _DialogRectangleTabState extends State<DialogRectangleTab> {
         icon: e.icon,
         isSelected: widget.tabs.indexOf(e) == _currentPage,
         onTap: () async {
+          e.onTap?.call();
           int page = widget.tabs.indexOf(e);
           setState(() {
             _currentPage = page;
@@ -89,7 +103,7 @@ class _DialogRectangleTabState extends State<DialogRectangleTab> {
 
 class _TabItemWidget extends StatelessWidget {
   final String title;
-  final String icon;
+  final Widget icon;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -117,7 +131,7 @@ class _TabItemWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            EraIcon(name: icon, size: 50),
+            IconTheme(data: const IconThemeData(size: 50), child: icon),
             const SizedBox(height: 10),
             Text(
               title,

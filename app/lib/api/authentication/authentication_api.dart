@@ -1,39 +1,42 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:era_connect/api/gen/bridge_definitions.dart' as bridge;
-import 'package:era_connect/api/ffi.dart';
+import 'package:era_connect/src/rust/api/shared_resources/authentication/account.dart';
+import 'package:era_connect/src/rust/api/shared_resources/authentication/msa_flow.dart';
+import 'package:era_connect/src/rust/api/shared_resources/entry.dart';
 import 'package:flutter/widgets.dart';
 
-final AuthenticationApi authenticationApi = AuthenticationApi();
+const authenticationApi = AuthenticationApi();
 
 typedef MinecraftLoginData = (
-  bridge.LoginFlowDeviceCode deviceCode,
-  Stream<bridge.LoginFlowStage> stageStream,
-  Future<bridge.MinecraftAccount> account
+  LoginFlowDeviceCode deviceCode,
+  Stream<LoginFlowStage> stageStream,
+  Future<MinecraftAccount> account
 );
 
-typedef LoginXstsError = bridge.LoginFlowErrors_XstsError;
-typedef LoginErrorGameNotOwn = bridge.LoginFlowErrors_GameNotOwned;
+typedef LoginXstsError = LoginFlowErrors_XstsError;
+typedef LoginErrorGameNotOwn = LoginFlowErrors_GameNotOwned;
 
 class AuthenticationApi {
-  Future<MinecraftLoginData> loginMinecraft() async {
-    final flowStream = api.minecraftLoginFlow();
+  const AuthenticationApi();
 
-    final deviceCodeCompleter = Completer<bridge.LoginFlowDeviceCode>();
-    final accountCompleter = Completer<bridge.MinecraftAccount>();
-    final stageStreamController = StreamController<bridge.LoginFlowStage>();
+  Future<MinecraftLoginData> loginMinecraft() async {
+    final flowStream = minecraftLoginFlow();
+
+    final deviceCodeCompleter = Completer<LoginFlowDeviceCode>();
+    final accountCompleter = Completer<MinecraftAccount>();
+    final stageStreamController = StreamController<LoginFlowStage>();
 
     flowStream.listen((event) {
       if (accountCompleter.isCompleted) return;
 
-      if (event is bridge.LoginFlowEvent_DeviceCode) {
+      if (event is LoginFlowEvent_DeviceCode) {
         deviceCodeCompleter.complete(event.field0);
-      } else if (event is bridge.LoginFlowEvent_Stage) {
+      } else if (event is LoginFlowEvent_Stage) {
         stageStreamController.add(event.field0);
-      } else if (event is bridge.LoginFlowEvent_Error) {
+      } else if (event is LoginFlowEvent_Error) {
         accountCompleter.completeError(event.field0);
-      } else if (event is bridge.LoginFlowEvent_Success) {
+      } else if (event is LoginFlowEvent_Success) {
         accountCompleter.complete(event.field0);
       }
     });
@@ -46,7 +49,7 @@ class AuthenticationApi {
   }
 }
 
-extension MinecraftSkinExtension on bridge.MinecraftSkin {
+extension MinecraftSkinExtension on MinecraftSkin {
   Image renderHead({required double size}) {
     final defaultImage = Image.asset(
       'assets/images/steve.png',
@@ -54,7 +57,7 @@ extension MinecraftSkinExtension on bridge.MinecraftSkin {
       height: size,
     );
 
-    final String path = api.getSkinFilePath(skin: this);
+    final String path = getSkinFilePath(skin: this);
     final file = File(path);
     if (!file.existsSync()) return defaultImage;
 
