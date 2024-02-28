@@ -1,15 +1,20 @@
-use std::sync::{atomic::AtomicUsize, Arc};
 pub use std::{borrow::Cow, fs::create_dir_all, path::PathBuf};
+use std::{
+    io::Read,
+    sync::{atomic::AtomicUsize, Arc},
+};
 
 use anyhow::bail;
 use chrono::{DateTime, Duration, Utc};
+use flate2::bufread::GzDecoder;
 use flutter_rust_bridge::frb;
 use log::info;
 use os_version::OsVersion;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use zip::ZipArchive;
+use tar::Archive;
+use tokio::sync::mpsc::unbounded_channel;
 
 use crate::api::{
     backend_exclusive::{
@@ -39,6 +44,7 @@ pub struct Collection {
     #[serde_as(as = "serde_with::DurationSeconds<i64>")]
     pub played_time: Duration,
     pub advanced_options: Option<AdvancedOptions>,
+    // this shall be in `bin`
     pub java_path: PathBuf,
 
     pub entry_path: PathBuf,
@@ -92,7 +98,7 @@ impl Collection {
         let now_time = Utc::now();
         let loader = Self::create_loader(&display_name)?;
         let entry_path = loader.base_path.clone();
-        let auto_java = STORAGE.global_settings.blocking_read().auto_java;
+        let auto_java = STORAGE.global_settings.read().await.auto_java;
         let java_path = PathBuf::new();
         let mut collection = Collection {
             display_name,
@@ -122,6 +128,16 @@ impl Collection {
             self.java_path = java_path;
             return Ok(());
         }
+        self.auto_java_download().await?;
+        info!("Java download complete!");
+        if let Some(java_path) = self.locate_auto_java_installation()? {
+            self.java_path = java_path;
+            return Ok(());
+        }
+        Ok(())
+    }
+
+    async fn auto_java_download(&mut self) -> anyhow::Result<()> {
         let version = &self.minecraft_version;
         let recommended_java_version = version.get_recommended_java_version().to_string();
         let java_install_base = Self::get_java_install_base();
@@ -135,7 +151,6 @@ impl Collection {
             _ => bail!("Unsupported platform"),
         };
         let arch = std::env::consts::ARCH.to_string();
-
         let reqwest_string = format!("https://api.adoptium.net/v3/binary/latest/{feature_version}/{release_type}/{os}/{arch}/{image_type}/{jvm_impl}/{heap_size}/{vendor}", 
             feature_version = recommended_java_version,
             release_type = "ga",
@@ -143,16 +158,15 @@ impl Collection {
             jvm_impl = "hotspot",
             heap_size = "normal", 
             vendor = "eclipse");
-
         let max = reqwest::get(&reqwest_string).await?.content_length();
         let current_size = Arc::new(AtomicUsize::new(0));
         let current_size_clone = Arc::clone(&current_size);
-
         let handle = Box::pin(async move {
-            let bytes = download_file(reqwest_string, Some(current_size_clone)).await?;
+            let bytes = download_file(reqwest_string, current_size_clone).await?;
             let cursor = std::io::Cursor::new(bytes);
-            let mut zip = ZipArchive::new(cursor)?;
-            zip.extract(java_install_base)?;
+            let tar = GzDecoder::new(cursor);
+            let mut archive = Archive::new(tar);
+            archive.unpack(java_install_base)?;
             Ok(())
         });
         let download_args = if let Some(max) = max {
@@ -175,27 +189,38 @@ impl Collection {
             end: 100.,
         };
         let collection_id = self.get_collection_id();
-        execute_and_progress(collection_id, download_args, download_bias).await?;
-        info!("Java download complete!");
+        execute_and_progress(
+            collection_id,
+            download_args,
+            download_bias,
+            String::from("Auto Java Download/Installation"),
+        )
+        .await?;
         Ok(())
     }
 
     fn locate_auto_java_installation(&self) -> anyhow::Result<Option<PathBuf>> {
         let auto_java_path_base = Self::get_java_install_base();
+        if !auto_java_path_base.exists() {
+            create_dir_all(&auto_java_path_base)?;
+        }
         for path in std::fs::read_dir(auto_java_path_base)? {
             let path = path?;
             let path_str = path.file_name().to_string_lossy().to_string();
-            let regex = Regex::new(r"jdk-(\d+\.\d+\.\d+)\+\d+-jre")?;
-            let Some(c) = regex.captures(&*path_str).and_then(|x| x.get(0)) else {
+            let regex = Regex::new(r"^jdk-(\d+\.\d+\.\d+)\+\d+-jre$")?;
+            let Some(c) = regex.captures(&*path_str).and_then(|x| x.get(1)) else {
                 continue;
             };
-            let readed_java_version = c.as_str();
+            let Some((readed_java_version, _)) = c.as_str().split_once('.') else {
+                continue;
+            };
             let current_java_version = self
                 .minecraft_version
                 .get_recommended_java_version()
                 .to_string();
             if readed_java_version == current_java_version {
-                return Ok(Some(path.path()));
+                info!("Successfully find java");
+                return Ok(Some(path.path().join("bin")));
             }
         }
         Ok(None)

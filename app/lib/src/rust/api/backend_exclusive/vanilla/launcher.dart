@@ -4,21 +4,28 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../../frb_generated.dart';
+import '../../shared_resources/authentication/account.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 class LaunchArgs {
   final List<String> jvmArgs;
   final String mainClass;
   final List<String> gameArgs;
+  final PathBuf javaExecutablePath;
 
   const LaunchArgs({
     required this.jvmArgs,
     required this.mainClass,
     required this.gameArgs,
+    required this.javaExecutablePath,
   });
 
   @override
-  int get hashCode => jvmArgs.hashCode ^ mainClass.hashCode ^ gameArgs.hashCode;
+  int get hashCode =>
+      jvmArgs.hashCode ^
+      mainClass.hashCode ^
+      gameArgs.hashCode ^
+      javaExecutablePath.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -27,5 +34,6 @@ class LaunchArgs {
           runtimeType == other.runtimeType &&
           jvmArgs == other.jvmArgs &&
           mainClass == other.mainClass &&
-          gameArgs == other.gameArgs;
+          gameArgs == other.gameArgs &&
+          javaExecutablePath == other.javaExecutablePath;
 }

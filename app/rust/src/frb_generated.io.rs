@@ -208,6 +208,7 @@ impl CstDecode<crate::api::backend_exclusive::vanilla::launcher::LaunchArgs>
             jvm_args: self.jvm_args.cst_decode(),
             main_class: self.main_class.cst_decode(),
             game_args: self.game_args.cst_decode(),
+            java_executable_path: self.java_executable_path.cst_decode(),
         }
     }
 }
@@ -504,6 +505,7 @@ impl NewWithNullPtr for wire_cst_launch_args {
             jvm_args: core::ptr::null_mut(),
             main_class: core::ptr::null_mut(),
             game_args: core::ptr::null_mut(),
+            java_executable_path: Default::default(),
         }
     }
 }
@@ -686,6 +688,11 @@ pub extern "C" fn frbgen_era_connect_wire_Collection_get_base_path(port_: i64) {
 #[no_mangle]
 pub extern "C" fn frbgen_era_connect_wire_Collection_get_collection_id(port_: i64, that: usize) {
     wire_Collection_get_collection_id_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_era_connect_wire_Collection_get_java_install_base(port_: i64) {
+    wire_Collection_get_java_install_base_impl(port_)
 }
 
 #[no_mangle]
@@ -1004,6 +1011,7 @@ pub struct wire_cst_launch_args {
     jvm_args: *mut wire_cst_list_String,
     main_class: *mut wire_cst_list_prim_u_8_strict,
     game_args: *mut wire_cst_list_String,
+    java_executable_path: usize,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

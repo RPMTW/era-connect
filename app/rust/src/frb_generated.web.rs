@@ -118,14 +118,15 @@ impl CstDecode<crate::api::backend_exclusive::vanilla::launcher::LaunchArgs>
             .unwrap();
         assert_eq!(
             self_.length(),
-            3,
-            "Expected 3 elements, got {}",
+            4,
+            "Expected 4 elements, got {}",
             self_.length()
         );
         crate::api::backend_exclusive::vanilla::launcher::LaunchArgs {
             jvm_args: self_.get(0).cst_decode(),
             main_class: self_.get(1).cst_decode(),
             game_args: self_.get(2).cst_decode(),
+            java_executable_path: self_.get(3).cst_decode(),
         }
     }
 }
@@ -637,6 +638,13 @@ pub fn wire_Collection_get_collection_id(
     that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
 ) {
     wire_Collection_get_collection_id_impl(port_, that)
+}
+
+#[wasm_bindgen]
+pub fn wire_Collection_get_java_install_base(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+) {
+    wire_Collection_get_java_install_base_impl(port_)
 }
 
 #[wasm_bindgen]

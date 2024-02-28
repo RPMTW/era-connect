@@ -738,6 +738,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.jvm_args = cst_encode_list_String(apiObj.jvmArgs);
     wireObj.main_class = cst_encode_String(apiObj.mainClass);
     wireObj.game_args = cst_encode_list_String(apiObj.gameArgs);
+    wireObj.java_executable_path =
+        cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockPathBuf(
+            apiObj.javaExecutablePath);
   }
 
   @protected
@@ -1305,6 +1308,21 @@ class RustLibWire implements BaseWire {
   late final _wire_Collection_get_collection_id =
       _wire_Collection_get_collection_idPtr
           .asFunction<void Function(int, int)>();
+
+  void wire_Collection_get_java_install_base(
+    int port_,
+  ) {
+    return _wire_Collection_get_java_install_base(
+      port_,
+    );
+  }
+
+  late final _wire_Collection_get_java_install_basePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'frbgen_era_connect_wire_Collection_get_java_install_base');
+  late final _wire_Collection_get_java_install_base =
+      _wire_Collection_get_java_install_basePtr
+          .asFunction<void Function(int)>();
 
   void wire_Collection_launch_game(
     int port_,
@@ -2027,6 +2045,9 @@ final class wire_cst_launch_args extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> main_class;
 
   external ffi.Pointer<wire_cst_list_String> game_args;
+
+  @ffi.UintPtr()
+  external int java_executable_path;
 }
 
 final class wire_cst_LoginFlowEvent_Stage extends ffi.Struct {

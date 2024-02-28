@@ -60,6 +60,9 @@ class Collection extends RustOpaque {
         that: this,
       );
 
+  static Future<PathBuf> getJavaInstallBase({dynamic hint}) =>
+      RustLib.instance.api.collectionGetJavaInstallBase(hint: hint);
+
   Future<void> launchGame({dynamic hint}) =>
       RustLib.instance.api.collectionLaunchGame(
         that: this,

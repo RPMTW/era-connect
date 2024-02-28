@@ -93,6 +93,8 @@ abstract class RustLibApi extends BaseApi {
   Future<CollectionId> collectionGetCollectionId(
       {required Collection that, dynamic hint});
 
+  Future<PathBuf> collectionGetJavaInstallBase({dynamic hint});
+
   Future<void> collectionLaunchGame({required Collection that, dynamic hint});
 
   Future<void> collectionSave({required Collection that, dynamic hint});
@@ -309,6 +311,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCollectionGetCollectionIdConstMeta => const TaskConstMeta(
         debugName: "Collection_get_collection_id",
         argNames: ["that"],
+      );
+
+  @override
+  Future<PathBuf> collectionGetJavaInstallBase({dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        return wire.wire_Collection_get_java_install_base(port_);
+      },
+      codec: DcoCodec(
+        decodeSuccessData:
+            dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockPathBuf,
+        decodeErrorData: null,
+      ),
+      constMeta: kCollectionGetJavaInstallBaseConstMeta,
+      argValues: [],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCollectionGetJavaInstallBaseConstMeta =>
+      const TaskConstMeta(
+        debugName: "Collection_get_java_install_base",
+        argNames: [],
       );
 
   @override
@@ -825,12 +851,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LaunchArgs dco_decode_launch_args(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return LaunchArgs(
       jvmArgs: dco_decode_list_String(arr[0]),
       mainClass: dco_decode_String(arr[1]),
       gameArgs: dco_decode_list_String(arr[2]),
+      javaExecutablePath:
+          dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockPathBuf(
+              arr[3]),
     );
   }
 
@@ -1330,8 +1359,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_jvmArgs = sse_decode_list_String(deserializer);
     var var_mainClass = sse_decode_String(deserializer);
     var var_gameArgs = sse_decode_list_String(deserializer);
+    var var_javaExecutablePath =
+        sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockPathBuf(
+            deserializer);
     return LaunchArgs(
-        jvmArgs: var_jvmArgs, mainClass: var_mainClass, gameArgs: var_gameArgs);
+        jvmArgs: var_jvmArgs,
+        mainClass: var_mainClass,
+        gameArgs: var_gameArgs,
+        javaExecutablePath: var_javaExecutablePath);
   }
 
   @protected
@@ -2001,6 +2036,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_list_String(self.jvmArgs, serializer);
     sse_encode_String(self.mainClass, serializer);
     sse_encode_list_String(self.gameArgs, serializer);
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockPathBuf(
+        self.javaExecutablePath, serializer);
   }
 
   @protected

@@ -57,7 +57,7 @@ fn wire_Collection_create_impl(
     mod_loader: impl CstDecode<Option<crate::api::shared_resources::collection::ModLoader>>,
     advanced_options: impl CstDecode<Option<crate::api::shared_resources::collection::AdvancedOptions>>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "Collection_create",
             port: Some(port_),
@@ -68,15 +68,19 @@ fn wire_Collection_create_impl(
             let api_version_metadata = version_metadata.cst_decode();
             let api_mod_loader = mod_loader.cst_decode();
             let api_advanced_options = advanced_options.cst_decode();
-            move |context| {
-                transform_result_dco((move || {
-                    crate::api::shared_resources::collection::Collection::create(
-                        api_display_name,
-                        api_version_metadata,
-                        api_mod_loader,
-                        api_advanced_options,
-                    )
-                })())
+            move |context| async move {
+                transform_result_dco(
+                    (move || async move {
+                        crate::api::shared_resources::collection::Collection::create(
+                            api_display_name,
+                            api_version_metadata,
+                            api_mod_loader,
+                            api_advanced_options,
+                        )
+                        .await
+                    })()
+                    .await,
+                )
             }
         },
     )
@@ -175,6 +179,27 @@ fn wire_Collection_get_collection_id_impl(
                     Result::<_, ()>::Ok(
                         crate::api::shared_resources::collection::Collection::get_collection_id(
                             &api_that,
+                        ),
+                    )
+                })())
+            }
+        },
+    )
+}
+fn wire_Collection_get_java_install_base_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Collection_get_java_install_base",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            move |context| {
+                transform_result_dco((move || {
+                    Result::<_, ()>::Ok(
+                        crate::api::shared_resources::collection::Collection::get_java_install_base(
                         ),
                     )
                 })())
@@ -733,10 +758,12 @@ impl SseDecode for crate::api::backend_exclusive::vanilla::launcher::LaunchArgs 
         let mut var_jvmArgs = <Vec<String>>::sse_decode(deserializer);
         let mut var_mainClass = <String>::sse_decode(deserializer);
         let mut var_gameArgs = <Vec<String>>::sse_decode(deserializer);
+        let mut var_javaExecutablePath = <PathBuf>::sse_decode(deserializer);
         return crate::api::backend_exclusive::vanilla::launcher::LaunchArgs {
             jvm_args: var_jvmArgs,
             main_class: var_mainClass,
             game_args: var_gameArgs,
+            java_executable_path: var_javaExecutablePath,
         };
     }
 }
@@ -1389,6 +1416,7 @@ impl flutter_rust_bridge::IntoDart
             self.jvm_args.into_into_dart().into_dart(),
             self.main_class.into_into_dart().into_dart(),
             self.game_args.into_into_dart().into_dart(),
+            self.java_executable_path.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1954,6 +1982,7 @@ impl SseEncode for crate::api::backend_exclusive::vanilla::launcher::LaunchArgs 
         <Vec<String>>::sse_encode(self.jvm_args, serializer);
         <String>::sse_encode(self.main_class, serializer);
         <Vec<String>>::sse_encode(self.game_args, serializer);
+        <PathBuf>::sse_encode(self.java_executable_path, serializer);
     }
 }
 

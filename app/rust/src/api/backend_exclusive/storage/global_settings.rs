@@ -2,15 +2,17 @@ use std::{borrow::Cow, path::PathBuf};
 
 pub use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
+use smart_default::SmartDefault;
 use struct_key_value_pair::VariantStruct;
 
 use super::storage_loader::{StorageInstance, StorageLoader};
 
 const GLOBAL_SETTINGS_FILENAME: &str = "global_setings.json";
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, SmartDefault, Clone, Debug)]
 pub struct GlobalSettings {
     pub appearances: Appearances,
+    #[default = true]
     pub auto_java: bool,
     pub ui_layout: UILayout,
     pub download: Download,
@@ -28,25 +30,18 @@ impl StorageInstance<Self> for GlobalSettings {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, SmartDefault)]
 #[serde(default)]
 pub struct Download {
+    #[default = 64]
     pub max_simultatneous_download: usize,
     pub download_speed_limit: Option<Speed>,
 }
 
-impl Default for Download {
-    fn default() -> Self {
-        Self {
-            max_simultatneous_download: 64,
-            download_speed_limit: None,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, SmartDefault)]
 pub enum Speed {
-    MegabytePerSecond(f64),
+    #[default]
+    MegabytePerSecond(#[default = 12.0] f64),
     MebibytePerSecond(f64),
     KilobytePerSecond(f64),
     KibiBytePerSecond(f64),
@@ -61,12 +56,6 @@ impl Speed {
             Speed::KilobytePerSecond(x) => *x / 1024.,
             Speed::KibiBytePerSecond(x) => *x / 1000.,
         }
-    }
-}
-
-impl Default for Speed {
-    fn default() -> Self {
-        Self::MegabytePerSecond(0.0)
     }
 }
 

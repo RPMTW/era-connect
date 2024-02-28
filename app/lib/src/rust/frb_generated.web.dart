@@ -548,7 +548,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     return [
       cst_encode_list_String(raw.jvmArgs),
       cst_encode_String(raw.mainClass),
-      cst_encode_list_String(raw.gameArgs)
+      cst_encode_list_String(raw.gameArgs),
+      cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockPathBuf(
+          raw.javaExecutablePath)
     ];
   }
 
@@ -1051,6 +1053,9 @@ class RustLibWire implements BaseWire {
   void wire_Collection_get_collection_id(NativePortType port_, Object that) =>
       wasmModule.wire_Collection_get_collection_id(port_, that);
 
+  void wire_Collection_get_java_install_base(NativePortType port_) =>
+      wasmModule.wire_Collection_get_java_install_base(port_);
+
   void wire_Collection_launch_game(NativePortType port_, Object that) =>
       wasmModule.wire_Collection_launch_game(port_, that);
 
@@ -1152,6 +1157,8 @@ class RustLibWasmModule implements WasmModule {
 
   external void wire_Collection_get_collection_id(
       NativePortType port_, Object that);
+
+  external void wire_Collection_get_java_install_base(NativePortType port_);
 
   external void wire_Collection_launch_game(NativePortType port_, Object that);
 

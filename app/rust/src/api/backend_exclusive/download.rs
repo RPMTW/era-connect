@@ -246,8 +246,8 @@ pub async fn rolling_average(
 
             let average_speed = average_speed.iter().sum::<f64>() / average_speed.len() as f64;
 
-            let global_settings = STORAGE.global_settings.read().await;
-            let speed_limit = global_settings.download.download_speed_limit.as_ref();
+            // let global_settings = STORAGE.global_settings.read().await;
+            // let speed_limit = global_settings.download.download_speed_limit.as_ref();
 
             Progress {
                 name,
