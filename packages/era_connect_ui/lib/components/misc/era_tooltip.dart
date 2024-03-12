@@ -10,6 +10,8 @@ class EraTooltip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasMultipleLines = message.contains('\n');
+
     return JustTheTooltip(
       content: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
@@ -23,7 +25,7 @@ class EraTooltip extends StatelessWidget {
       ),
       offset: -7,
       preferredDirection: AxisDirection.right,
-      borderRadius: BorderRadius.circular(50),
+      borderRadius: BorderRadius.circular(hasMultipleLines ? 15 : 50),
       backgroundColor: context.theme.secondarySurfaceColor,
       child: child,
     );
