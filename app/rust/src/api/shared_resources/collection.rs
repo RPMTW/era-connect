@@ -24,6 +24,8 @@ use crate::api::{
     shared_resources::entry::DATA_DIR,
 };
 
+use super::entry::STORAGE;
+
 #[serde_with::serde_as]
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 #[frb(opaque)]
@@ -66,7 +68,7 @@ impl Collection {
             version_metadata.clone(),
         );
 
-        let collection = Collection {
+        let mut collection = Collection {
             display_name,
             minecraft_version: version_metadata,
             mod_loader,
@@ -78,6 +80,12 @@ impl Collection {
             mod_manager,
             launch_args: None,
         };
+
+        if let Some(options) = advanced_options {
+            if options.auto_translate {
+                collection.add_modrinth_mod("rpmtw-update-mod", vec![], None);
+            }
+        }
 
         collection.save()?;
 
@@ -312,4 +320,7 @@ pub enum ModLoaderType {
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct AdvancedOptions {
     pub jvm_max_memory: Option<usize>,
+    pub auto_translate: bool,
+    pub performance_optimizaiton: bool,
+    pub font_optimization: bool,
 }
