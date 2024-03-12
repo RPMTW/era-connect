@@ -77,12 +77,14 @@ impl Collection {
     pub fn create(
         display_name: String,
         version_metadata: VersionMetadata,
-        mod_loader: Option<ModLoader>,
-        advanced_options: Option<AdvancedOptions>,
+        mod_loader: impl Into<Option<ModLoader>>,
+        advanced_options: impl Into<Option<AdvancedOptions>>,
     ) -> anyhow::Result<Collection> {
         let now_time = Utc::now();
         let loader = Self::create_loader(&display_name)?;
         let entry_path = loader.base_path.clone();
+        let mod_loader = mod_loader.into();
+        let advanced_options = advanced_options.into();
 
         let collection = Collection {
             display_name,
